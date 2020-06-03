@@ -30,4 +30,17 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
 
+  val desEstatesUrl : String = servicesConfig.baseUrl("des-estates")
+
+  val getTrustOrEstateUrl : String = servicesConfig.baseUrl("des-display-trust-or-estate")
+
+  val varyTrustOrEstateUrl : String = servicesConfig.baseUrl("des-vary-trust-or-estate")
+
+  val desEnvironment : String = loadConfig("microservice.services.des-estates.environment")
+  val desToken : String = loadConfig("microservice.services.des-estates.token")
+
+  private def loadConfig(key: String) = config.getOptional[String](key).getOrElse(
+    throw new Exception(s"Missing configuration key : $key")
+  )
+
 }

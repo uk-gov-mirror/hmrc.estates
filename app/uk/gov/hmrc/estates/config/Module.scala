@@ -17,11 +17,15 @@
 package uk.gov.hmrc.estates.config
 
 import com.google.inject.AbstractModule
+import uk.gov.hmrc.estates.controllers.actions.{AuthenticatedIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.repositories.{EstatesMongoDriver, MongoDriver, TransformationRepository, TransformationRepositoryImpl}
 
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
+
+    bind(classOf[IdentifierAction]).to(classOf[AuthenticatedIdentifierAction]).asEagerSingleton()
+
     bind(classOf[MongoDriver]).to(classOf[EstatesMongoDriver]).asEagerSingleton()
 
     bind(classOf[TransformationRepository]).to(classOf[TransformationRepositoryImpl]).asEagerSingleton()

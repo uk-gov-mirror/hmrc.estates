@@ -5,13 +5,14 @@ import sbt._
 
 object AppDependencies {
 
-  val compile = Seq(
+  val compile: Seq[ModuleID] = Seq(
 
-    "uk.gov.hmrc"             %% "simple-reactivemongo"     % "7.26.0-play-26",
+    "org.reactivemongo"       %% "play2-reactivemongo"      % "0.18.8-play26",
+    "uk.gov.hmrc"             %% "logback-json-logger"            % "4.8.0",
     "uk.gov.hmrc"             %% "bootstrap-play-26"        % "1.8.0"
   )
 
-  val test = Seq(
+  val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"             %% "bootstrap-play-26"        % "1.8.0" % Test classifier "tests",
     "org.scalatest"           %% "scalatest"                % "3.0.8"                 % "test",
     "com.typesafe.play"       %% "play-test"                % current                 % "test",

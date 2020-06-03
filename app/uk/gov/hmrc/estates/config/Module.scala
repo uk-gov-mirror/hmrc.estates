@@ -16,18 +16,14 @@
 
 package uk.gov.hmrc.estates.config
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.estates.repositories.{EstatesMongoDriver, MongoDriver, TransformationRepository, TransformationRepositoryImpl}
 
-@Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class Module extends AbstractModule {
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  override def configure(): Unit = {
+    bind(classOf[MongoDriver]).to(classOf[EstatesMongoDriver]).asEagerSingleton()
 
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
-
-  val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
-
+    bind(classOf[TransformationRepository]).to(classOf[TransformationRepositoryImpl]).asEagerSingleton()
+  }
 }

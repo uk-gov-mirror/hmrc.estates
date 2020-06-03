@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.config
+package uk.gov.hmrc.estates.repositories
 
+import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.modules.reactivemongo.ReactiveMongoApi
 
 @Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class EstatesMongoDriver @Inject()(val api : ReactiveMongoApi) extends MongoDriver
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
-
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
-
-  val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
-
+@ImplementedBy(classOf[EstatesMongoDriver])
+sealed trait MongoDriver {
+  val api : ReactiveMongoApi
 }

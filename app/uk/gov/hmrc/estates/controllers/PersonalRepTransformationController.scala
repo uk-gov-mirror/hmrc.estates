@@ -36,7 +36,7 @@ class PersonalRepTransformationController @Inject()(
 
   private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
 
-  def amendLeadTrustee(utr: String): Action[JsValue] = identify.async(parse.json) {
+  def amendPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[EstatePerRepIndType] match {
         case JsSuccess(model, _) =>

@@ -1,9 +1,12 @@
 # microservice specific routes
 
-POST        /check                  uk.gov.hmrc.estates.controllers.CheckEstateController.checkExistingEstate
+->          /personal-rep               personalRep.Routes
 
-POST        /register               uk.gov.hmrc.estates.controllers.RegisterEstateController.registration
+POST        /check                      uk.gov.hmrc.estates.controllers.CheckEstateController.checkExistingEstate
 
-GET         /:utr                   uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)
+POST        /register                   uk.gov.hmrc.estates.controllers.RegisterEstateController.registration
 
-POST        /variation              uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation
+POST        /variation                  uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation
+
+GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)
+

@@ -48,9 +48,9 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
     override def now: LocalDate = LocalDate.of(1999, 3, 14)
   }
 
-  "amend lead trustee" must {
+  "amend personal rep" must {
 
-    "add a new amend lead trustee transform" in {
+    "add a new amend personal rep transform" in {
 
       val personalRepTransformationService = mock[PersonalRepTransformationService]
       val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, LocalDateServiceStub)
@@ -70,7 +70,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
         .withBody(Json.toJson(personalRep))
         .withHeaders(CONTENT_TYPE -> "application/json")
 
-      val result = controller.amendLeadTrustee("aUTR").apply(request)
+      val result = controller.amendPersonalRep("aUTR").apply(request)
 
       status(result) mustBe OK
       verify(personalRepTransformationService)
@@ -85,7 +85,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
         .withBody(Json.parse("{}"))
         .withHeaders(CONTENT_TYPE -> "application/json")
 
-      val result = controller.amendLeadTrustee("aUTR").apply(request)
+      val result = controller.amendPersonalRep("aUTR").apply(request)
       status(result) mustBe BAD_REQUEST
     }
   }

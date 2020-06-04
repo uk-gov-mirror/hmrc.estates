@@ -1,0 +1,2 @@
+
+POST        /amend/:utr             uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRep(utr: String)

@@ -19,12 +19,14 @@ package uk.gov.hmrc.estates.services
 import org.mockito.Mockito.when
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.connectors.DesConnector
-import uk.gov.hmrc.estates.models.ExistingCheckRequest
+import uk.gov.hmrc.estates.exceptions.{AlreadyRegisteredException, InternalServerErrorException}
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
+import uk.gov.hmrc.estates.utils.JsonRequests
 
 import scala.concurrent.Future
 
-class DesServiceSpec extends BaseSpec {
+class DesServiceSpec extends BaseSpec with JsonRequests {
 
   private trait DesServiceFixture {
     lazy val request = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
@@ -104,70 +106,70 @@ class DesServiceSpec extends BaseSpec {
     }
   }
 
-//  ".registerEstate" should {
-//
-//    "return RegistrationTrnResponse " when {
-//      "connector returns RegistrationTrnResponse." in new DesServiceFixture {
-//        when(mockConnector.registerEstate(estateRegRequest)).
-//          thenReturn(Future.successful(RegistrationTrnResponse("trn123")))
-//        val futureResult = SUT.registerEstate(estateRegRequest)
-//        whenReady(futureResult) {
-//          result => result mustBe RegistrationTrnResponse("trn123")
-//        }
-//      }
-//    }
-//
-//    "return AlreadyRegisteredException " when {
-//      "connector returns  AlreadyRegisteredException." in new DesServiceFixture {
-//        when(mockConnector.registerEstate(estateRegRequest)).
-//          thenReturn(Future.failed(AlreadyRegisteredException))
-//        val futureResult = SUT.registerEstate(estateRegRequest)
-//
-//        whenReady(futureResult.failed) {
-//          result => result mustBe AlreadyRegisteredException
-//        }
-//      }
-//    }
-//
-//    "return same Exception " when {
-//      "connector returns  exception." in new DesServiceFixture {
-//        when(mockConnector.registerEstate(estateRegRequest)).
-//          thenReturn(Future.failed(InternalServerErrorException("")))
-//        val futureResult = SUT.registerEstate(estateRegRequest)
-//
-//        whenReady(futureResult.failed) {
-//          result => result mustBe an[InternalServerErrorException]
-//        }
-//      }
-//    }
-//
-//  }
-//
-//  ".getSubscriptionId" should {
-//
-//    "return SubscriptionIdResponse " when {
-//      "connector returns SubscriptionIdResponse." in new DesServiceFixture {
-//        when(mockConnector.getSubscriptionId("trn123456789")).
-//          thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
-//        val futureResult = SUT.getSubscriptionId("trn123456789")
-//        whenReady(futureResult) {
-//          result => result mustBe SubscriptionIdResponse("123456789")
-//        }
-//      }
-//    }
-//
-//    "return same Exception " when {
-//      "connector returns  exception." in new DesServiceFixture {
-//        when(mockConnector.getSubscriptionId("trn123456789")).
-//          thenReturn(Future.failed(InternalServerErrorException("")))
-//        val futureResult = SUT.getSubscriptionId("trn123456789")
-//
-//        whenReady(futureResult.failed) {
-//          result => result mustBe an[InternalServerErrorException]
-//        }
-//      }
-//    }
-//  }
+  ".registerEstate" should {
+
+    "return RegistrationTrnResponse " when {
+      "connector returns RegistrationTrnResponse." in new DesServiceFixture {
+        when(mockConnector.registerEstate(estateRegRequest)).
+          thenReturn(Future.successful(RegistrationTrnResponse("trn123")))
+        val futureResult = SUT.registerEstate(estateRegRequest)
+        whenReady(futureResult) {
+          result => result mustBe RegistrationTrnResponse("trn123")
+        }
+      }
+    }
+
+    "return AlreadyRegisteredException " when {
+      "connector returns  AlreadyRegisteredException." in new DesServiceFixture {
+        when(mockConnector.registerEstate(estateRegRequest)).
+          thenReturn(Future.failed(AlreadyRegisteredException))
+        val futureResult = SUT.registerEstate(estateRegRequest)
+
+        whenReady(futureResult.failed) {
+          result => result mustBe AlreadyRegisteredException
+        }
+      }
+    }
+
+    "return same Exception " when {
+      "connector returns  exception." in new DesServiceFixture {
+        when(mockConnector.registerEstate(estateRegRequest)).
+          thenReturn(Future.failed(InternalServerErrorException("")))
+        val futureResult = SUT.registerEstate(estateRegRequest)
+
+        whenReady(futureResult.failed) {
+          result => result mustBe an[InternalServerErrorException]
+        }
+      }
+    }
+
+  }
+
+  ".getSubscriptionId" should {
+
+    "return SubscriptionIdResponse " when {
+      "connector returns SubscriptionIdResponse." in new DesServiceFixture {
+        when(mockConnector.getSubscriptionId("trn123456789")).
+          thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
+        val futureResult = SUT.getSubscriptionId("trn123456789")
+        whenReady(futureResult) {
+          result => result mustBe SubscriptionIdResponse("123456789")
+        }
+      }
+    }
+
+    "return same Exception " when {
+      "connector returns  exception." in new DesServiceFixture {
+        when(mockConnector.getSubscriptionId("trn123456789")).
+          thenReturn(Future.failed(InternalServerErrorException("")))
+        val futureResult = SUT.getSubscriptionId("trn123456789")
+
+        whenReady(futureResult.failed) {
+          result => result mustBe an[InternalServerErrorException]
+        }
+      }
+    }
+  }
 //
 //  ".getEstateInfo" should {
 //    "return EstateFoundResponse" when {

@@ -25,11 +25,11 @@ import uk.gov.hmrc.estates.utils.JsonUtils
 class AddEstatePerRepIndTransformSpec extends FreeSpec with MustMatchers with OptionValues {
 
   val newPersonalRep = EstatePerRepIndType(
-    name =  NameType("First", None, "Last"),
-    dateOfBirth = LocalDate.of(2000,1,1),
-    identification = IdentificationType(None, None, None),
-    phoneNumber = "07987654",
-    email = None
+    name =  NameType("Alister", None, "Mc'Lovern"),
+    dateOfBirth = LocalDate.of(1980,6,1),
+    identification = IdentificationType(Some("JS123456A"), None, None),
+    phoneNumber = "078888888",
+    email = Some("test@abc.com")
   )
 
   "the add business settlor transformer should" - {
@@ -38,9 +38,9 @@ class AddEstatePerRepIndTransformSpec extends FreeSpec with MustMatchers with Op
 
       "when there are existing personal reps" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-register-estate.json.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
 
-        val afterJson = JsonUtils.getJsonValueFromFile("valid-register-estate.json.json")
+        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
         val transformer = new AddEstatePerRepInTransform(newPersonalRep)
 
@@ -50,9 +50,9 @@ class AddEstatePerRepIndTransformSpec extends FreeSpec with MustMatchers with Op
       }
 
       "when there are no existing personal reps" in {
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-register-estate.json.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
 
-        val afterJson = JsonUtils.getJsonValueFromFile("valid-register-estate.json.json")
+        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
         val transformer = new AddEstatePerRepInTransform(newPersonalRep)
 

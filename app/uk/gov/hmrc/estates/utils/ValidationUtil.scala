@@ -16,28 +16,28 @@
 
 package uk.gov.hmrc.estates.utils
 
-import play.api.libs.json.{JsValue, Json}
+import java.time.LocalDate
 
-import scala.io.{BufferedSource, Source}
+import uk.gov.hmrc.estates.services.EstatesValidationError
 
+trait ValidationUtil {
 
-trait JsonUtils {
-
-  def getJsonFromFile(filename :String) :String = {
-    val source: BufferedSource = Source.fromFile(getClass.getResource(s"/$filename").getPath)
-    val jsonString = source.mkString
-    source.close()
-    jsonString
+  def isNotFutureDate(date: LocalDate, path: String, key: String): Option[EstatesValidationError] = {
+    if (isAfterToday(date)) {
+      Some(EstatesValidationError(s"$key must be today or in the past.", path))
+    } else {
+      None
+    }
   }
 
-  def getJsonValueFromFile(filename:String) :JsValue = {
-    Json.parse(getJsonFromFile(filename))
+  def isNotFutureDate(date: Option[LocalDate], path: String, key: String): Option[EstatesValidationError] = {
+    date flatMap {
+      d =>
+        isNotFutureDate(d, path, key)
+    }
   }
 
-  def getJsonValueFromString(jsonString : String ):JsValue = {
-    Json.parse(jsonString)
+  def isAfterToday(date: LocalDate): Boolean = {
+    date.isAfter(LocalDate.now)
   }
-
 }
-
-object JsonUtils extends JsonUtils

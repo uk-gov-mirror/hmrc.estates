@@ -16,28 +16,13 @@
 
 package uk.gov.hmrc.estates.utils
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.estates.models.EstateRegistration
 
-import scala.io.{BufferedSource, Source}
+trait JsonRequests extends JsonUtils {
+  lazy val invalidEstateRegistrationJson: String =  getJsonFromFile("invalid-estate-registration-01.json")
 
-
-trait JsonUtils {
-
-  def getJsonFromFile(filename :String) :String = {
-    val source: BufferedSource = Source.fromFile(getClass.getResource(s"/$filename").getPath)
-    val jsonString = source.mkString
-    source.close()
-    jsonString
-  }
-
-  def getJsonValueFromFile(filename:String) :JsValue = {
-    Json.parse(getJsonFromFile(filename))
-  }
-
-  def getJsonValueFromString(jsonString : String ):JsValue = {
-    Json.parse(jsonString)
-  }
-
+  lazy val estateRegRequest: EstateRegistration = getJsonValueFromFile("valid-estate-registration-01.json").validate[EstateRegistration].get
+  lazy val estateRegistration01: String =  getJsonFromFile("valid-estate-registration-01.json")
+  lazy val estateRegistration03: String =  getJsonFromFile("valid-estate-registration-03.json")
 }
-
-object JsonUtils extends JsonUtils

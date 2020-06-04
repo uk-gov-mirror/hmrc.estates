@@ -14,30 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.utils
+package uk.gov.hmrc.estates.models
 
-import play.api.libs.json.{JsValue, Json}
-
-import scala.io.{BufferedSource, Source}
+import play.api.libs.json.{Json, OFormat}
 
 
-trait JsonUtils {
+case class TaxEnrolmentSubscription(serviceName: String, callback: String, etmpId: String)
 
-  def getJsonFromFile(filename :String) :String = {
-    val source: BufferedSource = Source.fromFile(getClass.getResource(s"/$filename").getPath)
-    val jsonString = source.mkString
-    source.close()
-    jsonString
-  }
-
-  def getJsonValueFromFile(filename:String) :JsValue = {
-    Json.parse(getJsonFromFile(filename))
-  }
-
-  def getJsonValueFromString(jsonString : String ):JsValue = {
-    Json.parse(jsonString)
-  }
-
+object TaxEnrolmentSubscription {
+  implicit val format: OFormat[TaxEnrolmentSubscription] = Json.format[TaxEnrolmentSubscription]
 }
 
-object JsonUtils extends JsonUtils

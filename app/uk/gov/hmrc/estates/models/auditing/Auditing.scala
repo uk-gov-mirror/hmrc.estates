@@ -14,30 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.utils
+package uk.gov.hmrc.estates.models.auditing
 
-import play.api.libs.json.{JsValue, Json}
+object Auditing {
 
-import scala.io.{BufferedSource, Source}
+//  val TRUST_REGISTRATION_SUBMITTED = "TrustRegistrationSubmitted"
+  val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
 
+//  val GET_TRUST = "GetTrust"
+  val GET_ESTATE = "GetEstate"
 
-trait JsonUtils {
-
-  def getJsonFromFile(filename :String) :String = {
-    val source: BufferedSource = Source.fromFile(getClass.getResource(s"/$filename").getPath)
-    val jsonString = source.mkString
-    source.close()
-    jsonString
-  }
-
-  def getJsonValueFromFile(filename:String) :JsValue = {
-    Json.parse(getJsonFromFile(filename))
-  }
-
-  def getJsonValueFromString(jsonString : String ):JsValue = {
-    Json.parse(jsonString)
-  }
+//  val TRUST_VARIATION = "TrustVariation"
+//  val TRUST_VARIATION_ATTEMPT = "TrustVariationAttempt"
+//  val TRUST_TRANSFORMATIONS = "TrustTransformations"
+  val ESTATE_VARIATION = "EstateVariation"
 
 }
-
-object JsonUtils extends JsonUtils

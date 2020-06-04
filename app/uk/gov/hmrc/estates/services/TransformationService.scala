@@ -29,15 +29,16 @@ import scala.concurrent.Future
 class TransformationService @Inject()(repository: TransformationRepository){
 
   def addNewTransform(utr: String, internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
-    repository.get(utr, internalId).map {
+    repository.get(utr, internalId) map {
       case None =>
         ComposedDeltaTransform(Seq(newTransform))
 
       case Some(composedTransform) =>
         composedTransform :+ newTransform
 
-    }.flatMap(newTransforms =>
-      repository.set(utr, internalId, newTransforms)).recoverWith {
+    } flatMap { newTransforms =>
+      repository.set(utr, internalId, newTransforms)
+    } recoverWith {
       case e =>
         Logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
         Future.failed(e)

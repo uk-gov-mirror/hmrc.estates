@@ -26,7 +26,7 @@ case class AddEstatePerRepInTransform(newPersonalRep: EstatePerRepIndType)
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     input.transform(
-      path.json.prune andThen (__).json.update(path.json.put(Json.toJson(newPersonalRep)))
+      path.json.prune andThen __.json.update(path.json.put(Json.toJson(newPersonalRep)))
     )
   }
 

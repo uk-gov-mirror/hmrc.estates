@@ -21,7 +21,6 @@ import uk.gov.hmrc.estates.models.{EstateRegistration, RegistrationResponse}
 
 case class EstateRegistrationSubmissionAuditEvent(
                                                   registration: EstateRegistration,
-                                                  draftId : String,
                                                   internalAuthId : String,
                                                   response: RegistrationResponse
                                                 )

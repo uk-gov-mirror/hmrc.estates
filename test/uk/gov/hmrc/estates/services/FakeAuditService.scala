@@ -29,7 +29,7 @@ class FakeAuditService @Inject()(auditConnector: AuditConnector, config: AppConf
   extends AuditService(auditConnector, config) {
 
 
-  override def audit(event: String, registration: EstateRegistration, draftId: String, internalId: String, response: RegistrationResponse)
+  override def audit(event: String, registration: EstateRegistration, internalId: String, response: RegistrationResponse)
                     (implicit hc: HeaderCarrier): Unit = ()
 
   override def audit(event: String,

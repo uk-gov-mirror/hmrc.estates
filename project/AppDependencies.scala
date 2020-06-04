@@ -1,22 +1,38 @@
-import play.core.PlayVersion.current
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
+import play.core.PlayVersion
 import sbt._
 
 object AppDependencies {
 
-  val compile = Seq(
+  val compile: Seq[ModuleID] = Seq(
 
-    "uk.gov.hmrc"             %% "simple-reactivemongo"     % "7.26.0-play-26",
-    "uk.gov.hmrc"             %% "bootstrap-play-26"        % "1.8.0"
+    "org.reactivemongo"          %% "play2-reactivemongo"      % "0.18.8-play26",
+    "uk.gov.hmrc"                %% "logback-json-logger"      % "4.8.0",
+    "uk.gov.hmrc"                %% "bootstrap-play-26"        % "1.8.0",
+    "uk.gov.hmrc"                %% "microservice-bootstrap"   % "10.9.0",
+    "uk.gov.hmrc"                %% "http-caching-client"      % "8.5.0-play-26",
+    "com.github.java-json-tools" % "json-schema-validator"     % "2.2.8"
   )
 
-  val test = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-play-26"        % "1.8.0" % Test classifier "tests",
-    "org.scalatest"           %% "scalatest"                % "3.0.8"                 % "test",
-    "com.typesafe.play"       %% "play-test"                % current                 % "test",
-    "org.pegdown"             %  "pegdown"                  % "1.6.0"                 % "test, it",
-    "org.scalatestplus.play"  %% "scalatestplus-play"       % "3.1.2"                 % "test, it"
-  )
+  val test: Seq[ModuleID] = Seq(
+    "org.scalatest"               %% "scalatest"          % "3.0.7",
+    "org.scalatestplus.play"      %% "scalatestplus-play" % "3.1.3",
+    "org.pegdown"                 %  "pegdown"            % "1.6.0",
+    "org.jsoup"                   %  "jsoup"              % "1.12.1",
+    "com.typesafe.play"           %% "play-test"          % PlayVersion.current,
+    "org.mockito"                 %  "mockito-all"        % "1.10.19",
+    "org.scalacheck"              %% "scalacheck"         % "1.14.3",
+    "wolfendale"                  %% "scalacheck-gen-regexp" % "0.1.2",
+    "com.github.tomakehurst"      % "wiremock-standalone"      % "2.25.1"
+  ).map(_ % "test, it")
 
+  val akkaVersion = "2.5.23"
+  val akkaHttpVersion = "10.0.15"
+
+  val overrides: Set[ModuleID] = Set(
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-protobuf" % akkaVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+  )
 }

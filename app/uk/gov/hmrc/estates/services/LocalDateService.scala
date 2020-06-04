@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.models.auditing
+package uk.gov.hmrc.estates.services
 
-object Auditing {
+import java.time.LocalDate
 
-  val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
-
-  val GET_ESTATE = "GetEstate"
-
-  val ESTATE_VARIATION = "EstateVariation"
-
+class LocalDateService {
+  def now: LocalDate = LocalDate.now
 }

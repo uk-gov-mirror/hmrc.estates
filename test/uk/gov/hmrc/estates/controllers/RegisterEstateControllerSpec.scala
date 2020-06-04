@@ -148,24 +148,6 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
         (output \ "message").as[String] mustBe "Provided request is invalid."
         verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
       }
-
-      "no draft id provided in headers" in {
-
-        mockDesServiceResponse
-
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
-
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration03), withDraftId = false))
-
-        status(result) mustBe BAD_REQUEST
-        val output = contentAsJson(result)
-
-        (output \ "code").as[String] mustBe "NO_DRAFT_ID"
-        (output \ "message").as[String] mustBe "No draft registration identifier provided."
-
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-      }
-
     }
 
 

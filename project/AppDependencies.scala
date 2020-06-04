@@ -1,7 +1,4 @@
 import play.core.PlayVersion
-import play.core.PlayVersion.current
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
@@ -28,4 +25,14 @@ object AppDependencies {
     "com.github.tomakehurst"      % "wiremock-standalone"      % "2.25.1"
   ).map(_ % "test, it")
 
+  val akkaVersion = "2.5.23"
+  val akkaHttpVersion = "10.0.15"
+
+  val overrides: Set[ModuleID] = Set(
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-protobuf" % akkaVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+  )
 }

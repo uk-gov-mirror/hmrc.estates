@@ -1,0 +1,32 @@
+/*
+ * Copyright 2020 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.estates.models.auditing
+
+object Auditing {
+
+//  val TRUST_REGISTRATION_SUBMITTED = "TrustRegistrationSubmitted"
+  val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
+
+//  val GET_TRUST = "GetTrust"
+  val GET_ESTATE = "GetEstate"
+
+//  val TRUST_VARIATION = "TrustVariation"
+//  val TRUST_VARIATION_ATTEMPT = "TrustVariationAttempt"
+//  val TRUST_TRANSFORMATIONS = "TrustTransformations"
+  val ESTATE_VARIATION = "EstateVariation"
+
+}

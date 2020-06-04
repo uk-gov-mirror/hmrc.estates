@@ -31,9 +31,8 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class CheckEstateController @Inject()(desService: DesService, config: AppConfig,
-                                      identify: IdentifierAction,
-                                      cc: ControllerComponents)
-                                     (implicit val executionContext: ExecutionContext)
+                                      identify: IdentifierAction)
+                                     (implicit val executionContext: ExecutionContext, cc: ControllerComponents)
   extends EstatesBaseController(cc) {
 
   def checkExistingEstate(): Action[JsValue] = identify.async(parse.json) { implicit request =>

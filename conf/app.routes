@@ -6,4 +6,4 @@ POST        /register               uk.gov.hmrc.estates.controllers.RegisterEsta
 
 GET         /:utr                   uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)
 
-#POST        /variation              uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation
+POST        /variation              uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation

@@ -19,11 +19,11 @@ package uk.gov.hmrc.estates.services
 import javax.inject.Inject
 import uk.gov.hmrc.estates.connectors.DesConnector
 import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
+import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models.{EstateRegistration, ExistingCheckRequest, ExistingCheckResponse, RegistrationResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
-
 
 class DesService @Inject()(val desConnector: DesConnector) {
 
@@ -44,9 +44,9 @@ class DesService @Inject()(val desConnector: DesConnector) {
   def getEstateInfo(utr: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     desConnector.getEstateInfo(utr)
   }
-//
-//  def estateVariation(estateVariation: EstateVariation)(implicit hc: HeaderCarrier): Future[VariationResponse] =
-//    desConnector.estateVariation(estateVariation: EstateVariation)
+
+  def estateVariation(estateVariation: EstateVariation)(implicit hc: HeaderCarrier): Future[VariationResponse] =
+    desConnector.estateVariation(estateVariation: EstateVariation)
 }
 
 

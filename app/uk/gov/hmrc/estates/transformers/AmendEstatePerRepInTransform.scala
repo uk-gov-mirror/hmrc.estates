@@ -19,7 +19,7 @@ package uk.gov.hmrc.estates.transformers
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.EstatePerRepIndType
 
-case class AddEstatePerRepInTransform(newPersonalRep: EstatePerRepIndType)
+case class AmendEstatePerRepInTransform(newPersonalRep: EstatePerRepIndType)
   extends DeltaTransform with JsonOperations {
 
   private lazy val path = __ \ 'estate \ 'entities \ 'personalRepresentative \ 'estatePerRepInd
@@ -32,10 +32,10 @@ case class AddEstatePerRepInTransform(newPersonalRep: EstatePerRepIndType)
 
 }
 
-object AddEstatePerRepInTransform {
+object AmendEstatePerRepInTransform {
 
-  val key = "AddEstatePerRepInTransform"
+  val key = "AmendEstatePerRepInTransform"
 
-  implicit val format: Format[AddEstatePerRepInTransform] = Json.format[AddEstatePerRepInTransform]
+  implicit val format: Format[AmendEstatePerRepInTransform] = Json.format[AmendEstatePerRepInTransform]
 }
 

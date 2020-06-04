@@ -30,14 +30,12 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
 
   def audit(event: String,
             registration: EstateRegistration,
-            draftId: String,
             internalId: String,
             response: RegistrationResponse)(implicit hc: HeaderCarrier): Unit = {
 
     if (config.auditingEnabled) {
       val auditPayload = EstateRegistrationSubmissionAuditEvent(
         registration = registration,
-        draftId = draftId,
         internalAuthId = internalId,
         response = response
       )

@@ -18,15 +18,10 @@ package uk.gov.hmrc.estates.models.auditing
 
 object Auditing {
 
-//  val TRUST_REGISTRATION_SUBMITTED = "TrustRegistrationSubmitted"
   val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
 
-//  val GET_TRUST = "GetTrust"
   val GET_ESTATE = "GetEstate"
 
-//  val TRUST_VARIATION = "TrustVariation"
-//  val TRUST_VARIATION_ATTEMPT = "TrustVariationAttempt"
-//  val TRUST_TRANSFORMATIONS = "TrustTransformations"
   val ESTATE_VARIATION = "EstateVariation"
 
 }

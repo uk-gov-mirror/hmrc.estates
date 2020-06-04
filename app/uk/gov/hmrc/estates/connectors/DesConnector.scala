@@ -23,6 +23,7 @@ import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json._
 import uk.gov.hmrc.estates.config.{AppConfig, WSHttp}
+import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
 import uk.gov.hmrc.estates.models.{EstateRegistration, ExistingCheckRequest, ExistingCheckResponse, RegistrationResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.estates.utils.Constants._
@@ -100,16 +101,16 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     response
   }
-//
-//  def getEstateInfo(utr: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
-//    val correlationId = UUID.randomUUID().toString
-//
-//    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
-//
-//    Logger.info(s"[DesConnector] getting playback for estate for correlationId: $correlationId")
-//
-//    http.GET[GetEstateResponse](createGetTrustOrEstateEndpoint(utr))(GetEstateResponse.httpReads, implicitly[HeaderCarrier](hc), global)
-//  }
+
+  def getEstateInfo(utr: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+    val correlationId = UUID.randomUUID().toString
+
+    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
+
+    Logger.info(s"[DesConnector] getting playback for estate for correlationId: $correlationId")
+
+    http.GET[GetEstateResponse](createGetTrustOrEstateEndpoint(utr))(GetEstateResponse.httpReads, implicitly[HeaderCarrier](hc), global)
+  }
 //
 //  def estateVariation(estateVariations: EstateVariation)(implicit hc: HeaderCarrier): Future[VariationResponse] = {
 //    val correlationId = UUID.randomUUID().toString

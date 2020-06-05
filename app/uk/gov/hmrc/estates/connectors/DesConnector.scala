@@ -25,33 +25,34 @@ import play.api.libs.json._
 import uk.gov.hmrc.estates.config.{AppConfig, WSHttp}
 import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
-import uk.gov.hmrc.estates.models.{EstateRegistration, ExistingCheckRequest, ExistingCheckResponse, RegistrationResponse, SubscriptionIdResponse}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.utils.Constants._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 
 class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
-  lazy val trustsServiceUrl : String = s"${config.desTrustsUrl}/trusts"
-  lazy val estatesServiceUrl : String = s"${config.desEstatesUrl}/estates"
+  private lazy val trustsServiceUrl : String = s"${config.desTrustsBaseUrl}/trusts"
+  private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
 
-  lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"
+  private lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"
 
-  lazy val estateRegistrationEndpoint : String = s"$estatesServiceUrl/registration"
+  private lazy val estateRegistrationEndpoint : String = s"$estatesServiceUrl/registration"
 
-  lazy val getTrustOrEstateUrl: String =  s"${config.getTrustOrEstateUrl}/trusts"
+  // When reading estates from DES, it's the same endpoint as for trusts.
+  // So this must remain "trusts" even though we're reading an estate.
+  private lazy val getEstateUrl: String =  s"${config.getEstateBaseUrl}/trusts"
 
-  def createGetTrustOrEstateEndpoint(utr: String): String = s"$getTrustOrEstateUrl/registration/$utr"
+  private def createEstateEndpointForUtr(utr: String): String = s"$getEstateUrl/registration/$utr"
 
-  lazy val trustVariationsEndpoint : String = s"${config.varyTrustOrEstateUrl}/trusts/variation"
-  lazy val estateVariationsEndpoint : String = s"${config.varyTrustOrEstateUrl}/estates/variation"
+  private lazy val estateVariationsEndpoint : String = s"${config.varyEstateBaseUrl}/estates/variation"
 
-  val ENVIRONMENT_HEADER = "Environment"
-  val CORRELATION_HEADER = "CorrelationId"
-  val OLD_CORRELATION_HEADER = "Correlation-Id"
+  private val ENVIRONMENT_HEADER = "Environment"
+  private val CORRELATION_HEADER = "CorrelationId"
+  private val OLD_CORRELATION_HEADER = "Correlation-Id"
 
   private def desHeaders(correlationId : String) : Seq[(String, String)] =
     Seq(
@@ -70,10 +71,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     Logger.info(s"[DesConnector] matching estate for correlationId: $correlationId")
 
-    val response = http.POST[JsValue, ExistingCheckResponse](matchEstatesEndpoint, Json.toJson(existingEstateCheckRequest))
-    (implicitly[Writes[JsValue]], ExistingCheckResponse.httpReads, implicitly[HeaderCarrier](hc),implicitly[ExecutionContext])
-
-    response
+    http.POST[JsValue, ExistingCheckResponse](matchEstatesEndpoint, Json.toJson(existingEstateCheckRequest))
   }
 
   def registerEstate(registration: EstateRegistration): Future[RegistrationResponse] = {
@@ -83,9 +81,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     Logger.info(s"[DesConnector] registering estate for correlationId: $correlationId")
 
-    val response = http.POST[JsValue, RegistrationResponse](estateRegistrationEndpoint, Json.toJson(registration))
-    (implicitly[Writes[JsValue]], RegistrationResponse.httpReads, implicitly[HeaderCarrier](hc),implicitly[ExecutionContext])
-    response
+    http.POST[JsValue, RegistrationResponse](estateRegistrationEndpoint, Json.toJson(registration))
   }
 
   def getSubscriptionId(trn: String): Future[SubscriptionIdResponse] = {
@@ -97,10 +93,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
     val subscriptionIdEndpointUrl = s"$trustsServiceUrl/trn/$trn/subscription"
     Logger.debug(s"[getSubscriptionId] Sending get subscription id request to DES, url=$subscriptionIdEndpointUrl")
 
-    val response = http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
-    (SubscriptionIdResponse.httpReads, implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-
-    response
+    http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 
   def getEstateInfo(utr: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
@@ -110,7 +103,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     Logger.info(s"[DesConnector] getting playback for estate for correlationId: $correlationId")
 
-    http.GET[GetEstateResponse](createGetTrustOrEstateEndpoint(utr))(GetEstateResponse.httpReads, implicitly[HeaderCarrier](hc), global)
+    http.GET[GetEstateResponse](createEstateEndpointForUtr(utr))
   }
 
   def estateVariation(estateVariations: EstateVariation)(implicit hc: HeaderCarrier): Future[VariationResponse] = {
@@ -120,7 +113,6 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     Logger.info(s"[DesConnector] submitting estate variation for correlationId: $correlationId")
 
-    http.POST[JsValue, VariationResponse](estateVariationsEndpoint, Json.toJson(estateVariations))(
-      implicitly[Writes[JsValue]], VariationResponse.httpReads, implicitly[HeaderCarrier](hc),implicitly[ExecutionContext])
+    http.POST[JsValue, VariationResponse](estateVariationsEndpoint, Json.toJson(estateVariations))
   }
 }

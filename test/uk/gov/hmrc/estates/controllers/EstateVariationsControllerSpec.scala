@@ -70,7 +70,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "not perform auditing" when {
       "the feature toggle is set to false" in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.successful(VariationResponse(tvnResponse)))
 
         when(mockConfig.auditingEnabled).thenReturn(false)
@@ -95,7 +95,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "perform auditing" when {
       "the feature toggle is set to true" in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.successful(VariationResponse(tvnResponse)))
 
         when(mockConfig.auditingEnabled).thenReturn(true)
@@ -121,7 +121,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       "individual user called the register endpoint with a valid json payload " in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.successful(VariationResponse(tvnResponse)))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
@@ -181,7 +181,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       "invalid correlation id is provided in the headers" in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.failed(InvalidCorrelationIdException))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
@@ -214,7 +214,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return a Conflict" when {
       "submission with same correlation id is submitted." in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.failed(DuplicateSubmissionException))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
@@ -247,7 +247,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       "the register endpoint called and something goes wrong." in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.failed(InternalServerErrorException("some error")))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
@@ -280,7 +280,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return service unavailable" when {
       "the des returns Service Unavailable as dependent service is down. " in {
 
-        when(mockDesService.estateVariation(any[EstateVariation])(any[HeaderCarrier]))
+        when(mockDesService.estateVariation(any[EstateVariation]))
           .thenReturn(Future.failed(ServiceNotAvailableException("dependent service is down")))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)

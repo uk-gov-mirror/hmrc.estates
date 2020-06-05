@@ -77,7 +77,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
   def registerEstate(registration: EstateRegistration): Future[RegistrationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier.apply(extraHeaders = desHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
     Logger.info(s"[DesConnector] registering estate for correlationId: $correlationId")
 
@@ -88,7 +88,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier.apply(extraHeaders = desHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
     val subscriptionIdEndpointUrl = s"$trustsServiceUrl/trn/$trn/subscription"
     Logger.debug(s"[getSubscriptionId] Sending get subscription id request to DES, url=$subscriptionIdEndpointUrl")
@@ -96,20 +96,20 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 
-  def getEstateInfo(utr: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+  def getEstateInfo(utr: String): Future[GetEstateResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc : HeaderCarrier = HeaderCarrier.apply(extraHeaders = desHeaders(correlationId))
+    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
     Logger.info(s"[DesConnector] getting playback for estate for correlationId: $correlationId")
 
     http.GET[GetEstateResponse](createEstateEndpointForUtr(utr))
   }
 
-  def estateVariation(estateVariations: EstateVariation)(implicit hc: HeaderCarrier): Future[VariationResponse] = {
+  def estateVariation(estateVariations: EstateVariation): Future[VariationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier.apply(extraHeaders = desHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
     Logger.info(s"[DesConnector] submitting estate variation for correlationId: $correlationId")
 

@@ -30,17 +30,16 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
 
-  val desTrustsUrl : String = servicesConfig.baseUrl("des-trusts")
-  val desEstatesUrl : String = servicesConfig.baseUrl("des-estates")
+  val desTrustsBaseUrl : String = servicesConfig.baseUrl("des-trusts")
+  val desEstatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
 
-  val getTrustOrEstateUrl : String = servicesConfig.baseUrl("des-display-trust-or-estate")
-
-  val varyTrustOrEstateUrl : String = servicesConfig.baseUrl("des-vary-trust-or-estate")
+  val getEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-playback")
+  val varyEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-variation")
 
   val desEnvironment : String = loadConfig("microservice.services.des-estates.environment")
   val desToken : String = loadConfig("microservice.services.des-estates.token")
 
-  val taxEnrolmentsUrl : String = servicesConfig.baseUrl("tax-enrolments")
+  val taxEnrolmentsBaseUrl : String = servicesConfig.baseUrl("tax-enrolments")
   val taxEnrolmentsPayloadBodyServiceName : String = loadConfig("microservice.services.tax-enrolments.serviceName")
   val taxEnrolmentsPayloadBodyCallback : String = loadConfig("microservice.services.tax-enrolments.callback")
   val delayToConnectTaxEnrolment : Int = loadConfig("microservice.services.estates.delayToConnectTaxEnrolment").toInt

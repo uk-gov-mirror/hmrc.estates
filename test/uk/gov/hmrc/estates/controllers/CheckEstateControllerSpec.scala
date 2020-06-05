@@ -173,7 +173,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
     new CheckEstateController(mockDesService, appConfig, new FakeIdentifierAction(bodyParsers, Organisation))
 
   private def mockDesServiceResponse(response : ExistingCheckResponse) = {
-    when(mockDesService.checkExistingEstate(any[ExistingCheckRequest])(any[HeaderCarrier]))
+    when(mockDesService.checkExistingEstate(any[ExistingCheckRequest]))
       .thenReturn(Future.successful(response))
   }
 }

@@ -20,32 +20,29 @@ import javax.inject.Inject
 import uk.gov.hmrc.estates.connectors.DesConnector
 import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
-import uk.gov.hmrc.estates.models.{EstateRegistration, ExistingCheckRequest, ExistingCheckResponse, RegistrationResponse, SubscriptionIdResponse}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.estates.models._
 
 import scala.concurrent.Future
 
 class DesService @Inject()(val desConnector: DesConnector) {
 
-  def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest)
-                         (implicit hc: HeaderCarrier): Future[ExistingCheckResponse] = {
+  def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest): Future[ExistingCheckResponse] = {
     desConnector.checkExistingEstate(existingEstateCheckRequest)
   }
 
-  def registerEstate(estateRegistration: EstateRegistration)
-                    (implicit hc: HeaderCarrier): Future[RegistrationResponse] = {
+  def registerEstate(estateRegistration: EstateRegistration): Future[RegistrationResponse] = {
     desConnector.registerEstate(estateRegistration)
   }
 
-  def getSubscriptionId(trn: String)(implicit hc: HeaderCarrier): Future[SubscriptionIdResponse] = {
+  def getSubscriptionId(trn: String): Future[SubscriptionIdResponse] = {
     desConnector.getSubscriptionId(trn)
   }
 
-  def getEstateInfo(utr: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+  def getEstateInfo(utr: String): Future[GetEstateResponse] = {
     desConnector.getEstateInfo(utr)
   }
 
-  def estateVariation(estateVariation: EstateVariation)(implicit hc: HeaderCarrier): Future[VariationResponse] =
+  def estateVariation(estateVariation: EstateVariation): Future[VariationResponse] =
     desConnector.estateVariation(estateVariation: EstateVariation)
 }
 

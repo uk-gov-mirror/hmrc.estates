@@ -90,6 +90,17 @@ class GetEstateControllerSpec  extends BaseSpec
 
     }
 
+    "return 404 - NotFound if nothing retrieved from transform service" in {
+
+      when(transformationService.getTransformedData(any[String], any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(None))
+
+      val result = getTrustController.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
+
+      status(result) mustBe NOT_FOUND
+
+    }
+
   }
 
 }

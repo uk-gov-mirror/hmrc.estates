@@ -19,14 +19,14 @@ package uk.gov.hmrc.estates.services
 import java.time.LocalDate
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{FreeSpec, MustMatchers}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.TransformationRepositoryImpl
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepInTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -53,7 +53,7 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
           email = None
         )
 
-        val transform = AmendEstatePerRepInTransform(personalRep)
+        val transform = AmendEstatePerRepIndTransform(personalRep)
 
         when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
         when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
@@ -83,9 +83,9 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
           email = None
         )
 
-        val existingTransforms = Seq(AmendEstatePerRepInTransform(personalRep))
+        val existingTransforms = Seq(AmendEstatePerRepIndTransform(personalRep))
 
-        val newTransform = AmendEstatePerRepInTransform(
+        val newTransform = AmendEstatePerRepIndTransform(
           personalRep.copy(email = Some("e@mail.com"))
         )
 
@@ -106,4 +106,5 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
     }
 
   }
+
 }

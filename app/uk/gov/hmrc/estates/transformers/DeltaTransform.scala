@@ -49,10 +49,12 @@ object DeltaTransform {
           (throw new Exception(s"Don't know how to deserialise transform"))
   )
 
-//  def addOtherIndividualsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-//    case transform: AddOtherIndividualTransform =>
-//      Json.obj(AddOtherIndividualTransform.key -> Json.toJson(transform)(AddOtherIndividualTransform.format))
-//  }
+  def amendPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AmendEstatePerRepIndTransform =>
+      Json.obj(AmendEstatePerRepIndTransform.key -> Json.toJson(transform)(AmendEstatePerRepIndTransform.format))
+    case transform: AmendEstatePerRepOrgTransform =>
+      Json.obj(AmendEstatePerRepOrgTransform.key -> Json.toJson(transform)(AmendEstatePerRepOrgTransform.format))
+  }
 
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {
     case transform => throw new Exception(s"Don't know how to serialise transform - $transform")
@@ -60,7 +62,7 @@ object DeltaTransform {
 
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
-//      addOtherIndividualsWrites orElse
+      amendPersonalRepWrites orElse
       defaultWrites
       ).apply(deltaTransform)
   }

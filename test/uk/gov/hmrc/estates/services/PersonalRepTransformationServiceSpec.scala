@@ -21,15 +21,15 @@ import java.time.LocalDate
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FreeSpec, MustMatchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
-import uk.gov.hmrc.estates.transformers.AmendEstatePerRepInTransform
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers {
+class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers with OptionValues {
 
   private object LocalDateServiceStub extends LocalDateService {
     override def now: LocalDate = LocalDate.of(1999, 3, 14)
@@ -56,8 +56,31 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       whenReady(result) { _ =>
 
         verify(transformationService).addNewTransform("utr",
-          "internalId", AmendEstatePerRepInTransform(personalRep)
+          "internalId", AmendEstatePerRepIndTransform(personalRep)
         )
+
+      }
+    }
+
+    "must return a personal rep ind if retrieved from transforms" in {
+
+      val personalRep = EstatePerRepIndType(
+        name =  NameType("First", None, "Last"),
+        dateOfBirth = LocalDate.of(2000,1,1),
+        identification = IdentificationType(None, None, None),
+        phoneNumber = "07987654",
+        email = None
+      )
+
+      val transformationService = mock[TransformationService]
+      val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+
+      when(transformationService.getTransformedData(any(), any()))
+        .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
+
+      whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+
+        result.value mustBe personalRep
 
       }
     }

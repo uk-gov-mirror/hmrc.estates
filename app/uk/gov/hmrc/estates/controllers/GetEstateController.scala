@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate._
-import uk.gov.hmrc.estates.services.{AuditService, DesService, TransformationService}
+import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,9 +31,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class GetEstateController @Inject()(identify: IdentifierAction,
                                     auditService: AuditService,
                                     desService: DesService,
-                                    validateUTRActionFactory: ValidateUTRActionFactory,
-                                    transformationService: TransformationService)
-                                   (implicit cc: ControllerComponents) extends BackendController(cc) {
+                                    validateUTRActionFactory: ValidateUTRActionFactory
+                                   )(implicit cc: ControllerComponents) extends BackendController(cc) {
 
   def get(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
     implicit request =>
@@ -83,11 +82,4 @@ class GetEstateController @Inject()(identify: IdentifierAction,
     }
   }
 
-  def getPersonalRep(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
-    implicit request =>
-      transformationService.getTransformedData(utr, request.identifier) map {
-        case Some(personalRep) => Ok(Json.toJson(personalRep))
-        case _ => NotFound
-      }
-  }
 }

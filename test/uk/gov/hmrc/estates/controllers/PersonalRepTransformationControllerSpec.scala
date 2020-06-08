@@ -103,121 +103,35 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
 
   "getPersonalRep" should {
 
-    "return 200 - Ok with processed content" when {
-      "transform contains only amend personalRepInd" in {
+    "return 200 - Ok with processed content" in {
 
-        val personalRep = EstatePerRepIndType(
-          name = NameType("First", None, "Last"),
-          dateOfBirth = LocalDate.of(2019, 6, 1),
-          identification = IdentificationType(
-            nino = Some("JH123456C"),
-            passport = None,
-            address = None
-          ),
-          phoneNumber = "07987654345",
-          email = None
-        )
+      val personalRep = EstatePerRepIndType(
+        name = NameType("First", None, "Last"),
+        dateOfBirth = LocalDate.of(2019, 6, 1),
+        identification = IdentificationType(
+          nino = Some("JH123456C"),
+          passport = None,
+          address = None
+        ),
+        phoneNumber = "07987654345",
+        email = None
+      )
 
-        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+      val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
 
-        val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+      val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
 
-        when(transformationService.getTransformedData(any[String], any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
+      when(transformationService.getTransformedData(any[String], any[String]))
+        .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
 
-        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
+      val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
 
-        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
+      val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
 
-        status(result) mustBe OK
-        contentType(result) mustBe Some(JSON)
-        contentAsJson(result) mustBe Json.toJson(personalRep)
+      status(result) mustBe OK
+      contentType(result) mustBe Some(JSON)
+      contentAsJson(result) mustBe Json.toJson(personalRep)
 
-      }
-      "transform contains multiple amend personalRepInd" in {
-
-        val personalRep1 = EstatePerRepIndType(
-          name = NameType("First", None, "Last"),
-          dateOfBirth = LocalDate.of(2019, 6, 1),
-          identification = IdentificationType(
-            nino = Some("JH123456C"),
-            passport = None,
-            address = None
-          ),
-          phoneNumber = "07987654345",
-          email = None
-        )
-        val personalRep2 = EstatePerRepIndType(
-            name = NameType("First", None, "Last"),
-            dateOfBirth = LocalDate.of(2019, 6, 1),
-            identification = IdentificationType(
-              nino = None,
-              passport = Some(PassportType("9876217121", LocalDate.of(2010, 1, 1), "UK")),
-              address = None
-            ),
-            phoneNumber = "07987654345",
-            email = None
-          )
-
-        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
-
-        val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
-
-        when(transformationService.getTransformedData(any[String], any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(
-            Seq(AmendEstatePerRepIndTransform(personalRep1), AmendEstatePerRepIndTransform(personalRep2))
-          ))))
-
-        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
-
-        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
-
-        status(result) mustBe OK
-        contentType(result) mustBe Some(JSON)
-        contentAsJson(result) mustBe Json.toJson(personalRep1)
-
-      }
-      "transform contains personal rep ind within multiple transform types" in {
-
-        val personalRep1 = EstatePerRepIndType(
-          name = NameType("First", None, "Last"),
-          dateOfBirth = LocalDate.of(2019, 6, 1),
-          identification = IdentificationType(
-            nino = Some("JH123456C"),
-            passport = None,
-            address = None
-          ),
-          phoneNumber = "07987654345",
-          email = None
-        )
-        val personalRep2 = EstatePerRepOrgType(
-          orgName = "Personal Rep",
-          identification = IdentificationOrgType(
-            utr = None,
-            address = None
-          ),
-          phoneNumber = "07987654345",
-          email = None
-        )
-
-        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
-
-        val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
-
-        when(transformationService.getTransformedData(any[String], any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(
-            Seq(AmendEstatePerRepOrgTransform(personalRep2), AmendEstatePerRepIndTransform(personalRep1))
-          ))))
-
-        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
-
-        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
-
-        status(result) mustBe OK
-        contentType(result) mustBe Some(JSON)
-        contentAsJson(result) mustBe Json.toJson(personalRep1)
-
-      }
     }
 
     "return 404 - NotFound if nothing retrieved from transform service" in {

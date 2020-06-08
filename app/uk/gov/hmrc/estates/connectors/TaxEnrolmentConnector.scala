@@ -35,7 +35,7 @@ class TaxEnrolmentConnectorImpl @Inject()(http: WSHttp, config: AppConfig) exten
     )
 
   override  def enrolSubscriber(subscriptionId: String)(implicit hc: HeaderCarrier) :  Future[TaxEnrolmentSuscriberResponse] = {
-    val taxEnrolmentsEndpoint = s"${config.taxEnrolmentsUrl}/tax-enrolments/subscriptions/$subscriptionId/subscriber"
+    val taxEnrolmentsEndpoint = s"${config.taxEnrolmentsBaseUrl}/tax-enrolments/subscriptions/$subscriptionId/subscriber"
     val taxEnolmentHeaders = hc.withExtraHeaders(headers: _*)
 
     val taxEnrolmentSubscriptionRequest = TaxEnrolmentSubscription(

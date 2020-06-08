@@ -19,8 +19,10 @@ package uk.gov.hmrc.estates.services
 import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsResult, JsSuccess, JsValue, Json, __, _}
+import uk.gov.hmrc.estates.models.EstatePerRepIndType
+import uk.gov.hmrc.estates.models.getEstate.TransformationErrorResponse
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepInTransform, ComposedDeltaTransform, DeltaTransform}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,6 +44,14 @@ class TransformationService @Inject()(repository: TransformationRepository){
       case e =>
         Logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
         Future.failed(e)
+    }
+  }
+
+  def getTransformedData(utr: String, internalId: String)(implicit hc : HeaderCarrier): Future[Option[EstatePerRepIndType]] = {
+    repository.get(utr, internalId) map {
+      case Some(ComposedDeltaTransform(AmendEstatePerRepInTransform(newPersonalRep) :: _)) =>
+        Some(newPersonalRep)
+      case _ => None
     }
   }
 

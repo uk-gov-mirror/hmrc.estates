@@ -1,2 +1,4 @@
 
+GET         /individual/:utr        uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.getPersonalRep(utr: String)
+
 POST        /amend/:utr             uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRep(utr: String)

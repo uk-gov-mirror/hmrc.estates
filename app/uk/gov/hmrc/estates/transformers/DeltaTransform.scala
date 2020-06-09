@@ -26,27 +26,21 @@ trait DeltaTransform {
 
 object DeltaTransform {
 
-//  private def readsForTransform[T](key: String)(implicit reads: Reads[T]): PartialFunction[JsObject, JsResult[T]] = {
-//    case json if json.keys.contains(key) =>
-//      (json \ key).validate[T]
-//  }
+  private def readsForTransform[T](key: String)(implicit reads: Reads[T]): PartialFunction[JsObject, JsResult[T]] = {
+    case json if json.keys.contains(key) =>
+      (json \ key).validate[T]
+  }
 
-//  def otherIndividualReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-//    readsForTransform[AmendOtherIndividualTransform](AmendOtherIndividualTransform.key) orElse
-//      readsForTransform[RemoveOtherIndividualsTransform](RemoveOtherIndividualsTransform.key) orElse
-//      readsForTransform[AddOtherIndividualTransform](AddOtherIndividualTransform.key)
-//  }
+  def personalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AmendEstatePerRepIndTransform](AmendEstatePerRepIndTransform.key) orElse
+      readsForTransform[AmendEstatePerRepOrgTransform](AmendEstatePerRepOrgTransform.key)
+  }
 
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
-//      (
-//        trusteeReads orElse
-//        beneficiaryReads orElse
-//        settlorReads orElse
-//        protectorReads orElse
-//        otherIndividualReads
-//      ) (value.as[JsObject]) orElse
-          (throw new Exception(s"Don't know how to deserialise transform"))
+      personalRepReads
+      (value.as[JsObject]) orElse
+        (throw new Exception(s"Don't know how to deserialise transform"))
   )
 
   def amendPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {

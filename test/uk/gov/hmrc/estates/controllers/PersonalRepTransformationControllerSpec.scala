@@ -30,9 +30,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, ValidateUTRActionFactory}
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
+import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.services.{LocalDateService, PersonalRepTransformationService, TransformationService}
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

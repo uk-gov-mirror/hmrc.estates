@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.estates.controllers.actions
 
-import akka.stream.Materializer
 import com.google.inject.Inject
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, BodyParsers, Results}
@@ -33,8 +32,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends BaseSpec {
 
+  private val cc = stubControllerComponents()
+
   class Harness(authAction: IdentifierAction) {
-    def onSubmit(): Action[JsValue] = authAction.apply(BodyParsers.parse.json) { _ => Results.Ok }
+    def onSubmit(): Action[JsValue] = authAction.apply(cc.parsers.json) { _ => Results.Ok }
   }
 
   private def authRetrievals(affinityGroup: AffinityGroup) =
@@ -44,7 +45,7 @@ class AuthActionSpec extends BaseSpec {
   private val orgAffinityGroup = AffinityGroup.Organisation
 
   private def actionToTest(authConnector: AuthConnector) = {
-    new AuthenticatedIdentifierAction(authConnector, appConfig, injector.instanceOf[BodyParsers.Default])
+    new AuthenticatedIdentifierAction(authConnector, injector.instanceOf[BodyParsers.Default])
   }
 
   "Auth Action" when {

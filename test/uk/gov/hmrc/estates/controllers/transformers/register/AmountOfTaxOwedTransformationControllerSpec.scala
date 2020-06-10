@@ -43,7 +43,7 @@ class AmountOfTaxOwedTransformationControllerSpec extends BaseSpec with MockitoS
   private val bodyParsers = injector.instanceOf[BodyParsers.Default]
 
   val identifierAction = new FakeIdentifierAction(bodyParsers, Organisation)
-  
+
   val mockTransformationService: AmountOfTaxTransformationService = mock[AmountOfTaxTransformationService]
 
   "amount of tax owed controller" when {

@@ -23,7 +23,13 @@ import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
 case class AmountOfTaxOwedTransform(amount: TaxAmount)
     extends DeltaTransform with JsonOperations {
 
-  override def applyTransform(input: JsValue): JsResult[JsValue] = JsSuccess(input)
+  private val path = __ \ 'estate \ 'periodTaxDues
+
+  override def applyTransform(input: JsValue): JsResult[JsValue] = {
+    input.transform(
+      path.json.prune andThen __.json.update(path.json.put(Json.toJson(amount)))
+    )
+  }
 
 }
 

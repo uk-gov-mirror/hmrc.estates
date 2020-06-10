@@ -27,7 +27,6 @@ import org.mockito.Mockito._
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.TransformationRepositoryImpl
 import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -35,7 +34,6 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
 
   private implicit val pc: PatienceConfig = PatienceConfig(timeout = Span(1000, Millis), interval = Span(15, Millis))
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "addNewTransform" - {
 
@@ -55,14 +53,14 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
 
         val transform = AmendEstatePerRepIndTransform(personalRep)
 
-        when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
-        when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
+        when(repository.get(any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
+        when(repository.set(any(), any())).thenReturn(Future.successful(true))
 
-        val result = service.addNewTransform("utr", "internalId", transform)
+        val result = service.addNewTransform("internalId", transform)
 
         whenReady(result) { _ =>
 
-          verify(repository).set("utr",
+          verify(repository).set(
             "internalId",
             ComposedDeltaTransform(Seq(transform))
           )
@@ -89,14 +87,14 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
           personalRep.copy(email = Some("e@mail.com"))
         )
 
-        when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
-        when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
+        when(repository.get(any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
+        when(repository.set(any(), any())).thenReturn(Future.successful(true))
 
-        val result = service.addNewTransform("utr", "internalId", newTransform)
+        val result = service.addNewTransform("internalId", newTransform)
 
         whenReady(result) { _ =>
 
-          verify(repository).set("utr",
+          verify(repository).set(
             "internalId",
             ComposedDeltaTransform(existingTransforms :+ newTransform)
           )

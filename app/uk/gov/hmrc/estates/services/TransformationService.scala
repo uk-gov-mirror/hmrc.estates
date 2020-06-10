@@ -30,8 +30,8 @@ import scala.concurrent.Future
 
 class TransformationService @Inject()(repository: TransformationRepository){
 
-  def addNewTransform(utr: String, internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
-    repository.get(utr, internalId) map {
+  def addNewTransform(internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
+    repository.get(internalId) map {
       case None =>
         ComposedDeltaTransform(Seq(newTransform))
 
@@ -39,7 +39,7 @@ class TransformationService @Inject()(repository: TransformationRepository){
         composedTransform :+ newTransform
 
     } flatMap { newTransforms =>
-      repository.set(utr, internalId, newTransforms)
+      repository.set(internalId, newTransforms)
     } recoverWith {
       case e =>
         Logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
@@ -47,10 +47,10 @@ class TransformationService @Inject()(repository: TransformationRepository){
     }
   }
 
-  def getTransformedData(utr: String, internalId: String): Future[Option[ComposedDeltaTransform]] =
-    repository.get(utr, internalId)
+  def getTransformedData(internalId: String): Future[Option[ComposedDeltaTransform]] =
+    repository.get(internalId)
 
-  def removeAllTransformations(utr: String, internalId: String): Future[Option[JsObject]] =
-    repository.resetCache(utr, internalId)
+  def removeAllTransformations(internalId: String): Future[Option[JsObject]] =
+    repository.resetCache(internalId)
 
 }

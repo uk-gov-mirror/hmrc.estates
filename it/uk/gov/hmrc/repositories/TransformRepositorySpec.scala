@@ -38,10 +38,10 @@ class TransformRepositorySpec extends FreeSpec with MustMatchers with TransformI
 
           val repository = application.injector.instanceOf[TransformationRepository]
 
-          val storedOk = repository.set("UTRUTRUTR", "InternalId", data)
+          val storedOk = repository.set("InternalId", data)
           storedOk.futureValue mustBe true
 
-          val retrieved = repository.get("UTRUTRUTR", "InternalId")
+          val retrieved = repository.get("InternalId")
             .map(_.getOrElse(fail("The record was not found in the database")))
 
           retrieved.futureValue mustBe data

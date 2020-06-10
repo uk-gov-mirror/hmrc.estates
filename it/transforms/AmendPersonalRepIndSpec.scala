@@ -67,14 +67,14 @@ class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSug
 
           dropTheDatabase(connection)
 
-          val amendRequest = FakeRequest(POST, "/estates/personal-rep/amend/5174384721")
+          val amendRequest = FakeRequest(POST, "/estates/personal-rep/individual")
             .withBody(Json.toJson(newPersonalRep))
             .withHeaders(CONTENT_TYPE -> "application/json")
 
           val amendResult = route(application, amendRequest).get
           status(amendResult) mustBe OK
 
-          val newResult = route(application, FakeRequest(GET, "/estates/personal-rep/individual/5174384721")).get
+          val newResult = route(application, FakeRequest(GET, "/estates/personal-rep/individual")).get
           status(newResult) mustBe OK
           contentAsJson(newResult) mustBe Json.toJson(newPersonalRep)
 

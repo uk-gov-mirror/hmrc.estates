@@ -18,8 +18,8 @@ package uk.gov.hmrc.estates.services.register
 
 import com.google.inject.Inject
 import uk.gov.hmrc.estates.models.Success
-import uk.gov.hmrc.estates.models.register.{AmountOfTaxOwed, TaxAmount}
-import uk.gov.hmrc.estates.services.{LocalDateService, TransformationService}
+import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
+import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.AmountOfTaxOwedTransform
 
@@ -27,8 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
 class AmountOfTaxTransformationService @Inject()(
-                                                  transformationService: TransformationService,
-                                                  localDateService: LocalDateService
+                                                  transformationService: TransformationService
                                                 ) {
 
   def get(internalId: String): Future[Option[AmountOfTaxOwed]] = {
@@ -43,7 +42,9 @@ class AmountOfTaxTransformationService @Inject()(
   }
 
   def addTransform(internalId: String, amount: AmountOfTaxOwed) : Future[Success.type] = {
-    Future.successful(Success)
+    transformationService.addNewTransform("utr", internalId, AmountOfTaxOwedTransform(amount)) map {
+      _ => Success
+    }
   }
 
 }

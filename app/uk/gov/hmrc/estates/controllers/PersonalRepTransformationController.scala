@@ -20,7 +20,7 @@ import javax.inject.Inject
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
+import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.services.{LocalDateService, PersonalRepTransformationService}
 import uk.gov.hmrc.estates.utils.ValidationUtil

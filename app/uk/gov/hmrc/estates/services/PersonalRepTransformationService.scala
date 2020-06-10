@@ -19,7 +19,6 @@ package uk.gov.hmrc.estates.services
 import javax.inject.Inject
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success

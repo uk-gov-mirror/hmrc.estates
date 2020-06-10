@@ -33,14 +33,13 @@ import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 trait TransformationRepository {
 
-  def get(utr: String, internalId: String): Future[Option[ComposedDeltaTransform]]
+  def get(internalId: String): Future[Option[ComposedDeltaTransform]]
 
-  def set(utr: String, internalId: String, transforms: ComposedDeltaTransform): Future[Boolean]
+  def set(internalId: String, transforms: ComposedDeltaTransform): Future[Boolean]
 
-  def resetCache(utr: String, internalId: String): Future[Option[JsObject]]
+  def resetCache(internalId: String): Future[Option[JsObject]]
 }
 
 @Singleton
@@ -80,10 +79,10 @@ class TransformationRepositoryImpl @Inject()(
     } yield createdLastUpdatedIndex && createdIdIndex
   }
 
-  override def get(utr: String, internalId: String): Future[Option[ComposedDeltaTransform]] = {
+  override def get(internalId: String): Future[Option[ComposedDeltaTransform]] = {
 
     val selector = Json.obj(
-      "id" -> createKey(utr, internalId)
+      "id" -> internalId
     )
 
     collection.flatMap {collection =>
@@ -96,19 +95,15 @@ class TransformationRepositoryImpl @Inject()(
     }
   }
 
-  private def createKey(utr: String, internalId: String) = {
-    (utr + '-' + internalId)
-  }
-
-  override def set(utr: String, internalId: String, transforms: ComposedDeltaTransform): Future[Boolean] = {
+  override def set(internalId: String, transforms: ComposedDeltaTransform): Future[Boolean] = {
 
     val selector = Json.obj(
-      "id" -> createKey(utr, internalId)
+      "id" -> internalId
     )
 
     val modifier = Json.obj(
       "$set" -> Json.obj(
-        "id" -> createKey(utr, internalId),
+        "id" -> internalId,
         "updatedAt" -> Json.obj("$date" -> Timestamp.valueOf(LocalDateTime.now())),
         "transforms" -> Json.toJson(transforms)
       )
@@ -121,9 +116,9 @@ class TransformationRepositoryImpl @Inject()(
     }
   }
 
-  override def resetCache(utr: String, internalId: String): Future[Option[JsObject]] = {
+  override def resetCache(internalId: String): Future[Option[JsObject]] = {
     val selector = Json.obj(
-      "id" -> createKey(utr, internalId)
+      "id" -> internalId
     )
 
     collection.flatMap(_.findAndRemove(selector, None, None, WriteConcern.Default, None, None, Seq.empty).map(

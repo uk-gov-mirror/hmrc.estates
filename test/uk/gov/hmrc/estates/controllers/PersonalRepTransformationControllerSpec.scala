@@ -24,129 +24,201 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.MustMatchers
 import play.api.libs.json.Json
-import play.api.mvc.{BodyParsers, ControllerComponents}
+import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.BaseSpec
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, ValidateUTRActionFactory}
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
-import uk.gov.hmrc.estates.services.{LocalDateService, PersonalRepTransformationService, TransformationService}
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType}
+import uk.gov.hmrc.estates.services.{PersonalRepTransformationService, TransformationService}
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
 
 class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar with ScalaFutures with MustMatchers {
 
-  val utr = "1234567890"
-
-  private implicit val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
-  private val bodyParsers = injector.instanceOf[BodyParsers.Default]
-
-  val identifierAction = new FakeIdentifierAction(bodyParsers, Organisation)
-
   private val transformationService = mock[TransformationService]
 
-  object LocalDateServiceStub extends LocalDateService {
-    override def now: LocalDate = LocalDate.of(1999, 3, 14)
-  }
+  private val personalRepInd = EstatePerRepIndType(
+    name = NameType("First", None, "Last"),
+    dateOfBirth = LocalDate.of(2019, 6, 1),
+    identification = IdentificationType(
+      nino = Some("JH123456C"),
+      passport = None,
+      address = None
+    ),
+    phoneNumber = "07987654345",
+    email = None
+  )
 
-  "amend personal rep" must {
+  private val personalRepOrg = EstatePerRepOrgType(
+    orgName =  "Personal Rep Org",
+    identification = IdentificationOrgType(None, None),
+    phoneNumber = "07987654",
+    email = None
+  )
+
+  "amend personal rep ind" must {
 
     "add a new amend personal rep transform" in {
 
-      val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+        val personalRepTransformationService = mock[PersonalRepTransformationService]
 
-      val personalRepTransformationService = mock[PersonalRepTransformationService]
-      val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
+        val application = applicationBuilder()
+          .overrides(
+            bind[PersonalRepTransformationService].toInstance(personalRepTransformationService)
+          ).build()
 
-      val personalRep = EstatePerRepIndType(
-        name =  NameType("First", None, "Last"),
-        dateOfBirth = LocalDate.of(2000,1,1),
-        identification = IdentificationType(None, None, None),
-        phoneNumber = "07987654",
-        email = None
-      )
+        when(personalRepTransformationService.addAmendEstatePerRepIndTransformer(any(), any()))
+          .thenReturn(Future.successful(Success))
 
-      when(personalRepTransformationService.addAmendEstatePerRepInTransformer(any(), any(), any()))
-        .thenReturn(Future.successful(Success))
+        val controller = application.injector.instanceOf[PersonalRepTransformationController]
 
-      val request = FakeRequest("POST", "path")
-        .withBody(Json.toJson(personalRep))
-        .withHeaders(CONTENT_TYPE -> "application/json")
+        val request = FakeRequest("POST", "path")
+          .withBody(Json.toJson(personalRepInd))
+          .withHeaders(CONTENT_TYPE -> "application/json")
 
-      val result = controller.amendPersonalRep("aUTR").apply(request)
+        val result = controller.amendPersonalRepInd().apply(request)
 
-      status(result) mustBe OK
-      verify(personalRepTransformationService)
-        .addAmendEstatePerRepInTransformer("aUTR", "id", personalRep)
+        status(result) mustBe OK
+        verify(personalRepTransformationService)
+          .addAmendEstatePerRepIndTransformer("id", personalRepInd)
+      }
+
+    "must return an error for malformed json" in {
+
+        val controller = injector.instanceOf[PersonalRepTransformationController]
+
+        val request = FakeRequest("POST", "path")
+          .withBody(Json.parse("{}"))
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        val result = controller.amendPersonalRepInd().apply(request)
+        status(result) mustBe BAD_REQUEST
+      }
+  }
+
+  "amend personal rep org" must {
+
+    "add a new amend personal rep transform" in {
+
+        val personalRepTransformationService = mock[PersonalRepTransformationService]
+
+        val application = applicationBuilder()
+          .overrides(
+            bind[PersonalRepTransformationService].toInstance(personalRepTransformationService)
+          ).build()
+
+        when(personalRepTransformationService.addAmendEstatePerRepOrgTransformer(any(), any()))
+          .thenReturn(Future.successful(Success))
+
+        val controller = application.injector.instanceOf[PersonalRepTransformationController]
+
+        val request = FakeRequest("POST", "path")
+          .withBody(Json.toJson(personalRepOrg))
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        val result = controller.amendPersonalRepOrg().apply(request)
+
+        status(result) mustBe OK
+        verify(personalRepTransformationService)
+          .addAmendEstatePerRepOrgTransformer("id", personalRepOrg)
     }
 
     "must return an error for malformed json" in {
 
-      val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+        val controller = injector.instanceOf[PersonalRepTransformationController]
 
-      val personalRepTransformationService = mock[PersonalRepTransformationService]
+        val request = FakeRequest("POST", "path")
+          .withBody(Json.parse("{}"))
+          .withHeaders(CONTENT_TYPE -> "application/json")
 
-      val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
-
-      val request = FakeRequest("POST", "path")
-        .withBody(Json.parse("{}"))
-        .withHeaders(CONTENT_TYPE -> "application/json")
-
-      val result = controller.amendPersonalRep("aUTR").apply(request)
-      status(result) mustBe BAD_REQUEST
+        val result = controller.amendPersonalRepOrg().apply(request)
+        status(result) mustBe BAD_REQUEST
     }
   }
 
-  "getPersonalRep" should {
+  "getPersonalRepInd" should {
 
     "return 200 - Ok with processed content" when {
       "a transform is retrieved" in {
 
-        val personalRep = EstatePerRepIndType(
-          name = NameType("First", None, "Last"),
-          dateOfBirth = LocalDate.of(2019, 6, 1),
-          identification = IdentificationType(
-            nino = Some("JH123456C"),
-            passport = None,
-            address = None
-          ),
-          phoneNumber = "07987654345",
-          email = None
-        )
+        val application = applicationBuilder()
+          .overrides(
+            bind[TransformationService].toInstance(transformationService)
+          ).build()
 
-        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+        when(transformationService.getTransformedData(any[String]))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRepInd))))))
 
-        val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val controller = application.injector.instanceOf[PersonalRepTransformationController]
 
-        when(transformationService.getTransformedData(any[String], any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
-
-        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
-
-        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
+        val result = controller.getPersonalRepInd()(FakeRequest(GET, "/estates/personal-rep/individual"))
 
         status(result) mustBe OK
         contentType(result) mustBe Some(JSON)
-        contentAsJson(result) mustBe Json.toJson(personalRep)
+        contentAsJson(result) mustBe Json.toJson(personalRepInd)
 
       }
 
+      "a transform is not retrieved" in {
+
+        val application = applicationBuilder()
+          .overrides(
+            bind[TransformationService].toInstance(transformationService)
+          ).build()
+
+        when(transformationService.getTransformedData(any[String]))
+          .thenReturn(Future.successful(None))
+
+        val controller = application.injector.instanceOf[PersonalRepTransformationController]
+
+        val result = controller.getPersonalRepInd()(FakeRequest(GET, "/estates/personal-rep/individual"))
+
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.toJson(Json.obj())
+      }
+
+    }
+  }
+
+  "getPersonalRepOrg" should {
+
+    "return 200 - Ok with processed content" when {
+      "a transform is retrieved" in {
+
+        val application = applicationBuilder()
+          .overrides(
+            bind[TransformationService].toInstance(transformationService)
+          ).build()
+
+        when(transformationService.getTransformedData(any[String]))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepOrgTransform(personalRepOrg))))))
+
+        val controller = application.injector.instanceOf[PersonalRepTransformationController]
+
+        val result = controller.getPersonalRepOrg()(FakeRequest(GET, "/estates/personal-rep/organisation"))
+
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.toJson(personalRepOrg)
+
+      }
 
       "a transform is not retrieved" in {
 
-        val personalRepTransformationService = injector.instanceOf[PersonalRepTransformationService]
-        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+        val application = applicationBuilder()
+          .overrides(
+            bind[TransformationService].toInstance(transformationService)
+          ).build()
 
-        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
-
-        when(transformationService.getTransformedData(any[String], any[String]))
+        when(transformationService.getTransformedData(any[String]))
           .thenReturn(Future.successful(None))
 
-        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
+        val controller = application.injector.instanceOf[PersonalRepTransformationController]
+
+        val result = controller.getPersonalRepOrg()(FakeRequest(GET, "/estates/personal-rep/organisation"))
 
         status(result) mustBe OK
         contentType(result) mustBe Some(JSON)

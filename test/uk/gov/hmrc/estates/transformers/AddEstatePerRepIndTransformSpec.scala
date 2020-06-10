@@ -42,7 +42,7 @@ class AddEstatePerRepIndTransformSpec extends FreeSpec with MustMatchers with Op
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
-        val transformer = new AmendEstatePerRepInTransform(newPersonalRep)
+        val transformer = new AmendEstatePerRepIndTransform(newPersonalRep)
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -54,7 +54,7 @@ class AddEstatePerRepIndTransformSpec extends FreeSpec with MustMatchers with Op
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
-        val transformer = new AmendEstatePerRepInTransform(newPersonalRep)
+        val transformer = new AmendEstatePerRepIndTransform(newPersonalRep)
 
         val result = transformer.applyTransform(trustJson).get
 

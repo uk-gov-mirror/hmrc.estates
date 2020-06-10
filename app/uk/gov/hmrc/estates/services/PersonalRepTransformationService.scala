@@ -18,7 +18,8 @@ package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
 import uk.gov.hmrc.estates.models.EstatePerRepIndType
-import uk.gov.hmrc.estates.transformers.AmendEstatePerRepInTransform
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
@@ -28,8 +29,18 @@ class PersonalRepTransformationService @Inject()(
                                                   localDateService: LocalDateService
                                                 )(implicit val ec: ExecutionContext) {
 
-  def addAmendEstatePerRepInTransformer(utr: String, internalId: String, newPersonalRep: EstatePerRepIndType): Future[Success.type] = {
-    transformationService.addNewTransform(utr, internalId, AmendEstatePerRepInTransform(newPersonalRep)).map(_ => Success)
+  def addAmendEstatePerRepInTransformer(utr: String, internalId: String, newPersonalRep: EstatePerRepIndType): Future[Success.type] =
+    transformationService.addNewTransform(utr, internalId, AmendEstatePerRepIndTransform(newPersonalRep)).map(_ => Success)
+
+  def getPersonalRepInd(utr: String, internalId: String): Future[Option[EstatePerRepIndType]] = {
+    transformationService.getTransformedData(utr, internalId) map {
+      case Some(ComposedDeltaTransform(transforms)) =>
+        transforms.flatMap{
+          case AmendEstatePerRepIndTransform(personalRep) => Some(personalRep)
+          case _ => None
+        }.headOption
+      case _ => None
+    }
   }
 
 }

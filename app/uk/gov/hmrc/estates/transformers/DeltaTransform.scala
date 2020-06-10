@@ -26,33 +26,29 @@ trait DeltaTransform {
 
 object DeltaTransform {
 
-//  private def readsForTransform[T](key: String)(implicit reads: Reads[T]): PartialFunction[JsObject, JsResult[T]] = {
-//    case json if json.keys.contains(key) =>
-//      (json \ key).validate[T]
-//  }
+  private def readsForTransform[T](key: String)(implicit reads: Reads[T]): PartialFunction[JsObject, JsResult[T]] = {
+    case json if json.keys.contains(key) =>
+      (json \ key).validate[T]
+  }
 
-//  def otherIndividualReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-//    readsForTransform[AmendOtherIndividualTransform](AmendOtherIndividualTransform.key) orElse
-//      readsForTransform[RemoveOtherIndividualsTransform](RemoveOtherIndividualsTransform.key) orElse
-//      readsForTransform[AddOtherIndividualTransform](AddOtherIndividualTransform.key)
-//  }
+  def personalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AmendEstatePerRepIndTransform](AmendEstatePerRepIndTransform.key) orElse
+      readsForTransform[AmendEstatePerRepOrgTransform](AmendEstatePerRepOrgTransform.key)
+  }
 
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
-//      (
-//        trusteeReads orElse
-//        beneficiaryReads orElse
-//        settlorReads orElse
-//        protectorReads orElse
-//        otherIndividualReads
-//      ) (value.as[JsObject]) orElse
-          (throw new Exception(s"Don't know how to deserialise transform"))
+      personalRepReads
+      (value.as[JsObject]) orElse
+        (throw new Exception(s"Don't know how to deserialise transform"))
   )
 
-//  def addOtherIndividualsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-//    case transform: AddOtherIndividualTransform =>
-//      Json.obj(AddOtherIndividualTransform.key -> Json.toJson(transform)(AddOtherIndividualTransform.format))
-//  }
+  def amendPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AmendEstatePerRepIndTransform =>
+      Json.obj(AmendEstatePerRepIndTransform.key -> Json.toJson(transform)(AmendEstatePerRepIndTransform.format))
+    case transform: AmendEstatePerRepOrgTransform =>
+      Json.obj(AmendEstatePerRepOrgTransform.key -> Json.toJson(transform)(AmendEstatePerRepOrgTransform.format))
+  }
 
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {
     case transform => throw new Exception(s"Don't know how to serialise transform - $transform")
@@ -60,7 +56,7 @@ object DeltaTransform {
 
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
-//      addOtherIndividualsWrites orElse
+      amendPersonalRepWrites orElse
       defaultWrites
       ).apply(deltaTransform)
   }

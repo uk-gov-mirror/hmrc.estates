@@ -31,8 +31,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class GetEstateController @Inject()(identify: IdentifierAction,
                                     auditService: AuditService,
                                     desService: DesService,
-                                    validateUTRActionFactory: ValidateUTRActionFactory)
-                                   (implicit cc: ControllerComponents) extends BackendController(cc) {
+                                    validateUTRActionFactory: ValidateUTRActionFactory
+                                   )(implicit cc: ControllerComponents) extends BackendController(cc) {
 
   def get(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
     implicit request =>
@@ -81,4 +81,5 @@ class GetEstateController @Inject()(identify: IdentifierAction,
         InternalServerError
     }
   }
+
 }

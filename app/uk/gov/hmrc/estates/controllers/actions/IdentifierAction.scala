@@ -25,7 +25,6 @@ import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Organisation}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.models.ApiResponse._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,7 +34,6 @@ import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthenticatedIdentifierAction @Inject()(override val authConnector: AuthConnector,
-                                              config: AppConfig,
                                               val parser: BodyParsers.Default)
                                              (implicit val executionContext: ExecutionContext)
   extends IdentifierAction with AuthorisedFunctions {

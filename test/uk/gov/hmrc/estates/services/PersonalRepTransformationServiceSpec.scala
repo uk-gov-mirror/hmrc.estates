@@ -21,15 +21,15 @@ import java.time.LocalDate
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FreeSpec, MustMatchers}
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
-import uk.gov.hmrc.estates.transformers.AmendEstatePerRepInTransform
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers {
+class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers with OptionValues {
 
   private object LocalDateServiceStub extends LocalDateService {
     override def now: LocalDate = LocalDate.of(1999, 3, 14)
@@ -56,10 +56,117 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       whenReady(result) { _ =>
 
         verify(transformationService).addNewTransform("utr",
-          "internalId", AmendEstatePerRepInTransform(personalRep)
+          "internalId", AmendEstatePerRepIndTransform(personalRep)
         )
 
       }
+    }
+
+    "must return a personal rep ind if retrieved from transforms" - {
+
+      "when there is a single transform" in {
+
+        val personalRep = EstatePerRepIndType(
+          name =  NameType("First", None, "Last"),
+          dateOfBirth = LocalDate.of(2000,1,1),
+          identification = IdentificationType(None, None, None),
+          phoneNumber = "07987654",
+          email = None
+        )
+
+        val transformationService = mock[TransformationService]
+        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+
+        when(transformationService.getTransformedData(any(), any()))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
+
+        whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+
+          result.value mustBe personalRep
+
+        }
+      }
+
+      "when multiple amend personalRepInd" in {
+
+          val personalRep1 = EstatePerRepIndType(
+            name = NameType("First", None, "Last"),
+            dateOfBirth = LocalDate.of(2019, 6, 1),
+            identification = IdentificationType(
+              nino = Some("JH123456C"),
+              passport = None,
+              address = None
+            ),
+            phoneNumber = "07987654345",
+            email = None
+          )
+          val personalRep2 = EstatePerRepIndType(
+            name = NameType("First", None, "Last"),
+            dateOfBirth = LocalDate.of(2019, 6, 1),
+            identification = IdentificationType(
+              nino = None,
+              passport = Some(PassportType("9876217121", LocalDate.of(2010, 1, 1), "UK")),
+              address = None
+            ),
+            phoneNumber = "07987654345",
+            email = None
+          )
+
+        val transformationService = mock[TransformationService]
+        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+
+          when(transformationService.getTransformedData(any[String], any[String]))
+            .thenReturn(Future.successful(Some(ComposedDeltaTransform(
+              Seq(AmendEstatePerRepIndTransform(personalRep1), AmendEstatePerRepIndTransform(personalRep2))
+            ))))
+
+          whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+
+            result.value mustBe personalRep1
+
+          }
+
+        }
+
+      "when personal rep ind within multiple transform types" in {
+
+          val personalRep1 = EstatePerRepIndType(
+            name = NameType("First", None, "Last"),
+            dateOfBirth = LocalDate.of(2019, 6, 1),
+            identification = IdentificationType(
+              nino = Some("JH123456C"),
+              passport = None,
+              address = None
+            ),
+            phoneNumber = "07987654345",
+            email = None
+          )
+          val personalRep2 = EstatePerRepOrgType(
+            orgName = "Personal Rep",
+            identification = IdentificationOrgType(
+              utr = None,
+              address = None
+            ),
+            phoneNumber = "07987654345",
+            email = None
+          )
+
+          val transformationService = mock[TransformationService]
+          val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+
+          when(transformationService.getTransformedData(any[String], any[String]))
+            .thenReturn(Future.successful(Some(ComposedDeltaTransform(
+              Seq(AmendEstatePerRepOrgTransform(personalRep2), AmendEstatePerRepIndTransform(personalRep1))
+            ))))
+
+          whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+
+            result.value mustBe personalRep1
+
+          }
+
+        }
+
     }
 
   }

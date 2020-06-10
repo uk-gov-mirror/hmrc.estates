@@ -19,8 +19,10 @@ package uk.gov.hmrc.estates.services
 import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsResult, JsSuccess, JsValue, Json, __, _}
+import uk.gov.hmrc.estates.models.EstatePerRepIndType
+import uk.gov.hmrc.estates.models.getEstate.TransformationErrorResponse
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, ComposedDeltaTransform, DeltaTransform}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +47,10 @@ class TransformationService @Inject()(repository: TransformationRepository){
     }
   }
 
-  def removeAllTransformations(utr: String, internalId: String): Future[Option[JsObject]] = {
+  def getTransformedData(utr: String, internalId: String): Future[Option[ComposedDeltaTransform]] =
+    repository.get(utr, internalId)
+
+  def removeAllTransformations(utr: String, internalId: String): Future[Option[JsObject]] =
     repository.resetCache(utr, internalId)
-  }
+
 }

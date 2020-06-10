@@ -1,6 +1,6 @@
 
-GET         /individual/                    uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.getPersonalRepInd()
-POST        /individual/                    uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRepInd()
+GET         /individual                    uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.getPersonalRepInd()
+POST        /individual                    uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRepInd()
 
-GET         /organisation/                  uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.getPersonalRepOrg()
-POST        /organisation/                  uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRepOrg()
+GET         /organisation                  uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.getPersonalRepOrg()
+POST        /organisation                  uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRepOrg()

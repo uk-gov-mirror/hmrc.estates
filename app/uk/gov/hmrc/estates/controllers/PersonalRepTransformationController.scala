@@ -39,9 +39,10 @@ class PersonalRepTransformationController @Inject()(
 
   def getPersonalRep(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
     implicit request =>
-      personalRepTransformationService.getPersonalRepInd(utr, request.identifier) map {
-        case Some(personalRep) => Ok(Json.toJson(personalRep))
-        case _ => NotFound
+      personalRepTransformationService.getPersonalRepInd(utr, request.identifier) map { personalRep =>
+        Ok(
+          personalRep map Json.toJson[EstatePerRepIndType] getOrElse Json.obj()
+        )
       }
   }
 

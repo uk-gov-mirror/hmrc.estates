@@ -103,52 +103,56 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
 
   "getPersonalRep" should {
 
-    "return 200 - Ok with processed content" in {
+    "return 200 - Ok with processed content" when {
+      "a transform is retrieved" in {
 
-      val personalRep = EstatePerRepIndType(
-        name = NameType("First", None, "Last"),
-        dateOfBirth = LocalDate.of(2019, 6, 1),
-        identification = IdentificationType(
-          nino = Some("JH123456C"),
-          passport = None,
-          address = None
-        ),
-        phoneNumber = "07987654345",
-        email = None
-      )
+        val personalRep = EstatePerRepIndType(
+          name = NameType("First", None, "Last"),
+          dateOfBirth = LocalDate.of(2019, 6, 1),
+          identification = IdentificationType(
+            nino = Some("JH123456C"),
+            passport = None,
+            address = None
+          ),
+          phoneNumber = "07987654345",
+          email = None
+        )
 
-      val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
 
-      val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val personalRepTransformationService = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
 
-      when(transformationService.getTransformedData(any[String], any[String]))
-        .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
+        when(transformationService.getTransformedData(any[String], any[String]))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
 
-      val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
+        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
 
-      val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
+        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
 
-      status(result) mustBe OK
-      contentType(result) mustBe Some(JSON)
-      contentAsJson(result) mustBe Json.toJson(personalRep)
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.toJson(personalRep)
+
+      }
+
+
+      "a transform is not retrieved" in {
+
+        val personalRepTransformationService = injector.instanceOf[PersonalRepTransformationService]
+        val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
+
+        val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
+
+        when(transformationService.getTransformedData(any[String], any[String]))
+          .thenReturn(Future.successful(None))
+
+        val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
+
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.toJson(Json.obj())
+      }
 
     }
-
-    "return 404 - NotFound if nothing retrieved from transform service" in {
-
-      val personalRepTransformationService = injector.instanceOf[PersonalRepTransformationService]
-      val validateUTRActionFactory = injector.instanceOf[ValidateUTRActionFactory]
-
-      val controller = new PersonalRepTransformationController(identifierAction, personalRepTransformationService, cc, validateUTRActionFactory, LocalDateServiceStub)
-
-      when(transformationService.getTransformedData(any[String], any[String]))
-        .thenReturn(Future.successful(None))
-
-      val result = controller.getPersonalRep(utr)(FakeRequest(GET, s"/trusts/$utr/transformed/personal-rep"))
-
-      status(result) mustBe NOT_FOUND
-
-    }
-
   }
 }

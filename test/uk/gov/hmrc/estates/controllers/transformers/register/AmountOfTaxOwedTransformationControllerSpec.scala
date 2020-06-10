@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.estates.controllers.transformers.register
 
-import java.time.LocalDate
-
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.MustMatchers
@@ -33,7 +31,6 @@ import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
 import uk.gov.hmrc.estates.models.Success
 import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
 import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTenThousand
-import uk.gov.hmrc.estates.services.LocalDateService
 import uk.gov.hmrc.estates.services.register.AmountOfTaxTransformationService
 
 import scala.concurrent.Future
@@ -46,11 +43,7 @@ class AmountOfTaxOwedTransformationControllerSpec extends BaseSpec with MockitoS
   private val bodyParsers = injector.instanceOf[BodyParsers.Default]
 
   val identifierAction = new FakeIdentifierAction(bodyParsers, Organisation)
-
-  object LocalDateServiceStub extends LocalDateService {
-    override def now: LocalDate = LocalDate.of(1999, 3, 14)
-  }
-
+  
   val mockTransformationService: AmountOfTaxTransformationService = mock[AmountOfTaxTransformationService]
 
   "amount of tax owed controller" when {

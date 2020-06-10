@@ -38,12 +38,12 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
       val transformationService = mock[TransformationService]
       val service = new AmountOfTaxTransformationService(transformationService)
 
-      when(transformationService.addNewTransform(any(), any(), any())).thenReturn(Future.successful(true))
+      when(transformationService.addNewTransform(any(), any())).thenReturn(Future.successful(true))
 
       val result = service.addTransform("internalId", AmountOfTaxOwed(AmountMoreThanTenThousand))
       whenReady(result) { _ =>
 
-        verify(transformationService).addNewTransform("utr",
+        verify(transformationService).addNewTransform(
           "internalId", AmountOfTaxOwedTransform(AmountMoreThanTenThousand)
         )
 
@@ -56,7 +56,7 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any(), any()))
+        when(transformationService.getTransformedData(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
 
         whenReady(service.get("internalId")) { result =>
@@ -70,7 +70,7 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any(), any()))
+        when(transformationService.getTransformedData(any()))
           .thenReturn(Future.successful(None))
 
         whenReady(service.get("internalId")) { result =>
@@ -86,7 +86,7 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any(), any()))
+        when(transformationService.getTransformedData(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(AmountMoreThanTenThousand))))))
 
         whenReady(service.get("internalId")) { result =>

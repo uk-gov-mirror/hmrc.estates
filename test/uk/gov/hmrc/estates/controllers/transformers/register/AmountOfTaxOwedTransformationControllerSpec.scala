@@ -32,7 +32,7 @@ import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
 import uk.gov.hmrc.estates.models.Success
 import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanThenThousand
+import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTenThousand
 import uk.gov.hmrc.estates.services.LocalDateService
 import uk.gov.hmrc.estates.services.register.AmountOfTaxTransformationService
 
@@ -60,7 +60,7 @@ class AmountOfTaxOwedTransformationControllerSpec extends BaseSpec with MockitoS
       "return the amount of tax owed" in {
         val controller = new AmountOfTaxOwedTransformationController(identifierAction, cc, LocalDateServiceStub, mockTransformationService)
 
-        when(mockTransformationService.get(any())).thenReturn(Future.successful(Some(AmountOfTaxOwed(AmountMoreThanThenThousand))))
+        when(mockTransformationService.get(any())).thenReturn(Future.successful(Some(AmountOfTaxOwed(AmountMoreThanTenThousand))))
 
         val request = FakeRequest("GET", "path")
           .withHeaders(CONTENT_TYPE -> "application/json")
@@ -99,7 +99,7 @@ class AmountOfTaxOwedTransformationControllerSpec extends BaseSpec with MockitoS
       "add a transform" in {
         val controller = new AmountOfTaxOwedTransformationController(identifierAction, cc, LocalDateServiceStub, mockTransformationService)
 
-        val amount = AmountOfTaxOwed(AmountMoreThanThenThousand)
+        val amount = AmountOfTaxOwed(AmountMoreThanTenThousand)
 
         val request = FakeRequest("POST", "path")
           .withBody(Json.toJson(amount))

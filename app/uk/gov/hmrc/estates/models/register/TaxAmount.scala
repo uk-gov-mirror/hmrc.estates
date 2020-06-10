@@ -22,13 +22,13 @@ sealed trait TaxAmount
 
 object TaxAmount extends Enumerable.Implicits {
 
-  case object AmountMoreThanThenThousand extends WithName("01") with TaxAmount
+  case object AmountMoreThanTenThousand extends WithName("01") with TaxAmount
   case object AmountMoreThanTwoFiftyThousand extends WithName("02") with TaxAmount
   case object AmountMoreThanFiveHundredThousand extends WithName("03") with TaxAmount
   case object AmountMoreThanTwoHalfMillion extends WithName("04") with TaxAmount
 
   val values: Set[TaxAmount] = Set(
-    AmountMoreThanThenThousand, AmountMoreThanTwoFiftyThousand, AmountMoreThanFiveHundredThousand, AmountMoreThanTwoHalfMillion
+    AmountMoreThanTenThousand, AmountMoreThanTwoFiftyThousand, AmountMoreThanFiveHundredThousand, AmountMoreThanTwoHalfMillion
   )
 
   implicit val enumerable: Enumerable[TaxAmount] =

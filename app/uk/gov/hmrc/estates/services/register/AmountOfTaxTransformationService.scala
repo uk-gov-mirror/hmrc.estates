@@ -34,7 +34,7 @@ class AmountOfTaxTransformationService @Inject()(
     transformationService.getTransformedData("utr", internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
-          case AmountOfTaxOwedTransform(amount) => Some(amount)
+          case AmountOfTaxOwedTransform(amount) => Some(AmountOfTaxOwed(amount))
           case _ => None
         }.headOption
       case _ => None
@@ -42,7 +42,7 @@ class AmountOfTaxTransformationService @Inject()(
   }
 
   def addTransform(internalId: String, amount: AmountOfTaxOwed) : Future[Success.type] = {
-    transformationService.addNewTransform("utr", internalId, AmountOfTaxOwedTransform(amount)) map {
+    transformationService.addNewTransform("utr", internalId, AmountOfTaxOwedTransform(amount.amount)) map {
       _ => Success
     }
   }

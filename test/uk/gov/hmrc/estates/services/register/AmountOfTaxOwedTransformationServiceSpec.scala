@@ -16,19 +16,16 @@
 
 package uk.gov.hmrc.estates.services.register
 
-import java.time.LocalDate
-
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanThenThousand
-import uk.gov.hmrc.estates.services.{LocalDateService, TransformationService}
+import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTenThousand
+import uk.gov.hmrc.estates.services.TransformationService
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.AmountOfTaxOwedTransform
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
 
 import scala.concurrent.Future
 
@@ -38,18 +35,16 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
 
     "must write a corresponding transform using the transformation service" in {
 
-      val amount = AmountOfTaxOwed(AmountMoreThanThenThousand)
-
       val transformationService = mock[TransformationService]
       val service = new AmountOfTaxTransformationService(transformationService)
 
       when(transformationService.addNewTransform(any(), any(), any())).thenReturn(Future.successful(true))
 
-      val result = service.addTransform("internalId", amount)
+      val result = service.addTransform("internalId", AmountOfTaxOwed(AmountMoreThanTenThousand))
       whenReady(result) { _ =>
 
         verify(transformationService).addNewTransform("utr",
-          "internalId", AmountOfTaxOwedTransform(amount)
+          "internalId", AmountOfTaxOwedTransform(AmountMoreThanTenThousand)
         )
 
       }
@@ -88,17 +83,15 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
 
       "when there is a single transform" in {
 
-        val amount = AmountOfTaxOwed(AmountMoreThanThenThousand)
-
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any(), any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(amount))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(AmountMoreThanTenThousand))))))
 
         whenReady(service.get("internalId")) { result =>
 
-          result.value mustBe amount
+          result.value mustBe AmountOfTaxOwed(AmountMoreThanTenThousand)
 
         }
       }

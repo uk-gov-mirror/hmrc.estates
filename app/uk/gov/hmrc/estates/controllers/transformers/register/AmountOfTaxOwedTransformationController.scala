@@ -47,7 +47,7 @@ class AmountOfTaxOwedTransformationController @Inject()(
       }
   }
 
-  def save(): Action[JsValue] = identify.async(parse.json) {
+  def save: Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[AmountOfTaxOwed] match {
         case JsSuccess(model, _) =>

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.estates
 
+import java.time.LocalDate
 import java.util.UUID
 
 import org.scalatest.concurrent.ScalaFutures
@@ -26,9 +27,15 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.inject.bind
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.config.AppConfig
+import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
+import uk.gov.hmrc.estates.services.LocalDateService
 import uk.gov.hmrc.estates.utils._
 import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class BaseSpec extends WordSpec
   with MustMatchers
@@ -39,7 +46,13 @@ class BaseSpec extends WordSpec
   with GuiceOneServerPerSuite
   with Inside {
 
+  object LocalDateServiceStub extends LocalDateService {
+    override def now: LocalDate = LocalDate.of(1999, 3, 14)
+  }
+
   implicit lazy val hc: HeaderCarrier = HeaderCarrier()
+
+  private val bodyParsers = stubControllerComponents().parsers.defaultBodyParser
 
   lazy val application = applicationBuilder().build()
 
@@ -49,6 +62,10 @@ class BaseSpec extends WordSpec
 
   def applicationBuilder(): GuiceApplicationBuilder = {
     new GuiceApplicationBuilder()
+      .overrides(
+        bind[LocalDateService].toInstance(LocalDateServiceStub),
+        bind[IdentifierAction].toInstance(new FakeIdentifierAction(bodyParsers, Organisation))
+      )
       .configure(
         Seq(
           "metrics.enabled" -> false,

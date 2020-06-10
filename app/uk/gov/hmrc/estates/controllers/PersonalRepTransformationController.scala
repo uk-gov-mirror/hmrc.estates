@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
-import uk.gov.hmrc.estates.models.EstatePerRepIndType
+import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.services.{LocalDateService, PersonalRepTransformationService}
 import uk.gov.hmrc.estates.utils.ValidationUtil
 
@@ -31,26 +31,48 @@ class PersonalRepTransformationController @Inject()(
                                           identify: IdentifierAction,
                                           personalRepTransformationService: PersonalRepTransformationService,
                                           cc: ControllerComponents,
-                                          validateUTRActionFactory: ValidateUTRActionFactory,
                                           localDateService: LocalDateService
                                         )(implicit val executionContext: ExecutionContext) extends EstatesBaseController(cc) with ValidationUtil {
 
   private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
 
-  def getPersonalRep(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
+  def getPersonalRepInd(): Action[AnyContent] = identify.async {
     implicit request =>
-      personalRepTransformationService.getPersonalRepInd(utr, request.identifier) map { personalRep =>
+      personalRepTransformationService.getPersonalRepInd(request.identifier) map { personalRep =>
         Ok(
           personalRep map Json.toJson[EstatePerRepIndType] getOrElse Json.obj()
         )
       }
   }
 
-  def amendPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
+  def getPersonalRepOrg(): Action[AnyContent] = identify.async {
+    implicit request =>
+      personalRepTransformationService.getPersonalRepOrg(request.identifier) map { personalRep =>
+        Ok(
+          personalRep map Json.toJson[EstatePerRepOrgType] getOrElse Json.obj()
+        )
+      }
+  }
+
+  def amendPersonalRepInd(): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[EstatePerRepIndType] match {
         case JsSuccess(model, _) =>
-          personalRepTransformationService.addAmendEstatePerRepInTransformer(utr, request.identifier, model) map { _ =>
+          personalRepTransformationService.addAmendEstatePerRepIndTransformer(request.identifier, model) map { _ =>
+            Ok
+          }
+        case JsError(errors) =>
+          logger.warn(s"Supplied Personal Rep could not be read as EstatePerRepIndType - $errors")
+          Future.successful(BadRequest)
+      }
+    }
+  }
+
+  def amendPersonalRepOrg(): Action[JsValue] = identify.async(parse.json) {
+    implicit request => {
+      request.body.validate[EstatePerRepOrgType] match {
+        case JsSuccess(model, _) =>
+          personalRepTransformationService.addAmendEstatePerRepOrgTransformer(request.identifier, model) map { _ =>
             Ok
           }
         case JsError(errors) =>

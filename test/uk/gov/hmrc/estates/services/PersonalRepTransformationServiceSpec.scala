@@ -50,13 +50,12 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       val transformationService = mock[TransformationService]
       val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
 
-      when(transformationService.addNewTransform(any(), any(), any())).thenReturn(Future.successful(true))
+      when(transformationService.addNewTransform(any(), any())).thenReturn(Future.successful(true))
 
-      val result = service.addAmendEstatePerRepInTransformer("utr", "internalId", personalRep)
+      val result = service.addAmendEstatePerRepIndTransformer("internalId", personalRep)
       whenReady(result) { _ =>
 
-        verify(transformationService).addNewTransform("utr",
-          "internalId", AmendEstatePerRepIndTransform(personalRep)
+        verify(transformationService).addNewTransform("internalId", AmendEstatePerRepIndTransform(personalRep)
         )
 
       }
@@ -77,10 +76,10 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
 
-        when(transformationService.getTransformedData(any(), any()))
+        when(transformationService.getTransformedData(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRep))))))
 
-        whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+        whenReady(service.getPersonalRepInd("internalId")) { result =>
 
           result.value mustBe personalRep
 
@@ -115,12 +114,12 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
 
-          when(transformationService.getTransformedData(any[String], any[String]))
+          when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(AmendEstatePerRepIndTransform(personalRep1), AmendEstatePerRepIndTransform(personalRep2))
             ))))
 
-          whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+          whenReady(service.getPersonalRepInd("internalId")) { result =>
 
             result.value mustBe personalRep1
 
@@ -154,12 +153,12 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           val transformationService = mock[TransformationService]
           val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
 
-          when(transformationService.getTransformedData(any[String], any[String]))
+          when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(AmendEstatePerRepOrgTransform(personalRep2), AmendEstatePerRepIndTransform(personalRep1))
             ))))
 
-          whenReady(service.getPersonalRepInd("utr", "internalId")) { result =>
+          whenReady(service.getPersonalRepInd("internalId")) { result =>
 
             result.value mustBe personalRep1
 

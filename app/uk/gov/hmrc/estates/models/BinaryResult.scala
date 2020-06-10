@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.models.register
+package uk.gov.hmrc.estates.models
 
-import play.api.libs.json.{Format, Json}
+sealed trait BinaryResult
 
-case class AmountOfTaxOwed(amount: TaxAmount)
-
-object AmountOfTaxOwed {
-
-  implicit val format : Format[AmountOfTaxOwed] = Json.format[AmountOfTaxOwed]
-
-}
+case object Success extends BinaryResult
+case object Failure extends BinaryResult

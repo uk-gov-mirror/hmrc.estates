@@ -30,7 +30,9 @@ import play.api.test.Helpers.{CONTENT_TYPE, _}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
-import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed.AmountMoreThanThenThousand
+import uk.gov.hmrc.estates.models.Success
+import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
+import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanThenThousand
 import uk.gov.hmrc.estates.services.LocalDateService
 import uk.gov.hmrc.estates.services.register.AmountOfTaxTransformationService
 
@@ -58,7 +60,7 @@ class AmountOfTaxOwedTransformationControllerSpec extends BaseSpec with MockitoS
       "return the amount of tax owed" in {
         val controller = new AmountOfTaxOwedTransformationController(identifierAction, cc, LocalDateServiceStub, mockTransformationService)
 
-        when(mockTransformationService.get(any())).thenReturn(Future.successful(Some(AmountMoreThanThenThousand)))
+        when(mockTransformationService.get(any())).thenReturn(Future.successful(Some(AmountOfTaxOwed(AmountMoreThanThenThousand))))
 
         val request = FakeRequest("GET", "path")
           .withHeaders(CONTENT_TYPE -> "application/json")
@@ -88,6 +90,38 @@ class AmountOfTaxOwedTransformationControllerSpec extends BaseSpec with MockitoS
         status(result) mustBe OK
         contentType(result) mustBe Some(JSON)
         contentAsJson(result) mustBe Json.obj()
+      }
+
+    }
+
+    ".save" must {
+
+      "add a transform" in {
+        val controller = new AmountOfTaxOwedTransformationController(identifierAction, cc, LocalDateServiceStub, mockTransformationService)
+
+        val amount = AmountOfTaxOwed(AmountMoreThanThenThousand)
+
+        val request = FakeRequest("POST", "path")
+          .withBody(Json.toJson(amount))
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        when(mockTransformationService.addTransform(any(), any())).thenReturn(Future.successful(Success))
+
+        val result = controller.save().apply(request)
+
+        status(result) mustBe OK
+      }
+
+      "must return an error for malformed json" in {
+        val controller = new AmountOfTaxOwedTransformationController(identifierAction, cc, LocalDateServiceStub, mockTransformationService)
+
+        val request = FakeRequest("POST", "path")
+          .withBody(Json.toJson("{}"))
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        val result = controller.save().apply(request)
+
+        status(result) mustBe BAD_REQUEST
       }
 
     }

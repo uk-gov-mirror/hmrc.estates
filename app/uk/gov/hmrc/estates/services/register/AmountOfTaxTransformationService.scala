@@ -17,7 +17,8 @@
 package uk.gov.hmrc.estates.services.register
 
 import com.google.inject.Inject
-import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
+import uk.gov.hmrc.estates.models.Success
+import uk.gov.hmrc.estates.models.register.{AmountOfTaxOwed, TaxAmount}
 import uk.gov.hmrc.estates.services.{LocalDateService, TransformationService}
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.AmountOfTaxOwedTransform
@@ -39,6 +40,10 @@ class AmountOfTaxTransformationService @Inject()(
         }.headOption
       case _ => None
     }
+  }
+
+  def addTransform(internalId: String, amount: AmountOfTaxOwed) : Future[Success.type] = {
+    Future.successful(Success)
   }
 
 }

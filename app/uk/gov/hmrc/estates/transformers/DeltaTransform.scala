@@ -36,10 +36,15 @@ object DeltaTransform {
       readsForTransform[AmendEstatePerRepOrgTransform](AmendEstatePerRepOrgTransform.key)
   }
 
+  def correspondenceNameReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AmendCorrespondenceNameTransform](AmendCorrespondenceNameTransform.key)
+  }
+
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
       personalRepReads
       (value.as[JsObject]) orElse
+        correspondenceNameReads(value.as[JsObject]) orElse
         (throw new Exception(s"Don't know how to deserialise transform"))
   )
 
@@ -50,6 +55,11 @@ object DeltaTransform {
       Json.obj(AmendEstatePerRepOrgTransform.key -> Json.toJson(transform)(AmendEstatePerRepOrgTransform.format))
   }
 
+  def amendCorrespondenceNameWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AmendCorrespondenceNameTransform =>
+      Json.obj(AmendCorrespondenceNameTransform.key -> Json.toJson(transform)(AmendCorrespondenceNameTransform.format))
+  }
+
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {
     case transform => throw new Exception(s"Don't know how to serialise transform - $transform")
   }
@@ -57,7 +67,8 @@ object DeltaTransform {
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
       amendPersonalRepWrites orElse
-      defaultWrites
+        amendCorrespondenceNameWrites orElse
+        defaultWrites
       ).apply(deltaTransform)
   }
 

@@ -1,0 +1,44 @@
+/*
+ * Copyright 2020 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.estates.services
+
+import javax.inject.Inject
+import play.api.libs.json.JsString
+import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
+import uk.gov.hmrc.estates.transformers.{AmendCorrespondenceNameTransform, AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
+
+class CorrespondenceTransformationService @Inject()(
+                                                  transformationService: TransformationService
+                                                )(implicit val ec: ExecutionContext) {
+
+  def addAmendCorrespondenceNameTransformer(internalId: String, newCorrespondenceName: JsString): Future[Success.type] =
+    transformationService.addNewTransform(internalId, AmendCorrespondenceNameTransform(newCorrespondenceName)).map(_ => Success)
+
+  def getCorrespondenceName(internalId: String): Future[Option[JsString]] = {
+    transformationService.getTransformedData(internalId) map {
+      case Some(ComposedDeltaTransform(transforms)) =>
+        transforms.flatMap{
+          case AmendCorrespondenceNameTransform(name) => Some(name)
+          case _ => None
+        }.headOption
+      case _ => None
+    }
+  }
+}

@@ -34,29 +34,26 @@ class PersonalRepTransformationService @Inject()(
     transformationService.addNewTransform(internalId, AddEstatePerRepTransform(None, Some(newPersonalRep))).map(_ => Success)
 
   def getPersonalRepInd(internalId: String): Future[Option[EstatePerRepIndType]] = {
-    transformationService.getTransformedData(internalId) map {
-      case Some(ComposedDeltaTransform(transforms)) =>
-        transforms.flatMap{
-          case transform: AddEstatePerRepTransform => Some(transform)
-          case _ => None
-        }.lastOption match {
-          case Some(transform) => transform.newPersonalIndRep
-          case None => None
-        }
-      case _ => None
+    getMostRecentPerRepTransform(internalId).map {
+      case Some(transform) => transform.newPersonalIndRep
+      case None => None
     }
   }
 
   def getPersonalRepOrg(internalId: String): Future[Option[EstatePerRepOrgType]] = {
+    getMostRecentPerRepTransform(internalId).map {
+      case Some(transform) => transform.newPersonalOrgRep
+      case None => None
+    }
+  }
+
+  private def getMostRecentPerRepTransform(internalId: String): Future[Option[AddEstatePerRepTransform]] = {
     transformationService.getTransformedData(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
           case transform: AddEstatePerRepTransform => Some(transform)
           case _ => None
-        }.lastOption match {
-          case Some(transform) => transform.newPersonalOrgRep
-          case None => None
-        }
+        }.lastOption
       case _ => None
     }
   }

@@ -40,7 +40,7 @@ class PersonalRepTransformationService @Inject()(
         transforms.flatMap{
           case AmendEstatePerRepIndTransform(personalRep) => Some(personalRep)
           case _ => None
-        }.headOption
+        }.lastOption
       case _ => None
     }
   }
@@ -51,7 +51,7 @@ class PersonalRepTransformationService @Inject()(
         transforms.flatMap{
           case AmendEstatePerRepOrgTransform(personalRep) => Some(personalRep)
           case _ => None
-        }.headOption
+        }.lastOption
       case _ => None
     }
   }

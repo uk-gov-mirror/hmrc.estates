@@ -30,11 +30,10 @@ import play.api.test.Helpers.{CONTENT_TYPE, _}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTenThousand
-import uk.gov.hmrc.estates.models.{EstateWillType, IdentificationType, NameType, Success}
+import uk.gov.hmrc.estates.models.{EstateWillType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.register.{AmountOfTaxOwedTransform, DeceasedTransform}
+import uk.gov.hmrc.estates.transformers.register.DeceasedTransform
 
 import scala.concurrent.Future
 
@@ -111,8 +110,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
           Future.successful(Some(ComposedDeltaTransform(
             Seq(
               DeceasedTransform(previousDeceased),
-              DeceasedTransform(deceased),
-              AmountOfTaxOwedTransform(AmountMoreThanTenThousand)
+              DeceasedTransform(deceased)
             )))))
 
         val request = FakeRequest("GET", "path")

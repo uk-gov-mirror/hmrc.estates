@@ -42,7 +42,7 @@ class AgentDetailsTransformationService @Inject()(
         transforms.flatMap{
           case AgentDetailsTransform(agentDetails) => Some(agentDetails)
           case _ => None
-        }.tailOption
+        }.lastOption
       case _ => None
     }
   }

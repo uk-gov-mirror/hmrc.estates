@@ -18,7 +18,6 @@ package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import uk.gov.hmrc.estates.models.register.{AddressType, AgentDetails}
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTwoFiftyThousand
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionValues {
@@ -34,13 +33,13 @@ class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionVa
       postCode = Some("ne64 8hr"),
       country = "GB"
     ),
-    agentTelephoneNumber =  "07912180120",
-    clientReference = "clientReference"
+    agentTelephoneNumber =  "07701086492",
+    clientReference = "Agent01"
   )
 
-  private val agentDetailsAgentNameUpdated = AgentDetails(
+  private val agentDetailsUpdated = AgentDetails(
     arn = "SARN1234567",
-    agentName = "Agent Name",
+    agentName = "Agent name",
     agentAddress = AddressType(
       line1 = "56",
       line2 = "Maple Street",
@@ -49,8 +48,8 @@ class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionVa
       postCode = Some("ne64 8hr"),
       country = "GB"
     ),
-    agentTelephoneNumber =  "07912180120",
-    clientReference = "clientReference"
+    agentTelephoneNumber =  "07701086492",
+    clientReference = "Agent01"
   )
 
   "the agent details transform should" - {
@@ -63,24 +62,24 @@ class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionVa
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-agent-details-transformed.json")
 
-        val transformer = new AgentDetailsTransform(agentDetailsAgentNameUpdated)
+        val transformer = new AgentDetailsTransform(agentDetailsUpdated)
 
         val result = transformer.applyTransform(trustJson).get
 
         result mustBe afterJson
       }
 
-//      "when there is no existing agent details" in {
-//        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-agent-details.json")
-//
-//        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01.json")
-//
-//        val transformer = new AmountOfTaxOwedTransform(AmountMoreThanTwoFiftyThousand)
-//
-//        val result = transformer.applyTransform(trustJson).get
-//
-//        result mustBe afterJson
-//      }
+      "when there is no existing agent details" in {
+        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-agent-details.json")
+
+        val afterJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+
+        val transformer = new AgentDetailsTransform(agentDetails)
+
+        val result = transformer.applyTransform(trustJson).get
+
+        result mustBe afterJson
+      }
     }
 
   }

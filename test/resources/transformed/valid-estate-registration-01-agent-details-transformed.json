@@ -70,11 +70,12 @@
   },
   "agentDetails": {
     "arn": "SARN1234567",
-    "agentName": "New Agent Name",
+    "agentName": "Agent name",
     "agentAddress": {
       "line1": "56",
       "line2": "Maple Street",
       "line3": "Northumberland",
+      "line4": "North East",
       "postCode": "ne64 8hr",
       "country": "GB"
     },

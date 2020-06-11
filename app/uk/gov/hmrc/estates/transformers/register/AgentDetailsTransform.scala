@@ -23,7 +23,7 @@ import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
 case class AgentDetailsTransform(agentDetails: AgentDetails)
     extends DeltaTransform with JsonOperations {
 
-  private val path = __ \ 'estate \ 'agentDetailsType
+  private val path = __ \ 'agentDetails
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     input.transform(

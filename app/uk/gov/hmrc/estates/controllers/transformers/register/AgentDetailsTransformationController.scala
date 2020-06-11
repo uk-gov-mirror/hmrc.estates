@@ -46,7 +46,7 @@ class AgentDetailsTransformationController @Inject()(
         case None => Ok(Json.obj())
       }
   }
-  
+
   def save: Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[AgentDetails] match {

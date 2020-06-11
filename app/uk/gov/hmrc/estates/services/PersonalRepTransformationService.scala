@@ -18,29 +18,31 @@ package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
 class PersonalRepTransformationService @Inject()(
-                                                  transformationService: TransformationService,
-                                                  localDateService: LocalDateService
+                                                  transformationService: TransformationService
                                                 )(implicit val ec: ExecutionContext) {
 
   def addAmendEstatePerRepIndTransformer(internalId: String, newPersonalRep: EstatePerRepIndType): Future[Success.type] =
-    transformationService.addNewTransform(internalId, AmendEstatePerRepIndTransform(newPersonalRep)).map(_ => Success)
+    transformationService.addNewTransform(internalId, AddEstatePerRepTransform(Some(newPersonalRep), None)).map(_ => Success)
 
   def addAmendEstatePerRepOrgTransformer(internalId: String, newPersonalRep: EstatePerRepOrgType): Future[Success.type] =
-    transformationService.addNewTransform(internalId, AmendEstatePerRepOrgTransform(newPersonalRep)).map(_ => Success)
+    transformationService.addNewTransform(internalId, AddEstatePerRepTransform(None, Some(newPersonalRep))).map(_ => Success)
 
   def getPersonalRepInd(internalId: String): Future[Option[EstatePerRepIndType]] = {
     transformationService.getTransformedData(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
-          case AmendEstatePerRepIndTransform(personalRep) => Some(personalRep)
+          case transform: AddEstatePerRepTransform => Some(transform)
           case _ => None
-        }.lastOption
+        }.lastOption match {
+          case Some(transform) => transform.newPersonalIndRep
+          case None => None
+        }
       case _ => None
     }
   }
@@ -49,9 +51,12 @@ class PersonalRepTransformationService @Inject()(
     transformationService.getTransformedData(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
-          case AmendEstatePerRepOrgTransform(personalRep) => Some(personalRep)
+          case transform: AddEstatePerRepTransform => Some(transform)
           case _ => None
-        }.lastOption
+        }.lastOption match {
+          case Some(transform) => transform.newPersonalOrgRep
+          case None => None
+        }
       case _ => None
     }
   }

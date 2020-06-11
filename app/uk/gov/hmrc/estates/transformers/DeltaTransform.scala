@@ -17,6 +17,7 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
+import uk.gov.hmrc.estates.transformers.register.AmountOfTaxOwedTransform
 
 trait DeltaTransform {
   def applyTransform(input: JsValue): JsResult[JsValue]
@@ -36,9 +37,16 @@ object DeltaTransform {
       readsForTransform[AmendEstatePerRepOrgTransform](AmendEstatePerRepOrgTransform.key)
   }
 
+  def amountTaxOwedReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AmountOfTaxOwedTransform](AmountOfTaxOwedTransform.key)
+  }
+
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
-      personalRepReads
+      (
+        personalRepReads orElse
+        amountTaxOwedReads
+      )
       (value.as[JsObject]) orElse
         (throw new Exception(s"Don't know how to deserialise transform"))
   )
@@ -50,6 +58,11 @@ object DeltaTransform {
       Json.obj(AmendEstatePerRepOrgTransform.key -> Json.toJson(transform)(AmendEstatePerRepOrgTransform.format))
   }
 
+  def amountOfTaxOwedWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AmountOfTaxOwedTransform =>
+      Json.obj(AmountOfTaxOwedTransform.key -> Json.toJson(transform)(AmountOfTaxOwedTransform.format))
+  }
+
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {
     case transform => throw new Exception(s"Don't know how to serialise transform - $transform")
   }
@@ -57,6 +70,7 @@ object DeltaTransform {
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
       amendPersonalRepWrites orElse
+      amountOfTaxOwedWrites orElse
       defaultWrites
       ).apply(deltaTransform)
   }

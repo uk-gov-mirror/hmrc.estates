@@ -25,7 +25,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTenThousand
+import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,27 +43,30 @@ class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar wit
   "an add AmountOfTaxOwed call" must {
     "return added data in a subsequent 'GET' call" in {
 
-      val newTaxAmount = AmountOfTaxOwed(AmountMoreThanTenThousand)
-
       running(application) {
         getConnection(application).map { connection =>
 
           dropTheDatabase(connection)
 
-          val amendRequest = FakeRequest(POST, "/estates/amount-tax-owed")
-            .withBody(Json.toJson(newTaxAmount))
-            .withHeaders(CONTENT_TYPE -> "application/json")
-
-          val amendResult = route(application, amendRequest).get
-          status(amendResult) mustBe OK
-
-          val newResult = route(application, FakeRequest(GET, "/estates/amount-tax-owed")).get
-          status(newResult) mustBe OK
-          contentAsJson(newResult) mustBe Json.toJson(newTaxAmount)
+          roundTripTest(AmountOfTaxOwed(AmountMoreThanTenThousand))
+          roundTripTest(AmountOfTaxOwed(AmountMoreThanFiveHundredThousand))
 
           dropTheDatabase(connection)
         }.get
       }
     }
+  }
+
+  private def roundTripTest(amount: AmountOfTaxOwed) = {
+    val amendRequest = FakeRequest(POST, "/estates/amount-tax-owed")
+      .withBody(Json.toJson(amount))
+      .withHeaders(CONTENT_TYPE -> "application/json")
+
+    val amendResult = route(application, amendRequest).get
+    status(amendResult) mustBe OK
+
+    val newResult = route(application, FakeRequest(GET, "/estates/amount-tax-owed")).get
+    status(newResult) mustBe OK
+    contentAsJson(newResult) mustBe Json.toJson(amount)
   }
 }

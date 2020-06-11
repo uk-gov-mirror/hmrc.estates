@@ -22,7 +22,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTenThousand
+import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
 import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.AmountOfTaxOwedTransform
@@ -87,16 +87,16 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val service = new AmountOfTaxTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(AmountMoreThanTenThousand))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(
+            Seq(
+              AmountOfTaxOwedTransform(AmountMoreThanFiveHundredThousand),
+              AmountOfTaxOwedTransform(AmountMoreThanTenThousand))
+          ))))
 
         whenReady(service.get("internalId")) { result =>
-
           result.value mustBe AmountOfTaxOwed(AmountMoreThanTenThousand)
-
         }
       }
-
     }
-
   }
 }

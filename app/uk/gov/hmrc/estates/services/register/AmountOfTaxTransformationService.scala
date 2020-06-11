@@ -36,7 +36,7 @@ class AmountOfTaxTransformationService @Inject()(
         transforms.flatMap{
           case AmountOfTaxOwedTransform(amount) => Some(AmountOfTaxOwed(amount))
           case _ => None
-        }.headOption
+        }.lastOption
       case _ => None
     }
   }

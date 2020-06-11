@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
-import uk.gov.hmrc.estates.transformers.register.AmountOfTaxOwedTransform
+import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform}
 
 trait DeltaTransform {
   def applyTransform(input: JsValue): JsResult[JsValue]
@@ -37,6 +37,10 @@ object DeltaTransform {
       readsForTransform[AmendEstatePerRepOrgTransform](AmendEstatePerRepOrgTransform.key)
   }
 
+  def agentDetailsReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AgentDetailsTransform](AgentDetailsTransform.key)
+  }
+
   def amountTaxOwedReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
     readsForTransform[AmountOfTaxOwedTransform](AmountOfTaxOwedTransform.key)
   }
@@ -45,6 +49,7 @@ object DeltaTransform {
     value =>
       (
         personalRepReads orElse
+        agentDetailsReads orElse
         amountTaxOwedReads
       )
       (value.as[JsObject]) orElse
@@ -56,6 +61,11 @@ object DeltaTransform {
       Json.obj(AmendEstatePerRepIndTransform.key -> Json.toJson(transform)(AmendEstatePerRepIndTransform.format))
     case transform: AmendEstatePerRepOrgTransform =>
       Json.obj(AmendEstatePerRepOrgTransform.key -> Json.toJson(transform)(AmendEstatePerRepOrgTransform.format))
+  }
+
+  def agentDetailsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AgentDetailsTransform =>
+      Json.obj(AgentDetailsTransform.key -> Json.toJson(transform)(AgentDetailsTransform.format))
   }
 
   def amountOfTaxOwedWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
@@ -70,6 +80,7 @@ object DeltaTransform {
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
       amendPersonalRepWrites orElse
+      agentDetailsWrites orElse
       amountOfTaxOwedWrites orElse
       defaultWrites
       ).apply(deltaTransform)

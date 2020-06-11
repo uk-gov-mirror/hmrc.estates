@@ -5,6 +5,9 @@
 GET         /amount-tax-owed            uk.gov.hmrc.estates.controllers.transformers.register.AmountOfTaxOwedTransformationController.get
 POST        /amount-tax-owed            uk.gov.hmrc.estates.controllers.transformers.register.AmountOfTaxOwedTransformationController.save
 
+GET         /agent-details              uk.gov.hmrc.estates.controllers.transformers.register.AgentDetailsTransformationController.get
+POST        /agent-details              uk.gov.hmrc.estates.controllers.transformers.register.AgentDetailsTransformationController.save
+
 POST        /check                      uk.gov.hmrc.estates.controllers.CheckEstateController.checkExistingEstate
 
 POST        /register                   uk.gov.hmrc.estates.controllers.RegisterEstateController.registration

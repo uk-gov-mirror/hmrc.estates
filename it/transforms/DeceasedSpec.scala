@@ -16,6 +16,8 @@
 
 package transforms
 
+import java.time.LocalDate
+
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
@@ -24,13 +26,12 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
+import uk.gov.hmrc.estates.models.{EstateWillType, IdentificationType, NameType}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
+class DeceasedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   private val cc = stubControllerComponents()
 
@@ -40,7 +41,29 @@ class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar wit
     )
     .build()
 
-  "an add AmountOfTaxOwed call" must {
+  private val originalDeceased = EstateWillType(
+    NameType("First", None, "Last"),
+    Some(LocalDate.of(1996, 4, 15)),
+    LocalDate.of(2016, 7, 2),
+    Some(IdentificationType(
+      nino = Some("AB000000C"),
+      address = None,
+      passport = None
+    ))
+  )
+
+  private val newDeceased = EstateWillType(
+    NameType("New First", Some("New Normal"), "New Last"),
+    Some(LocalDate.of(1992, 4, 15)),
+    LocalDate.of(2012, 7, 2),
+    Some(IdentificationType(
+      nino = Some("AB654321C"),
+      address = None,
+      passport = None
+    ))
+  )
+
+  "an add Deceased call" must {
     "return added data in a subsequent 'GET' call" in {
 
       running(application) {
@@ -48,8 +71,8 @@ class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar wit
 
           dropTheDatabase(connection)
 
-          roundTripTest(AmountOfTaxOwed(AmountMoreThanTenThousand))
-          roundTripTest(AmountOfTaxOwed(AmountMoreThanFiveHundredThousand))
+          roundTripTest(originalDeceased)
+          roundTripTest(newDeceased)
 
           dropTheDatabase(connection)
         }.get
@@ -57,16 +80,15 @@ class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar wit
     }
   }
 
-  private def roundTripTest(amount: AmountOfTaxOwed) = {
-    val amendRequest = FakeRequest(POST, "/estates/amount-tax-owed")
-      .withBody(Json.toJson(amount))
+  private def roundTripTest(deceased: EstateWillType) = {
+    val amendRequest = FakeRequest(POST, "/estates/deceased")
+      .withBody(Json.toJson(deceased))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
-    val amendResult = route(application, amendRequest).get
-    status(amendResult) mustBe OK
+    status(route(application, amendRequest).get) mustBe OK
 
-    val newResult = route(application, FakeRequest(GET, "/estates/amount-tax-owed")).get
+    val newResult = route(application, FakeRequest(GET, "/estates/deceased")).get
     status(newResult) mustBe OK
-    contentAsJson(newResult) mustBe Json.toJson(amount)
+    contentAsJson(newResult) mustBe Json.toJson(deceased)
   }
 }

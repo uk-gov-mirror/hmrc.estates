@@ -138,7 +138,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
 
           whenReady(service.getPersonalRepInd("internalId")) { result =>
 
-            result.value mustBe personalRep1
+            result.value mustBe personalRep2
 
           }
 
@@ -181,7 +181,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         }
       }
 
-      "when multiple amend personalRepInd" in {
+      "when multiple amend personalRepOrg" in {
 
           val personalRep1 = EstatePerRepOrgType(
             orgName = "Personal Rep 1",
@@ -212,13 +212,13 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
 
           whenReady(service.getPersonalRepOrg("internalId")) { result =>
 
-            result.value mustBe personalRep1
+            result.value mustBe personalRep2
 
           }
 
         }
 
-      "when personal rep ind within multiple transform types" in {
+      "when personal rep org within multiple transform types" in {
 
           val transformationService = mock[TransformationService]
           val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)

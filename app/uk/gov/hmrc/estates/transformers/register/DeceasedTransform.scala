@@ -30,5 +30,11 @@ case class DeceasedTransform(deceased: EstateWillType)
       path.json.prune andThen __.json.update(path.json.put(Json.toJson(deceased)))
     )
   }
+}
 
+object DeceasedTransform {
+
+  val key = "DeceasedTransform"
+
+  implicit val format: Format[DeceasedTransform] = Json.format[DeceasedTransform]
 }

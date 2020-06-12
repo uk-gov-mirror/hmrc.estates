@@ -33,8 +33,7 @@ object DeltaTransform {
   }
 
   def personalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-    readsForTransform[AmendEstatePerRepIndTransform](AmendEstatePerRepIndTransform.key) orElse
-      readsForTransform[AmendEstatePerRepOrgTransform](AmendEstatePerRepOrgTransform.key)
+    readsForTransform[AddEstatePerRepTransform](AddEstatePerRepTransform.key)
   }
 
   def agentDetailsReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
@@ -57,11 +56,9 @@ object DeltaTransform {
         (throw new Exception(s"Don't know how to deserialise transform"))
   )
 
-  def amendPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-    case transform: AmendEstatePerRepIndTransform =>
-      Json.obj(AmendEstatePerRepIndTransform.key -> Json.toJson(transform)(AmendEstatePerRepIndTransform.format))
-    case transform: AmendEstatePerRepOrgTransform =>
-      Json.obj(AmendEstatePerRepOrgTransform.key -> Json.toJson(transform)(AmendEstatePerRepOrgTransform.format))
+  def personalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AddEstatePerRepTransform =>
+      Json.obj(AddEstatePerRepTransform.key -> Json.toJson(transform)(AddEstatePerRepTransform.format))
   }
 
   def agentDetailsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
@@ -85,7 +82,7 @@ object DeltaTransform {
 
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
-      amendPersonalRepWrites orElse
+      personalRepWrites orElse
       agentDetailsWrites orElse
       amountOfTaxOwedWrites orElse
       deceasedWrites orElse

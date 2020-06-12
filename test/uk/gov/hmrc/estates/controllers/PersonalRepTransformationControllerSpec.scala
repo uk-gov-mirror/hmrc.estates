@@ -20,17 +20,17 @@ import java.time.LocalDate
 
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
+import org.scalatest.MustMatchers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.MustMatchers
-import play.api.libs.json.Json
 import play.api.inject.bind
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.estates.BaseSpec
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType}
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.services.{PersonalRepTransformationService, TransformationService}
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
 
 import scala.concurrent.Future
 import scala.util.Success
@@ -149,7 +149,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
           ).build()
 
         when(transformationService.getTransformedData(any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRepInd))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(Some(personalRepInd), None))))))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
 
@@ -194,7 +194,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
           ).build()
 
         when(transformationService.getTransformedData(any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepOrgTransform(personalRepOrg))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(None, Some(personalRepOrg)))))))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
 

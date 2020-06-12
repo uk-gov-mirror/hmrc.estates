@@ -28,15 +28,22 @@ case class AddEstatePerRepTransform(
 
   private lazy val path = __ \ 'estate \ 'entities \ 'personalRepresentative
 
+  private lazy val isPassportPath = __ \ 'estatePerRepInd \ 'identification \ 'passport \ 'isPassport
+
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     val newPersonalRep = Json.obj(
       "estatePerRepInd" -> newPersonalIndRep,
       "estatePerRepOrg" -> newPersonalOrgRep
     ).withoutNulls
 
+    val updatedPersonalRep = newPersonalRep.transform(isPassportPath.json.prune) match {
+      case JsSuccess(value, _) => value
+      case JsError(_) => newPersonalRep
+    }
+
     input.transform(
       path.json.prune andThen
-        __.json.update(path.json.put(Json.toJson(newPersonalRep)))
+        __.json.update(path.json.put(Json.toJson(updatedPersonalRep)))
     )
   }
 }

@@ -97,7 +97,7 @@ class CorrespondenceTransformationControllerSpec extends BaseSpec with MockitoSu
 
         status(result) mustBe OK
         contentType(result) mustBe Some(JSON)
-        contentAsJson(result) mustBe Json.toJson(newEstateName)
+        contentAsJson(result) mustBe Json.obj("name" -> newEstateName)
 
       }
 

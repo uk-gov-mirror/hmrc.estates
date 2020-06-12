@@ -38,7 +38,7 @@ class CorrespondenceTransformationController @Inject()(
     implicit request =>
       personalRepTransformationService.getCorrespondenceName(request.identifier) map { correspondenceName =>
         Ok(
-          correspondenceName.getOrElse(Json.obj())
+          correspondenceName.map(name => Json.obj("name" -> name)).getOrElse(Json.obj())
         )
       }
   }

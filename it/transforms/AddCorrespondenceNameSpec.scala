@@ -71,6 +71,6 @@ class AddCorrespondenceNameSpec extends WordSpec with MustMatchers with MockitoS
 
     val newResult = route(application, FakeRequest(GET, "/estates/correspondence/name")).get
     status(newResult) mustBe OK
-    contentAsJson(newResult) mustBe Json.toJson(name)
+    contentAsJson(newResult) mustBe Json.obj("name" -> name)
   }
 }

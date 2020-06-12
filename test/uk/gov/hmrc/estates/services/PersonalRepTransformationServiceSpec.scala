@@ -24,7 +24,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
-import uk.gov.hmrc.estates.transformers.{AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,38 +49,34 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
     email = None
   )
 
-  private object LocalDateServiceStub extends LocalDateService {
-    override def now: LocalDate = LocalDate.of(1999, 3, 14)
-  }
-
   "PersonalRepTransformationService" - {
 
     "must write a corresponding transform using the transformation service" - {
       "for individual" in {
 
         val transformationService = mock[TransformationService]
-        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val service = new PersonalRepTransformationService(transformationService)
 
         when(transformationService.addNewTransform(any(), any())).thenReturn(Future.successful(true))
 
         val result = service.addAmendEstatePerRepIndTransformer("internalId", personalRepInd)
         whenReady(result) { _ =>
 
-          verify(transformationService).addNewTransform("internalId", AmendEstatePerRepIndTransform(personalRepInd))
+          verify(transformationService).addNewTransform("internalId", AddEstatePerRepTransform(Some(personalRepInd), None))
 
         }
       }
       "for organisation" in {
 
         val transformationService = mock[TransformationService]
-        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val service = new PersonalRepTransformationService(transformationService)
 
         when(transformationService.addNewTransform(any(), any())).thenReturn(Future.successful(true))
 
         val result = service.addAmendEstatePerRepOrgTransformer("internalId", personalRepOrg)
         whenReady(result) { _ =>
 
-          verify(transformationService).addNewTransform("internalId", AmendEstatePerRepOrgTransform(personalRepOrg))
+          verify(transformationService).addNewTransform("internalId", AddEstatePerRepTransform(None, Some(personalRepOrg)))
 
         }
       }
@@ -91,14 +87,14 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       "when there is a single transform" in {
 
         val transformationService = mock[TransformationService]
-        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val service = new PersonalRepTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepIndTransform(personalRepInd))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(Some(personalRepInd), None))))))
 
         whenReady(service.getPersonalRepInd("internalId")) { result =>
 
-          result.value mustBe personalRepInd
+          result mustBe Some(personalRepInd)
 
         }
       }
@@ -129,16 +125,19 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           )
 
         val transformationService = mock[TransformationService]
-        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val service = new PersonalRepTransformationService(transformationService)
 
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
-              Seq(AmendEstatePerRepIndTransform(personalRep1), AmendEstatePerRepIndTransform(personalRep2))
+              Seq(
+                AddEstatePerRepTransform(Some(personalRep1), None),
+                AddEstatePerRepTransform(Some(personalRep2), None)
+              )
             ))))
 
           whenReady(service.getPersonalRepInd("internalId")) { result =>
 
-            result.value mustBe personalRep2
+            result mustBe Some(personalRep2)
 
           }
 
@@ -147,20 +146,44 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       "when personal rep ind within multiple transform types" in {
 
           val transformationService = mock[TransformationService]
-          val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+          val service = new PersonalRepTransformationService(transformationService)
 
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
-              Seq(AmendEstatePerRepOrgTransform(personalRepOrg), AmendEstatePerRepIndTransform(personalRepInd))
+              Seq(
+                AddEstatePerRepTransform(None, Some(personalRepOrg)),
+                AddEstatePerRepTransform(Some(personalRepInd), None)
+              )
             ))))
 
           whenReady(service.getPersonalRepInd("internalId")) { result =>
 
-            result.value mustBe personalRepInd
+            result mustBe Some(personalRepInd)
 
           }
 
         }
+
+      "when personal rep ind superceded" in {
+
+        val transformationService = mock[TransformationService]
+        val service = new PersonalRepTransformationService(transformationService)
+
+        when(transformationService.getTransformedData(any[String]))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(
+            Seq(
+              AddEstatePerRepTransform(Some(personalRepInd), None),
+              AddEstatePerRepTransform(None, Some(personalRepOrg))
+            )
+          ))))
+
+        whenReady(service.getPersonalRepInd("internalId")) { result =>
+
+          result mustBe None
+
+        }
+
+      }
 
     }
 
@@ -169,14 +192,14 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       "when there is a single transform" in {
 
         val transformationService = mock[TransformationService]
-        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val service = new PersonalRepTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AmendEstatePerRepOrgTransform(personalRepOrg))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(None, Some(personalRepOrg)))))))
 
         whenReady(service.getPersonalRepOrg("internalId")) { result =>
 
-          result.value mustBe personalRepOrg
+          result mustBe Some(personalRepOrg)
 
         }
       }
@@ -203,16 +226,18 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           )
 
         val transformationService = mock[TransformationService]
-        val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+        val service = new PersonalRepTransformationService(transformationService)
 
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
-              Seq(AmendEstatePerRepOrgTransform(personalRep1), AmendEstatePerRepOrgTransform(personalRep2))
+              Seq(
+                AddEstatePerRepTransform(None, Some(personalRep1)),
+                AddEstatePerRepTransform(None, Some(personalRep2)))
             ))))
 
           whenReady(service.getPersonalRepOrg("internalId")) { result =>
 
-            result.value mustBe personalRep2
+            result mustBe Some(personalRep2)
 
           }
 
@@ -221,22 +246,44 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       "when personal rep org within multiple transform types" in {
 
           val transformationService = mock[TransformationService]
-          val service = new PersonalRepTransformationService(transformationService, LocalDateServiceStub)
+          val service = new PersonalRepTransformationService(transformationService)
 
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
-              Seq(AmendEstatePerRepIndTransform(personalRepInd), AmendEstatePerRepOrgTransform(personalRepOrg))
+              Seq(
+                AddEstatePerRepTransform(Some(personalRepInd), None),
+                AddEstatePerRepTransform(None, Some(personalRepOrg)))
             ))))
 
           whenReady(service.getPersonalRepOrg("internalId")) { result =>
 
-            result.value mustBe personalRepOrg
+            result mustBe Some(personalRepOrg)
 
           }
 
         }
 
     }
+    "when personal rep org superceded" in {
+
+      val transformationService = mock[TransformationService]
+      val service = new PersonalRepTransformationService(transformationService)
+
+      when(transformationService.getTransformedData(any[String]))
+        .thenReturn(Future.successful(Some(ComposedDeltaTransform(
+          Seq(
+            AddEstatePerRepTransform(None, Some(personalRepOrg)),
+            AddEstatePerRepTransform(Some(personalRepInd), None))
+        ))))
+
+      whenReady(service.getPersonalRepOrg("internalId")) { result =>
+
+        result mustBe None
+
+      }
+
+    }
 
   }
+
 }

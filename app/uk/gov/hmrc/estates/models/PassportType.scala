@@ -22,7 +22,8 @@ import play.api.libs.json.{Format, Json}
 
 case class PassportType(number: String,
                         expirationDate: LocalDate,
-                        countryOfIssue: String)
+                        countryOfIssue: String,
+                        isPassport: Option[Boolean] = Some(true))
 
 object PassportType {
   implicit val passportTypeFormat: Format[PassportType] = Json.format[PassportType]

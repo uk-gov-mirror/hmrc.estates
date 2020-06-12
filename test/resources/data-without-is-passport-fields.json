@@ -1,0 +1,20 @@
+{
+  "object1": {
+    "field": "field"
+  },
+  "object2": {
+    "array": [
+      {
+        "field": "field"
+      },
+      {
+        "object": {
+          "field": "field"
+        }
+      },
+      {
+        "field": "field"
+      }
+    ]
+  }
+}

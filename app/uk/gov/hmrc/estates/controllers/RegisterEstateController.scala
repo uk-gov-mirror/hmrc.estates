@@ -28,11 +28,12 @@ import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.services.{AuditService, DesService, RosmPatternService, ValidationService}
 import uk.gov.hmrc.estates.utils.ErrorResponses._
+import uk.gov.hmrc.estates.utils.JsonOps._
+import uk.gov.hmrc.estates.models.JsonWithoutNulls._
 import uk.gov.hmrc.http.BadRequestException
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-
 
 class RegisterEstateController @Inject()(desService: DesService, config: AppConfig,
                                          validationService: ValidationService,
@@ -44,11 +45,11 @@ class RegisterEstateController @Inject()(desService: DesService, config: AppConf
   def registration(): Action[JsValue] = identifierAction.async(parse.json) {
     implicit request =>
 
-      val registrationJsonString = request.body.toString()
+      val payload = request.body.applyRules().toString
 
       validationService
         .get(config.estatesApiRegistrationSchema)
-        .validate[EstateRegistration](registrationJsonString) match {
+        .validate[EstateRegistration](payload) match {
 
         case Right(estatesRegistrationRequest) =>
           desService.registerEstate(estatesRegistrationRequest).flatMap {

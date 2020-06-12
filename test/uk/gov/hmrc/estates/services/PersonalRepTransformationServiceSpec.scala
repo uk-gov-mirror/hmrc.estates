@@ -21,13 +21,13 @@ import java.time.LocalDate
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
+import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers with OptionValues {
 

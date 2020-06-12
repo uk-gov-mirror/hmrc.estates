@@ -17,7 +17,6 @@
 package uk.gov.hmrc.estates.utils
 
 import play.api.libs.json._
-import uk.gov.hmrc.estates.models.JsonWithoutNulls._
 
 object JsonOps {
 
@@ -55,16 +54,15 @@ object JsonOps {
             val updatedFields = obj.fieldSet.toSeq.map {
               case (field, fieldValue) => field -> traverseRec(prefix / field, fieldValue)
             }
-            JsObject(updatedFields).withoutNulls
+            JsObject(updatedFields)
         }
       }
 
       traverseRec(Nil, underlying)
     }
 
-    def applyRules(): JsValue = underlying.traverse {
+    def applyRules: JsValue = underlying.traverse {
         case (path, JsString(phone)) if path.isEndsWith("phoneNumber") => JsString(phone.replaceAll("\\(0\\)", ""))
-        case (path, _: JsBoolean) if path.isEndsWith("isPassport") => JsNull
       }
   }
 }

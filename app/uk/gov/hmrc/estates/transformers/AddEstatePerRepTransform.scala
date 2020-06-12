@@ -19,6 +19,7 @@ package uk.gov.hmrc.estates.transformers
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.models.JsonWithoutNulls._
+import uk.gov.hmrc.estates.utils.JsonOps._
 
 case class AddEstatePerRepTransform(
                                      newPersonalIndRep: Option[EstatePerRepIndType],
@@ -34,7 +35,7 @@ case class AddEstatePerRepTransform(
     val newPersonalRep = Json.obj(
       "estatePerRepInd" -> newPersonalIndRep,
       "estatePerRepOrg" -> newPersonalOrgRep
-    ).withoutNulls
+    ).withoutNulls.applyRules
 
     val updatedPersonalRep = newPersonalRep.transform(isPassportPath.json.prune) match {
       case JsSuccess(value, _) => value

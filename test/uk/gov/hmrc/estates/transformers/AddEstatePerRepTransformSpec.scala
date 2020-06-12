@@ -71,21 +71,21 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
         result mustBe afterJson
       }
 
-      "when the personal rep has passport details" in {
+      "remove isPassport field and apply phone number rules upon applying transform" in {
 
         val personalRepInd = EstatePerRepIndType(
           name =  NameType("Alister", None, "Mc'Lovern"),
           dateOfBirth = LocalDate.of(1980,6,1),
           identification = IdentificationType(
             None,
-            Some(PassportType("123456789", LocalDate.parse("2025-09-28"), "ES")),
+            Some(PassportType("123456789", LocalDate.parse("2025-09-28"), "ES", Some(true))),
             Some(AddressType("Address line 1", "Address line 2", Some("Address line 3"), Some("Town or city"), Some("Z99 2YY"), "GB"))
           ),
-          phoneNumber = "078888888",
+          phoneNumber = "(0)078888888",
           email = Some("test@abc.com")
         )
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-03.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-03-with-is-passport-field.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-03-personal-rep-ind-transformed.json")
 

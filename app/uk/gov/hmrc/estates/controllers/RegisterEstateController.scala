@@ -45,7 +45,7 @@ class RegisterEstateController @Inject()(desService: DesService, config: AppConf
   def registration(): Action[JsValue] = identifierAction.async(parse.json) {
     implicit request =>
 
-      val payload = request.body.applyRules().toString
+      val payload = request.body.applyRules.toString
 
       validationService
         .get(config.estatesApiRegistrationSchema)

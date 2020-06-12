@@ -18,11 +18,10 @@ package uk.gov.hmrc.estates.controllers
 
 import javax.inject.Inject
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsError, JsString, JsSuccess, JsValue, Json}
+import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
-import uk.gov.hmrc.estates.services.{CorrespondenceTransformationService, LocalDateService, PersonalRepTransformationService}
+import uk.gov.hmrc.estates.services.CorrespondenceTransformationService
 import uk.gov.hmrc.estates.utils.ValidationUtil
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,8 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CorrespondenceTransformationController @Inject()(
                                                         identify: IdentifierAction,
                                                         personalRepTransformationService: CorrespondenceTransformationService,
-                                                        cc: ControllerComponents,
-                                                        localDateService: LocalDateService
+                                                        cc: ControllerComponents
                                         )(implicit val executionContext: ExecutionContext) extends EstatesBaseController(cc) with ValidationUtil {
 
   private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
@@ -40,12 +38,12 @@ class CorrespondenceTransformationController @Inject()(
     implicit request =>
       personalRepTransformationService.getCorrespondenceName(request.identifier) map { correspondenceName =>
         Ok(
-          correspondenceName.map(name => Json.obj("name" -> name)).getOrElse(Json.obj())
+          correspondenceName.getOrElse(Json.obj())
         )
       }
   }
 
-  def amendCorrespondenceName(): Action[JsValue] = identify.async(parse.json) {
+  def addCorrespondenceName(): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[JsString] match {
         case JsSuccess(model, _) =>

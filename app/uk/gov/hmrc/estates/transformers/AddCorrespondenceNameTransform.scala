@@ -19,22 +19,22 @@ package uk.gov.hmrc.estates.transformers
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.EstatePerRepOrgType
 
-case class AmendCorrespondenceNameTransform(newCorrespondenceName: JsString)
+case class AddCorrespondenceNameTransform(newCorrespondenceName: JsString)
   extends DeltaTransform with JsonOperations {
 
   private lazy val path = __ \ 'correspondence \ 'name
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     input.transform(
-      path.json.prune andThen __.json.update(path.json.put(newCorrespondenceName))
+      __.json.update(path.json.put(newCorrespondenceName))
     )
   }
 
 }
 
-object AmendCorrespondenceNameTransform {
+object AddCorrespondenceNameTransform {
 
-  val key = "AmendCorrespondenceNameTransform"
+  val key = "AddCorrespondenceNameTransform"
 
-  implicit val format: Format[AmendCorrespondenceNameTransform] = Json.format[AmendCorrespondenceNameTransform]
+  implicit val format: Format[AddCorrespondenceNameTransform] = Json.format[AddCorrespondenceNameTransform]
 }

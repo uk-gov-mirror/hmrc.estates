@@ -18,8 +18,7 @@ package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
 import play.api.libs.json.JsString
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
-import uk.gov.hmrc.estates.transformers.{AmendCorrespondenceNameTransform, AmendEstatePerRepIndTransform, AmendEstatePerRepOrgTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, ComposedDeltaTransform}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
@@ -29,15 +28,15 @@ class CorrespondenceTransformationService @Inject()(
                                                 )(implicit val ec: ExecutionContext) {
 
   def addAmendCorrespondenceNameTransformer(internalId: String, newCorrespondenceName: JsString): Future[Success.type] =
-    transformationService.addNewTransform(internalId, AmendCorrespondenceNameTransform(newCorrespondenceName)).map(_ => Success)
+    transformationService.addNewTransform(internalId, AddCorrespondenceNameTransform(newCorrespondenceName)).map(_ => Success)
 
   def getCorrespondenceName(internalId: String): Future[Option[JsString]] = {
     transformationService.getTransformedData(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
-          case AmendCorrespondenceNameTransform(name) => Some(name)
+          case AddCorrespondenceNameTransform(name) => Some(name)
           case _ => None
-        }.headOption
+        }.lastOption
       case _ => None
     }
   }

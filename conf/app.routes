@@ -2,6 +2,8 @@
 
 ->          /personal-rep               personalRep.Routes
 
+->          /correspondence             correspondence.Routes
+
 GET         /amount-tax-owed            uk.gov.hmrc.estates.controllers.transformers.register.AmountOfTaxOwedTransformationController.get
 POST        /amount-tax-owed            uk.gov.hmrc.estates.controllers.transformers.register.AmountOfTaxOwedTransformationController.save
 

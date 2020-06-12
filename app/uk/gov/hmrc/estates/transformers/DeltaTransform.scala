@@ -36,6 +36,10 @@ object DeltaTransform {
     readsForTransform[AddEstatePerRepTransform](AddEstatePerRepTransform.key)
   }
 
+  def correspondenceNameReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AddCorrespondenceNameTransform](AddCorrespondenceNameTransform.key)
+  }
+
   def agentDetailsReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
     readsForTransform[AgentDetailsTransform](AgentDetailsTransform.key)
   }
@@ -50,6 +54,7 @@ object DeltaTransform {
         personalRepReads orElse
         agentDetailsReads orElse
         amountTaxOwedReads orElse
+        correspondenceNameReads orElse
         readsForTransform[DeceasedTransform](DeceasedTransform.key)
       )
       (value.as[JsObject]) orElse
@@ -59,6 +64,11 @@ object DeltaTransform {
   def personalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
     case transform: AddEstatePerRepTransform =>
       Json.obj(AddEstatePerRepTransform.key -> Json.toJson(transform)(AddEstatePerRepTransform.format))
+  }
+
+  def correspondenceNameWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AddCorrespondenceNameTransform =>
+      Json.obj(AddCorrespondenceNameTransform.key -> Json.toJson(transform)(AddCorrespondenceNameTransform.format))
   }
 
   def agentDetailsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
@@ -86,6 +96,7 @@ object DeltaTransform {
       agentDetailsWrites orElse
       amountOfTaxOwedWrites orElse
       deceasedWrites orElse
+      correspondenceNameWrites orElse
       defaultWrites
       ).apply(deltaTransform)
   }

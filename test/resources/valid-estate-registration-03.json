@@ -53,8 +53,7 @@
               "passport": {
                 "number": "123456789",
                 "expirationDate": "2025-09-28",
-                "countryOfIssue": "ES",
-                "isPassport": true
+                "countryOfIssue": "ES"
               },
               "address": {
                 "line1": "Address line 1",

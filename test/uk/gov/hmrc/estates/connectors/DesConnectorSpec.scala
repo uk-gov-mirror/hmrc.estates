@@ -444,6 +444,23 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
       }
     }
 
+    "return NotEnoughDataResponse" when {
+
+      "des has returned a 204" in {
+        val utr = "6666666666"
+        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, Json.stringify(jsonResponse204))
+
+        val futureResult = connector.getEstateInfo(utr)
+
+        whenReady(futureResult) { result =>
+          result mustBe NotEnoughDataResponse(jsonResponse204, Json.parse(
+            """
+              |{"obj.responseHeader":[{"msg":["error.path.missing"],"args":[]}]}
+              |""".stripMargin))
+        }
+      }
+    }
+
     "return InternalServerErrorResponse" when {
       "des has returned a 500 with the code SERVER_ERROR" in {
         val utr = "1234567893"
@@ -469,7 +486,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         }
       }
     }
-  }//getEstateInfo
+  }
 
   ".EstateVariation" should {
 

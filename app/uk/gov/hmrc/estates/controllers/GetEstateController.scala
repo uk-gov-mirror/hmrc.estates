@@ -60,6 +60,21 @@ class GetEstateController @Inject()(identify: IdentifierAction,
         auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "Invalid regime received from DES.")
         InternalServerError
 
+      case NotEnoughDataResponse(json, errors) =>
+        val reason = Json.obj(
+          "response" -> json,
+          "reason" -> "Missing mandatory fields in response received from DES",
+          "errors" -> errors
+        )
+
+        auditService.audit(
+          event = Auditing.GET_ESTATE,
+          request = Json.obj("utr" -> utr),
+          internalId = request.identifier,
+          response = reason
+        )
+
+        InternalServerError
       case _: BadRequestResponse.type =>
         auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "Bad Request received from DES.")
         InternalServerError

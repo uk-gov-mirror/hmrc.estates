@@ -19,7 +19,7 @@ package uk.gov.hmrc.estates.transformers
 import java.time.LocalDate
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType}
+import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with OptionValues {
@@ -65,6 +65,31 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
         val transformer = new AddEstatePerRepTransform(Some(newPersonalRepInd), None)
+
+        val result = transformer.applyTransform(trustJson).get
+
+        result mustBe afterJson
+      }
+
+      "remove isPassport field and apply phone number rules upon applying transform" in {
+
+        val personalRepInd = EstatePerRepIndType(
+          name =  NameType("Alister", None, "Mc'Lovern"),
+          dateOfBirth = LocalDate.of(1980,6,1),
+          identification = IdentificationType(
+            None,
+            Some(PassportType("123456789", LocalDate.parse("2025-09-28"), "ES", Some(true))),
+            Some(AddressType("Address line 1", "Address line 2", Some("Address line 3"), Some("Town or city"), Some("Z99 2YY"), "GB"))
+          ),
+          phoneNumber = "(0)078888888",
+          email = Some("test@abc.com")
+        )
+
+        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-03-with-is-passport-field.json")
+
+        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-03-personal-rep-ind-transformed.json")
+
+        val transformer = new AddEstatePerRepTransform(Some(personalRepInd), None)
 
         val result = transformer.applyTransform(trustJson).get
 

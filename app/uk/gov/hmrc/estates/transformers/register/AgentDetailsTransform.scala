@@ -19,6 +19,7 @@ package uk.gov.hmrc.estates.transformers.register
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.register.AgentDetails
 import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
+import uk.gov.hmrc.estates.utils.JsonOps._
 
 case class AgentDetailsTransform(agentDetails: AgentDetails)
     extends DeltaTransform with JsonOperations {
@@ -27,7 +28,8 @@ case class AgentDetailsTransform(agentDetails: AgentDetails)
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     input.transform(
-      path.json.prune andThen __.json.update(path.json.put(Json.toJson(agentDetails)))
+      path.json.prune andThen
+        __.json.update(path.json.put(Json.toJson(agentDetails).applyRules))
     )
   }
 

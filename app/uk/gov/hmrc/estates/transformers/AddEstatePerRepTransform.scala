@@ -19,6 +19,7 @@ package uk.gov.hmrc.estates.transformers
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.models.JsonWithoutNulls._
+import uk.gov.hmrc.estates.utils.JsonOps._
 
 case class AddEstatePerRepTransform(
                                      newPersonalIndRep: Option[EstatePerRepIndType],
@@ -29,15 +30,25 @@ case class AddEstatePerRepTransform(
   private lazy val path = __ \ 'estate \ 'entities \ 'personalRepresentative
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
+
     val newPersonalRep = Json.obj(
       "estatePerRepInd" -> newPersonalIndRep,
       "estatePerRepOrg" -> newPersonalOrgRep
-    ).withoutNulls
+    ).withoutNulls.applyRules
 
     input.transform(
       path.json.prune andThen
-        __.json.update(path.json.put(Json.toJson(newPersonalRep)))
+        __.json.update(path.json.put(Json.toJson(removeIsPassportField(newPersonalRep))))
     )
+  }
+
+  private def removeIsPassportField(original: JsValue): JsValue = {
+    val isPassportPath = __ \ 'estatePerRepInd \ 'identification \ 'passport \ 'isPassport
+
+    original.transform(isPassportPath.json.prune) match {
+      case JsSuccess(updated, _) => updated
+      case JsError(_) => original
+    }
   }
 }
 

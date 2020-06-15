@@ -50,7 +50,7 @@ object GetEstateResponse {
                 estateFound
               case JsError(errors) =>
                 Logger.info(s"[GetTrustResponse] Cannot parse as EstateFoundResponse due to $errors")
-                InternalServerErrorResponse
+                NotEnoughDataResponse(response.json, JsError.toJson(errors))
             }
           case BAD_REQUEST =>
             response.json.asOpt[DesErrorResponse] match {

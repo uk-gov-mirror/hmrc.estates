@@ -19,7 +19,7 @@ package uk.gov.hmrc.estates.transformers
 import java.time.LocalDate
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, Json}
 import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
@@ -43,6 +43,21 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
       line4 = None,
       postCode = Some("NE981ZZ"),
       country = "GB"
+    ))),
+    phoneNumber = "078888888",
+    email = Some("test@abc.com")
+  )
+
+  val newPersonalRepIndWithNonUkAddress = EstatePerRepIndType(
+    name =  NameType("Alister", None, "Mc'Lovern"),
+    dateOfBirth = LocalDate.of(1980,6,1),
+    identification = IdentificationType(None, None, Some(AddressType(
+      line1 = "Line 1",
+      line2 = "Line 2",
+      line3 = None,
+      line4 = None,
+      postCode = None,
+      country = "DE"
     ))),
     phoneNumber = "078888888",
     email = Some("test@abc.com")
@@ -144,6 +159,18 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
   "the personal rep declaration transform" - {
 
+    "when personal rep doesn't have an address" in {
+      val document = Json.obj()
+
+      val transformer = new AddEstatePerRepTransform(Some(newPersonalRepInd), None)
+
+      val result = transformer.applyDeclarationTransform(document)
+
+      val expectedResult = JsError("No address on personal rep individual to apply to correspondence")
+
+      result mustBe expectedResult
+    }
+
     "uk based personal rep individual" - {
 
       "must write to correspondence" - {
@@ -156,7 +183,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
           val result = transformer.applyDeclarationTransform(document).get
 
-          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence.json")
+          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-uk-address.json")
 
           result mustBe expectedResult
         }
@@ -172,7 +199,44 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
           val result = transformer.applyDeclarationTransform(document).get
 
-          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-name.json")
+          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-uk-address-and-name.json")
+
+          result mustBe expectedResult
+        }
+
+      }
+
+    }
+
+    "non-uk based personal rep individual" - {
+
+      "must write to correspondence" - {
+
+        "when starting with a blank document" in {
+
+          val document = Json.obj()
+
+          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+
+          val result = transformer.applyDeclarationTransform(document).get
+
+          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-non-uk-address.json")
+
+          result mustBe expectedResult
+        }
+
+        "when not starting with a blank document" in {
+          val document = Json.obj(
+            "correspondence" -> Json.obj(
+              "name" -> "Estate of Personal Rep"
+            )
+          )
+
+          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+
+          val result = transformer.applyDeclarationTransform(document).get
+
+          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-non-uk-address-and-name.json")
 
           result mustBe expectedResult
         }

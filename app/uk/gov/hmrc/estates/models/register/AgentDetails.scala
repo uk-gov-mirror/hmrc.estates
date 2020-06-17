@@ -18,7 +18,7 @@ package uk.gov.hmrc.estates.models.register
 
 import play.api.libs.json.{Format, Json}
 
-case class AgentDetails(arn: String,
+case class AgentDetails(arn: String, // Remove the ARN from the transform and frontend?
                         agentName: String,
                         agentAddress: AddressType,
                         agentTelephoneNumber: String,

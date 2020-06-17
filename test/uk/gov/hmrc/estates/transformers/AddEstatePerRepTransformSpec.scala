@@ -19,6 +19,7 @@ package uk.gov.hmrc.estates.transformers
 import java.time.LocalDate
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import play.api.libs.json.Json
 import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
@@ -28,6 +29,21 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
     name =  NameType("Alister", None, "Mc'Lovern"),
     dateOfBirth = LocalDate.of(1980,6,1),
     identification = IdentificationType(Some("JS123456A"), None, None),
+    phoneNumber = "078888888",
+    email = Some("test@abc.com")
+  )
+
+  val newPersonalRepIndWithUkAddress = EstatePerRepIndType(
+    name =  NameType("Alister", None, "Mc'Lovern"),
+    dateOfBirth = LocalDate.of(1980,6,1),
+    identification = IdentificationType(None, None, Some(AddressType(
+      line1 = "Line 1",
+      line2 = "Line 2",
+      line3 = None,
+      line4 = None,
+      postCode = Some("NE981ZZ"),
+      country = "GB"
+    ))),
     phoneNumber = "078888888",
     email = Some("test@abc.com")
   )
@@ -122,6 +138,47 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         result mustBe afterJson
       }
+    }
+
+  }
+
+  "the personal rep declaration transform" - {
+
+    "uk based personal rep individual" - {
+
+      "must write to correspondence" - {
+
+        "when starting with a blank document" in {
+
+          val document = Json.obj()
+
+          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+
+          val result = transformer.applyDeclarationTransform(document).get
+
+          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence.json")
+
+          result mustBe expectedResult
+        }
+
+        "when not starting with a blank document" in {
+          val document = Json.obj(
+            "correspondence" -> Json.obj(
+              "name" -> "Estate of Personal Rep"
+            )
+          )
+
+          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+
+          val result = transformer.applyDeclarationTransform(document).get
+
+          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-name.json")
+
+          result mustBe expectedResult
+        }
+
+      }
+
     }
 
   }

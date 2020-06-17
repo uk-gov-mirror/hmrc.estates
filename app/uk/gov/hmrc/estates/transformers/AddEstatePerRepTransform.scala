@@ -29,6 +29,8 @@ case class AddEstatePerRepTransform(
 
   private lazy val path = __ \ 'estate \ 'entities \ 'personalRepresentative
 
+  private lazy val correspondencePath = __ \ 'correspondence
+
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
 
     val newPersonalRep = Json.obj(
@@ -40,6 +42,36 @@ case class AddEstatePerRepTransform(
       path.json.prune andThen
         __.json.update(path.json.put(Json.toJson(removeIsPassportField(newPersonalRep))))
     )
+  }
+
+  override def applyDeclarationTransform(input: JsValue): JsResult[JsValue] = {
+    this match {
+      case AddEstatePerRepTransform(Some(newPersonalIndRep), None) =>
+        val telephone = newPersonalIndRep.phoneNumber
+        newPersonalIndRep.identification.address match {
+          case Some(address) =>
+            val isAbroad = address.postCode.isEmpty
+
+            input.transform(
+              __.json.update(
+                correspondencePath.json.put {
+                  Json.obj(
+                    "abroadIndicator" -> isAbroad,
+                    "address" -> address,
+                    "phoneNumber" -> telephone
+                  )
+                }
+              )
+            )
+
+          case None =>
+            JsError("No address on personal rep individual to apply to correspondence")
+        }
+      case AddEstatePerRepTransform(None, Some(newPersonalOrgRep)) =>
+        super.applyDeclarationTransform(input)
+      case _ =>
+        super.applyDeclarationTransform(input)
+    }
   }
 
   private def removeIsPassportField(original: JsValue): JsValue = {

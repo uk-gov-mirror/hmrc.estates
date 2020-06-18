@@ -18,11 +18,10 @@ package uk.gov.hmrc.estates.services.register
 
 import javax.inject.Inject
 import play.api.Logger
-import play.api.libs.json.{JsError, JsResult, JsSuccess, JsValue, Json}
-import play.api.mvc.AnyContent
-import uk.gov.hmrc.estates.models.{EstateRegistration, NameType, RegistrationFailureResponse, RegistrationResponse}
+import play.api.libs.json._
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
+import uk.gov.hmrc.estates.models.{EstateRegistration, NameType, RegistrationResponse}
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeclarationTransformer}
@@ -36,32 +35,42 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                    )(implicit ec: ExecutionContext) {
 
   def submit(declaration: RegistrationDeclaration)
-            (implicit request: IdentifierRequest[_]) : Future[RegistrationResponse] = ???
+            (implicit request: IdentifierRequest[_]): Future[RegistrationResponse] = {
+    repository.get(request.identifier) flatMap {
+      case Some(t) =>
+        buildSubmissionFromTransforms(declaration.name, t) match {
+          case JsSuccess(json, _) =>
+            json.asOpt[EstateRegistration] match {
+              case Some(payload) =>
+                desService.registerEstate(payload)
+              case None =>
+                Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration"))
+            }
+          case JsError(errors) =>
+            Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
+        }
+      case None =>
+        Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
+    }
+  }
 
-  def buildSubmissionFromTransforms(name: NameType, transforms : ComposedDeltaTransform)
+  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform)
                                    (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
-
-        // Audit transforms to splunk
-
-        // Audit final document about to be submitted
-
-        // Recover and audit why we couldn't submit the registration
-
-        val startingDocument = Json.obj()
-        for {
-          initial <- {
-            Logger.info(s"[RegistrationService] applying transformations")
-            transforms.applyTransform(startingDocument)
-          }
-          transformed <- {
-            Logger.info(s"[RegistrationService] applying declaration transformations")
-            transforms.applyDeclarationTransform(initial)
-          }
-          result <- {
-            Logger.info(s"[RegistrationService] applying final transformations")
-            declarationTransformer.transform(request.affinityGroup, transformed, name)
-          }
-        } yield result
+    val startingDocument = Json.obj()
+    for {
+      initial <- {
+        Logger.info(s"[RegistrationService] applying transformations")
+        transforms.applyTransform(startingDocument)
+      }
+      transformed <- {
+        Logger.info(s"[RegistrationService] applying declaration transformations")
+        transforms.applyDeclarationTransform(initial)
+      }
+      result <- {
+        Logger.info(s"[RegistrationService] applying final transformations")
+        declarationTransformer.transform(request.affinityGroup, transformed, name)
+      }
+    } yield result
   }
 
 

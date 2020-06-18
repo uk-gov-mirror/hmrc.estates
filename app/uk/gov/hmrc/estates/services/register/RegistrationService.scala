@@ -18,13 +18,14 @@ package uk.gov.hmrc.estates.services.register
 
 import javax.inject.Inject
 import play.api.Logger
-import play.api.libs.json.{JsError, JsResult, JsValue, Json}
+import play.api.libs.json.{JsError, JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.AnyContent
-import uk.gov.hmrc.estates.models.NameType
+import uk.gov.hmrc.estates.models.{EstateRegistration, NameType, RegistrationFailureResponse, RegistrationResponse}
+import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
-import uk.gov.hmrc.estates.transformers.DeclarationTransformer
+import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeclarationTransformer}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,10 +35,11 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                     declarationTransformer: DeclarationTransformer
                                    )(implicit ec: ExecutionContext) {
 
-  def applyRegistrationTransforms(name: NameType)(implicit request: IdentifierRequest[AnyContent]): Future[JsResult[JsValue]] = {
+  def submit(declaration: RegistrationDeclaration)
+            (implicit request: IdentifierRequest[_]) : Future[RegistrationResponse] = ???
 
-    repository.get(request.identifier) map {
-      case Some(transforms) =>
+  def buildSubmissionFromTransforms(name: NameType, transforms : ComposedDeltaTransform)
+                                   (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
 
         // Audit transforms to splunk
 
@@ -60,8 +62,6 @@ class RegistrationService @Inject()(repository: TransformationRepository,
             declarationTransformer.transform(request.affinityGroup, transformed, name)
           }
         } yield result
-      case _ => JsError("No transforms to build document")
-    }
   }
 
 

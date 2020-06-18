@@ -26,10 +26,11 @@ import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.ApiResponse._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.auditing.Auditing
+import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
+import uk.gov.hmrc.estates.services.register.RegistrationService
 import uk.gov.hmrc.estates.services.{AuditService, DesService, RosmPatternService, ValidationService}
 import uk.gov.hmrc.estates.utils.ErrorResponses._
 import uk.gov.hmrc.estates.utils.JsonOps._
-import uk.gov.hmrc.estates.models.JsonWithoutNulls._
 import uk.gov.hmrc.http.BadRequestException
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +40,8 @@ class RegisterEstateController @Inject()(desService: DesService, config: AppConf
                                          validationService: ValidationService,
                                          identifierAction: IdentifierAction,
                                          rosmPatternService: RosmPatternService,
-                                         auditService: AuditService)
+                                         auditService: AuditService,
+                                         registrationService: RegistrationService)
                                         (implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
 
   def registration(): Action[JsValue] = identifierAction.async(parse.json) {
@@ -122,5 +124,23 @@ class RegisterEstateController @Inject()(desService: DesService, config: AppConf
       }
 
   }
+
+//  def declare() = identifierAction.async(parse.json) {
+//    implicit request => {
+//      request.body.validate[RegistrationDeclaration].fold(
+//        errors => {
+//          Logger.error(s"[RegisterEstateController][declare] unable to parse json as RegistrationDeclaration, $errors")
+//          Future.successful(BadRequest)
+//        },
+//        declaration => {
+//          registrationService
+//            .submit(declaration)
+//            .map(response => Ok(Json.toJson(response)))
+//        } recover {
+//          case _ => INTERNAL_SERVER_ERROR
+//        }
+//      )
+//    }
+//  }
 
 }

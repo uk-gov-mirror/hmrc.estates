@@ -18,8 +18,6 @@ package uk.gov.hmrc.estates.services.register
 
 import java.time.LocalDate
 
-import org.mockito.Matchers.any
-import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
@@ -37,7 +35,6 @@ import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, AddEsta
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 import scala.concurrent.ExecutionContext.Implicits._
-import scala.concurrent.Future
 
 class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutures with MustMatchers with OptionValues {
 
@@ -77,18 +74,15 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       )
     ))
 
-    when(mockTransformationRepository.get(any())).thenReturn(
-      Future.successful(Some(transforms))
-    )
-
     val expectedJson = JsonUtils.getJsonValueFromFile("transformed/declared/registration-submission-with-personal-rep-ind-no-tax-no-agent.json")
 
-    val transformedJson = service.applyRegistrationTransforms(NameType("John", None, "Doe"))(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
+    val transformedJson = service.buildSubmissionFromTransforms(
+      NameType("John", None, "Doe"),
+      transforms
+    )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
 
-    whenReady(transformedJson) { result =>
-      result.get mustEqual expectedJson
-      result.get.validate[EstateRegistration].isSuccess mustBe true
-    }
+    transformedJson.get mustEqual expectedJson
+    transformedJson.get.validate[EstateRegistration].isSuccess mustBe true
   }
 
   "Organisation registering with tax liability" in {
@@ -128,18 +122,15 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       YearsReturnsTransform(YearsReturns(List(YearReturnType("20", taxConsequence = true))))
     ))
 
-    when(mockTransformationRepository.get(any())).thenReturn(
-      Future.successful(Some(transforms))
-    )
-
     val expectedJson = JsonUtils.getJsonValueFromFile("transformed/declared/registration-submission-with-personal-rep-ind-with-tax-no-agent.json")
 
-    val transformedJson = service.applyRegistrationTransforms(NameType("John", None, "Doe"))(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
+    val transformedJson = service.buildSubmissionFromTransforms(
+      NameType("John", None, "Doe"),
+      transforms
+    )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
 
-    whenReady(transformedJson) { result =>
-      result.get mustEqual expectedJson
-      result.get.validate[EstateRegistration].isSuccess mustBe true
-    }
+    transformedJson.get mustEqual expectedJson
+    transformedJson.get.validate[EstateRegistration].isSuccess mustBe true
   }
 
   "Agent registering with no tax liability" in {
@@ -177,17 +168,14 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       AgentDetailsTransform(AgentDetails("arn", "Agency Ltd", AddressType("line1", "line2", None, None, None, "FR"), "tel", "crn"))
     ))
 
-    when(mockTransformationRepository.get(any())).thenReturn(
-      Future.successful(Some(transforms))
-    )
-
     val expectedJson = JsonUtils.getJsonValueFromFile("transformed/declared/registration-submission-with-personal-rep-ind-no-tax-with-agent.json")
 
-    val transformedJson = service.applyRegistrationTransforms(NameType("John", None, "Doe"))(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Agent))
+    val transformedJson = service.buildSubmissionFromTransforms(
+      NameType("John", None, "Doe"),
+      transforms
+    )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Agent))
 
-    whenReady(transformedJson) { result =>
-      result.get mustEqual expectedJson
-      result.get.validate[EstateRegistration].isSuccess mustBe true
-    }
+    transformedJson.get mustEqual expectedJson
+    transformedJson.get.validate[EstateRegistration].isSuccess mustBe true
   }
 }

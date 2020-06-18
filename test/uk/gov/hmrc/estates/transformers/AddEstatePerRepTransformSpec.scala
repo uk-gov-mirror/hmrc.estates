@@ -63,11 +63,21 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
     email = Some("test@abc.com")
   )
 
-  val newPersonalRepOrg = EstatePerRepOrgType(
+  val newPersonalRepOrgWithUkAddress = EstatePerRepOrgType(
     orgName =  "Lovely Organisation",
     identification = IdentificationOrgType(
       None,
       Some(AddressType("line1", "line2", Some("line3"), Some("line4"), Some("postCode"), "Country"))
+    ),
+    phoneNumber = "078888888",
+    email = Some("testy@xyz.org")
+  )
+
+  val newPersonalRepOrgWithNonUkAddress = EstatePerRepOrgType(
+    orgName =  "Lovely Organisation",
+    identification = IdentificationOrgType(
+      None,
+      Some(AddressType("line1", "line2", Some("line3"), Some("line4"), None, "Country"))
     ),
     phoneNumber = "078888888",
     email = Some("testy@xyz.org")
@@ -135,7 +145,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed.json")
 
-        val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrg))
+        val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -147,7 +157,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed.json")
 
-        val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrg))
+        val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -171,78 +181,154 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
       result mustBe expectedResult
     }
 
-    "uk based personal rep individual" - {
+    "individual personal rep" - {
 
-      "must write to correspondence" - {
+      "UK based" - {
 
-        "when starting with a blank document" in {
+        "must write to correspondence" - {
 
-          val document = Json.obj()
+          "when starting with a blank document" in {
 
-          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+            val document = Json.obj()
 
-          val result = transformer.applyDeclarationTransform(document).get
+            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
 
-          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-uk-address.json")
+            val result = transformer.applyDeclarationTransform(document).get
 
-          result mustBe expectedResult
-        }
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-uk-address.json")
 
-        "when not starting with a blank document" in {
-          val document = Json.obj(
-            "correspondence" -> Json.obj(
-              "name" -> "Estate of Personal Rep"
+            result mustBe expectedResult
+          }
+
+          "when not starting with a blank document" in {
+            val document = Json.obj(
+              "correspondence" -> Json.obj(
+                "name" -> "Estate of Personal Rep"
+              )
             )
-          )
 
-          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
 
-          val result = transformer.applyDeclarationTransform(document).get
+            val result = transformer.applyDeclarationTransform(document).get
 
-          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-uk-address-and-name.json")
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-uk-address-and-name.json")
 
-          result mustBe expectedResult
+            result mustBe expectedResult
+          }
+
         }
-
       }
 
+      "non-UK based" - {
+
+        "must write to correspondence" - {
+
+          "when starting with a blank document" in {
+
+            val document = Json.obj()
+
+            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+
+            val result = transformer.applyDeclarationTransform(document).get
+
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-non-uk-address.json")
+
+            result mustBe expectedResult
+          }
+
+          "when not starting with a blank document" in {
+            val document = Json.obj(
+              "correspondence" -> Json.obj(
+                "name" -> "Estate of Personal Rep"
+              )
+            )
+
+            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+
+            val result = transformer.applyDeclarationTransform(document).get
+
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-non-uk-address-and-name.json")
+
+            result mustBe expectedResult
+          }
+
+        }
+      }
     }
 
-    "non-uk based personal rep individual" - {
+    "business personal rep" - {
 
-      "must write to correspondence" - {
+      "UK based" - {
 
-        "when starting with a blank document" in {
+        "must write to correspondence" - {
 
-          val document = Json.obj()
+          "when starting with a blank document" in {
 
-          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+            val document = Json.obj()
 
-          val result = transformer.applyDeclarationTransform(document).get
+            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
-          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-non-uk-address.json")
+            val result = transformer.applyDeclarationTransform(document).get
 
-          result mustBe expectedResult
-        }
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-org-correspondence-with-uk-address.json")
 
-        "when not starting with a blank document" in {
-          val document = Json.obj(
-            "correspondence" -> Json.obj(
-              "name" -> "Estate of Personal Rep"
+            result mustBe expectedResult
+          }
+
+          "when not starting with a blank document" in {
+            val document = Json.obj(
+              "correspondence" -> Json.obj(
+                "name" -> "Estate of Personal Rep"
+              )
             )
-          )
 
-          val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
-          val result = transformer.applyDeclarationTransform(document).get
+            val result = transformer.applyDeclarationTransform(document).get
 
-          val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-correspondence-with-non-uk-address-and-name.json")
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-org-correspondence-with-uk-address-and-name.json")
 
-          result mustBe expectedResult
+            result mustBe expectedResult
+          }
+
         }
-
       }
 
+      "non-UK based" - {
+
+        "must write to correspondence" - {
+
+          "when starting with a blank document" in {
+
+            val document = Json.obj()
+
+            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
+
+            val result = transformer.applyDeclarationTransform(document).get
+
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-org-correspondence-with-non-uk-address.json")
+
+            result mustBe expectedResult
+          }
+
+          "when not starting with a blank document" in {
+            val document = Json.obj(
+              "correspondence" -> Json.obj(
+                "name" -> "Estate of Personal Rep"
+              )
+            )
+
+            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
+
+            val result = transformer.applyDeclarationTransform(document).get
+
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-org-correspondence-with-non-uk-address-and-name.json")
+
+            result mustBe expectedResult
+          }
+
+        }
+      }
     }
 
   }

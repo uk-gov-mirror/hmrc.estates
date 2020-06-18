@@ -26,9 +26,15 @@ case class DeceasedTransform(deceased: EstateWillType)
   private lazy val path = __ \ 'estate \ 'entities \ 'deceased
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
-    input.transform(
-      path.json.prune andThen __.json.update(path.json.put(Json.toJson(deceased)))
-    )
+    if (input.transform(path.json.pick).isSuccess) {
+      input.transform(
+        path.json.prune andThen __.json.update(path.json.put(Json.toJson(deceased)))
+      )
+    } else {
+      input.transform(
+        __.json.update(path.json.put(Json.toJson(deceased)))
+      )
+    }
   }
 }
 

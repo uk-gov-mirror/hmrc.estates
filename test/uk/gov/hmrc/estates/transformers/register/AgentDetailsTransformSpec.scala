@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import uk.gov.hmrc.estates.models.register.{AddressType, AgentDetails}
+import uk.gov.hmrc.estates.models.{AddressType, AgentDetails}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionValues {

@@ -38,6 +38,13 @@ class RegistrationService @Inject()(repository: TransformationRepository,
 
     repository.get(request.identifier) map {
       case Some(transforms) =>
+
+        // Audit transforms to splunk
+
+        // Audit final document about to be submitted
+
+        // Recover and audit why we couldn't submit the registration
+
         val startingDocument = Json.obj()
         for {
           initial <- {
@@ -50,7 +57,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
           }
           result <- {
             Logger.info(s"[RegistrationService] applying final transformations")
-            declarationTransformer.transform(transformed, name)
+            declarationTransformer.transform(request.affinityGroup, transformed, name)
           }
         } yield result
       case _ => JsError("No transforms to build document")

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
-import uk.gov.hmrc.estates.models.register.AgentDetails
+import uk.gov.hmrc.estates.models.AgentDetails
 import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
 import uk.gov.hmrc.estates.utils.JsonOps._
 

@@ -17,20 +17,26 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json._
+import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.models.{AddressType, Declaration, NameType}
 
 class DeclarationTransformer {
 
-  def transform(body: JsValue, declarationName: NameType): JsResult[JsValue] = {
-
-    addDeclaration(declarationName, body)
+  def transform(actor: AffinityGroup, body: JsValue, declarationName: NameType): JsResult[JsValue] = {
+    addDeclaration(actor, declarationName, body)
   }
 
   private val correspondenceAddressPath: JsPath = __ \ 'correspondence \ 'address
+  private val agentAddressPath: JsPath          = __ \ 'agentDetails \ 'agentAddress
 
-  private def addDeclaration(name: NameType, responseJson: JsValue): JsResult[JsObject] = {
+  private def addDeclaration(actor: AffinityGroup, name: NameType, responseJson: JsValue): JsResult[JsObject] = {
     for {
-      addressJson <- declarationAddress(responseJson)
+      addressJson <- if (actor == Agent){
+        takeAddressFromPath(agentAddressPath ,responseJson)
+      } else {
+        takeAddressFromPath(correspondenceAddressPath, responseJson)
+      }
       address <- addressJson.validate[AddressType]
       declaration = Declaration(name, address)
       updated <- responseJson.transform(putNewValue(__ \ 'declaration, Json.toJson(declaration)))
@@ -39,8 +45,8 @@ class DeclarationTransformer {
     }
   }
 
-  private def declarationAddress(responseJson: JsValue): JsResult[JsValue] = {
-    responseJson.transform(correspondenceAddressPath.json.pick)
+  private def takeAddressFromPath(path: JsPath, responseJson: JsValue): JsResult[JsValue] = {
+    responseJson.transform(path.json.pick)
   }
 
   private def putNewValue(path: JsPath, value: JsValue ): Reads[JsObject] =

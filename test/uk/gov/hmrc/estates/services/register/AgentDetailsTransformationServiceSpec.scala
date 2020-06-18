@@ -21,7 +21,7 @@ import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.estates.models.register.{AddressType, AgentDetails}
+import uk.gov.hmrc.estates.models.{AddressType, AgentDetails}
 import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.AgentDetailsTransform

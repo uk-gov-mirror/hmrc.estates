@@ -20,7 +20,22 @@ import play.api.libs.json.{JsValue, _}
 import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, DeceasedTransform, YearsReturnsTransform}
 
 trait DeltaTransform {
-  def applyTransform(input: JsValue): JsResult[JsValue]
+
+  val path: JsPath = __
+
+  val value: JsValue = Json.obj()
+
+  def applyTransform(input: JsValue): JsResult[JsValue] = {
+    if (input.transform(path.json.pick).isSuccess) {
+      input.transform(
+        path.json.prune andThen __.json.update(path.json.put(Json.toJson(value)))
+      )
+    } else {
+      input.transform(
+        __.json.update(path.json.put(Json.toJson(value)))
+      )
+    }
+  }
 
   def applyDeclarationTransform(input: JsValue): JsResult[JsValue] = JsSuccess(input)
 }

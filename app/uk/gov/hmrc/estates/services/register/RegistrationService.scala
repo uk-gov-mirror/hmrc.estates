@@ -36,9 +36,10 @@ class RegistrationService @Inject()(repository: TransformationRepository,
 
   def submit(declaration: RegistrationDeclaration)
             (implicit request: IdentifierRequest[_]): Future[RegistrationResponse] = {
+
     repository.get(request.identifier) flatMap {
-      case Some(t) =>
-        buildSubmissionFromTransforms(declaration.name, t) match {
+      case Some(transforms) =>
+        buildSubmissionFromTransforms(declaration.name, transforms) match {
           case JsSuccess(json, _) =>
             json.asOpt[EstateRegistration] match {
               case Some(payload) =>

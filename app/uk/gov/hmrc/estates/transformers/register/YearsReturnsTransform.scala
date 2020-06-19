@@ -16,19 +16,15 @@
 
 package uk.gov.hmrc.estates.transformers.register
 
-import play.api.libs.json.{Format, JsResult, JsValue, Json, __}
+import play.api.libs.json._
 import uk.gov.hmrc.estates.models.YearsReturns
 import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
 
 case class YearsReturnsTransform(years: YearsReturns) extends DeltaTransform with JsonOperations {
 
-  private val path =  __ \ 'yearsReturns
+  override val path: JsPath =  __ \ 'yearsReturns
 
-  override def applyTransform(input: JsValue): JsResult[JsValue] = {
-    input.transform(
-      path.json.prune andThen __.json.update(path.json.put(Json.toJson(years)))
-    )
-  }
+  override val value: JsValue = Json.toJson(years)
 }
 
 

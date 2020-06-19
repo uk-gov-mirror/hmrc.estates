@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.estates.transformers
 
-import play.api.libs.json._
+import play.api.libs.json.{JsPath, _}
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.models.JsonWithoutNulls._
 import uk.gov.hmrc.estates.models.AddressType
@@ -28,22 +28,18 @@ case class AddEstatePerRepTransform(
                                    )
   extends DeltaTransform with JsonOperations {
 
-  private lazy val path = __ \ 'estate \ 'entities \ 'personalRepresentative
+  override val path: JsPath = __ \ 'estate \ 'entities \ 'personalRepresentative
 
   private lazy val correspondencePath = __ \ 'correspondence
 
-  override def applyTransform(input: JsValue): JsResult[JsValue] = {
-
-    val newPersonalRep = Json.obj(
-      "estatePerRepInd" -> newPersonalIndRep,
-      "estatePerRepOrg" -> newPersonalOrgRep
-    ).withoutNulls.applyRules
-
-    input.transform(
-      path.json.prune andThen
-        __.json.update(path.json.put(Json.toJson(removeIsPassportField(newPersonalRep))))
+  override val value: JsValue = Json.toJson(
+    removeIsPassportField(
+      Json.obj(
+        "estatePerRepInd" -> newPersonalIndRep,
+        "estatePerRepOrg" -> newPersonalOrgRep
+      ).withoutNulls.applyRules
     )
-  }
+  )
 
   override def applyDeclarationTransform(input: JsValue): JsResult[JsValue] = {
 

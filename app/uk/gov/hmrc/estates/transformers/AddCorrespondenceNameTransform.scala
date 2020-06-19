@@ -22,7 +22,7 @@ import uk.gov.hmrc.estates.models.EstatePerRepOrgType
 case class AddCorrespondenceNameTransform(newCorrespondenceName: JsString)
   extends DeltaTransform with JsonOperations {
 
-  private lazy val path = __ \ 'correspondence \ 'name
+  override val path: JsPath = __ \ 'correspondence \ 'name
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     input.transform(

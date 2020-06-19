@@ -23,19 +23,9 @@ import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
 case class DeceasedTransform(deceased: EstateWillType)
     extends DeltaTransform with JsonOperations {
 
-  private lazy val path = __ \ 'estate \ 'entities \ 'deceased
+  override val path: JsPath = __ \ 'estate \ 'entities \ 'deceased
 
-  override def applyTransform(input: JsValue): JsResult[JsValue] = {
-    if (input.transform(path.json.pick).isSuccess) {
-      input.transform(
-        path.json.prune andThen __.json.update(path.json.put(Json.toJson(deceased)))
-      )
-    } else {
-      input.transform(
-        __.json.update(path.json.put(Json.toJson(deceased)))
-      )
-    }
-  }
+  override val value: JsValue = Json.toJson(deceased)
 }
 
 object DeceasedTransform {

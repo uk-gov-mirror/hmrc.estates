@@ -26,7 +26,10 @@ case class AgentDetailsTransform(agentDetails: AgentDetails)
 
   override val path: JsPath = __ \ 'agentDetails
 
-  override val value: JsValue = Json.toJson(agentDetails).applyRules
+  override val value: JsValue = Json.toJson(agentDetails)
+
+  override def applyDeclarationTransform(input: JsValue): JsResult[JsValue] =
+    super.applyDeclarationTransform(input.applyRules)
 
 }
 

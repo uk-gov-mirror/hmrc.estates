@@ -32,14 +32,10 @@ case class AddEstatePerRepTransform(
 
   private lazy val correspondencePath = __ \ 'correspondence
 
-  override val value: JsValue = Json.toJson(
-    removeIsPassportField(
-      Json.obj(
-        "estatePerRepInd" -> newPersonalIndRep,
-        "estatePerRepOrg" -> newPersonalOrgRep
-      ).withoutNulls.applyRules
-    )
-  )
+  override val value: JsValue = Json.obj(
+    "estatePerRepInd" -> newPersonalIndRep,
+    "estatePerRepOrg" -> newPersonalOrgRep
+  ).withoutNulls
 
   override def applyDeclarationTransform(input: JsValue): JsResult[JsValue] = {
 
@@ -76,9 +72,8 @@ case class AddEstatePerRepTransform(
               JsSuccess(inputWithCorrespondence)
             }
           }
-        } yield {
-          inputWithAddressRemoved
-        }
+        } yield removeIsPassportField(inputWithAddressRemoved).applyRules
+
       case AddEstatePerRepTransform(None, Some(newPersonalOrgRep)) =>
         for {
           inputWithCorrespondence <- transformCorrespondence(newPersonalOrgRep.identification.address, newPersonalOrgRep.phoneNumber)
@@ -89,16 +84,15 @@ case class AddEstatePerRepTransform(
               JsSuccess(inputWithCorrespondence)
             }
           }
-        } yield {
-          inputWithAddressRemoved
-        }
+        } yield inputWithAddressRemoved.applyRules
+
       case _ =>
         super.applyDeclarationTransform(input)
     }
   }
 
   private def removeIsPassportField(original: JsValue): JsValue = {
-    val isPassportPath = __ \ 'estatePerRepInd \ 'identification \ 'passport \ 'isPassport
+    val isPassportPath = path \ 'estatePerRepInd \ 'identification \ 'passport \ 'isPassport
 
     original.transform(isPassportPath.json.prune) match {
       case JsSuccess(updated, _) => updated

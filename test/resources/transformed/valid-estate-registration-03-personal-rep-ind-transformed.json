@@ -22,7 +22,7 @@
       "postCode": "Z99 2YY",
       "country": "GB"
     },
-    "phoneNumber": "07598765432"
+    "phoneNumber": "078888888"
   },
   "estate": {
     "entities": {
@@ -65,7 +65,7 @@
           },
           "name": {
             "firstName": "Alister",
-            "lastName": "Mc'Lovern"
+            "lastName": "McGovern"
           },
           "dateOfBirth": "1980-06-01",
           "email": "test@abc.com"

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import play.api.libs.json.Json
 import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTwoFiftyThousand
 import uk.gov.hmrc.estates.utils.JsonUtils
 
@@ -49,6 +50,18 @@ class AmountOfTaxOwedTransformSpec extends FreeSpec with MustMatchers with Optio
         val result = transformer.applyTransform(trustJson).get
 
         result mustBe afterJson
+      }
+
+      "when the document is empty" in {
+        val transformer = AmountOfTaxOwedTransform(AmountMoreThanTwoFiftyThousand)
+
+        val result = transformer.applyTransform(Json.obj()).get
+
+        result mustBe Json.obj(
+          "estate" -> Json.obj(
+            "periodTaxDues" -> Json.toJson(AmountMoreThanTwoFiftyThousand.toString)
+          )
+        )
       }
     }
 

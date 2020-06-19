@@ -112,29 +112,20 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
         result mustBe afterJson
       }
 
-      "remove isPassport field and apply phone number rules upon applying transform" in {
+      "when the document is empty" in {
+        val transformer = AddEstatePerRepTransform(Some(newPersonalRepInd), None)
 
-        val personalRepInd = EstatePerRepIndType(
-          name =  NameType("Alister", None, "Mc'Lovern"),
-          dateOfBirth = LocalDate.of(1980,6,1),
-          identification = IdentificationType(
-            None,
-            Some(PassportType("123456789", LocalDate.parse("2025-09-28"), "ES", Some(true))),
-            Some(AddressType("Address line 1", "Address line 2", Some("Address line 3"), Some("Town or city"), Some("Z99 2YY"), "GB"))
-          ),
-          phoneNumber = "(0)078888888",
-          email = Some("test@abc.com")
+        val result = transformer.applyTransform(Json.obj()).get
+
+        result mustBe Json.obj(
+          "estate" -> Json.obj(
+            "entities" -> Json.obj(
+              "personalRepresentative" -> Json.obj(
+                "estatePerRepInd"-> Json.toJson(newPersonalRepInd)
+              )
+            )
+          )
         )
-
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-03-with-is-passport-field.json")
-
-        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-03-personal-rep-ind-transformed.json")
-
-        val transformer = new AddEstatePerRepTransform(Some(personalRepInd), None)
-
-        val result = transformer.applyTransform(trustJson).get
-
-        result mustBe afterJson
       }
     }
     "add a personal rep organisation" - {
@@ -179,6 +170,31 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
       val expectedResult = JsError("No address on personal rep individual to apply to correspondence")
 
       result mustBe expectedResult
+    }
+
+    "remove isPassport field and apply phone number rules upon applying transform" in {
+
+      val personalRepInd = EstatePerRepIndType(
+        name =  NameType("Alister", None, "Mc'Lovern"),
+        dateOfBirth = LocalDate.of(1980,6,1),
+        identification = IdentificationType(
+          None,
+          Some(PassportType("123456789", LocalDate.parse("2025-09-28"), "ES", Some(true))),
+          Some(AddressType("Address line 1", "Address line 2", Some("Address line 3"), Some("Town or city"), Some("Z99 2YY"), "GB"))
+        ),
+        phoneNumber = "(0)078888888",
+        email = Some("test@abc.com")
+      )
+
+      val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-03-with-is-passport-field.json")
+
+      val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-03-personal-rep-ind-transformed.json")
+
+      val transformer = new AddEstatePerRepTransform(Some(personalRepInd), None)
+
+      val result = transformer.applyDeclarationTransform(trustJson).get
+
+      result mustBe afterJson
     }
 
     "individual personal rep" - {

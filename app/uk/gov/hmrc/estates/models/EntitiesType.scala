@@ -16,11 +16,17 @@
 
 package uk.gov.hmrc.estates.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, JsPath, Json, Writes}
 
 case class EntitiesType(personalRepresentative: PersonalRepresentativeType,
                         deceased: EstateWillType)
 
 object EntitiesType {
   implicit val entitiesTypeFormat: Format[EntitiesType] = Json.format[EntitiesType]
+
+  val entitiesWriteToDes: Writes[EntitiesType] = (
+    (JsPath \ "personalRepresentative").write[PersonalRepresentativeType](PersonalRepresentativeType.personalRepTypeWritesToDes) and
+      (JsPath \ "deceased").write[EstateWillType]
+    ).apply(unlift(EntitiesType.unapply))
 }

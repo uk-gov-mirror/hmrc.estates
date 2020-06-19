@@ -19,20 +19,40 @@ package uk.gov.hmrc.estates.services.register
 import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json._
+import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.models.{EstateRegistration, NameType, RegistrationResponse}
+import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration, NameType, RegistrationResponse}
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.services.{AuditService, DesService}
+import uk.gov.hmrc.estates.services.DesService
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeclarationTransformer}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
-                                    auditService: AuditService,
                                     declarationTransformer: DeclarationTransformer
                                    )(implicit ec: ExecutionContext) {
+
+  def getRegistration()(implicit request: IdentifierRequest[_]): Future[EstateRegistrationNoDeclaration] = {
+
+    repository.get(request.identifier) flatMap {
+      case Some(transforms) =>
+        buildPrintFromTransforms(transforms) match {
+          case JsSuccess(json, _) =>
+            json.asOpt[EstateRegistrationNoDeclaration] match {
+              case Some(payload) =>
+                Future.successful(payload)
+              case None =>
+                Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistrationNoDeclaration"))
+            }
+          case JsError(errors) =>
+            Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
+        }
+      case None =>
+        Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
+    }
+  }
 
   def submit(declaration: RegistrationDeclaration)
             (implicit request: IdentifierRequest[_]): Future[RegistrationResponse] = {
@@ -55,24 +75,37 @@ class RegistrationService @Inject()(repository: TransformationRepository,
     }
   }
 
-  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform)
+  private def buildPrintFromTransforms(transforms: ComposedDeltaTransform)
                                    (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
-    val startingDocument = Json.obj()
     for {
-      initial <- {
-        Logger.info(s"[RegistrationService] applying transformations")
-        transforms.applyTransform(startingDocument)
-      }
-      transformed <- {
-        Logger.info(s"[RegistrationService] applying declaration transformations")
-        transforms.applyDeclarationTransform(initial)
-      }
-      result <- {
-        Logger.info(s"[RegistrationService] applying final transformations")
-        declarationTransformer.transform(request.affinityGroup, transformed, name)
-      }
+      result <- applyTransforms(transforms)
     } yield result
   }
 
+  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform)
+                                   (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
+    for {
+      transformsApplied <- applyTransforms(transforms)
+      declarationTransformsApplied <- applyTransformsForDeclaration(transforms, transformsApplied)
+      result <- applyDeclarationAddressTransform(declarationTransformsApplied, request.affinityGroup, name)
+    } yield result
+  }
+
+  private def applyTransforms(transforms: ComposedDeltaTransform): JsResult[JsValue] = {
+    Logger.info(s"[RegistrationService] applying transformations")
+    transforms.applyTransform(Json.obj())
+  }
+
+  private def applyTransformsForDeclaration(transforms: ComposedDeltaTransform, original: JsValue): JsResult[JsValue] = {
+    Logger.info(s"[RegistrationService] applying declaration transformations")
+    transforms.applyDeclarationTransform(original)
+  }
+
+  private def applyDeclarationAddressTransform(original: JsValue,
+                                               affinityGroup: AffinityGroup,
+                                               name: NameType): JsResult[JsValue] = {
+    Logger.info(s"[RegistrationService] applying declaration address transform")
+    declarationTransformer.transform(affinityGroup, original, name)
+  }
 
 }

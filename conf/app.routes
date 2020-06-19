@@ -17,6 +17,8 @@ POST        /check                      uk.gov.hmrc.estates.controllers.CheckEst
 
 POST        /register                   uk.gov.hmrc.estates.controllers.RegisterEstateController.register
 
+GET         /registration               uk.gov.hmrc.estates.controllers.RegisterEstateController.get
+
 POST        /variation                  uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation
 
 GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)

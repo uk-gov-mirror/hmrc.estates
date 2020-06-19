@@ -17,10 +17,17 @@
 package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import play.api.libs.json.Json
 import uk.gov.hmrc.estates.models.{YearReturnType, YearsReturns}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 class YearsReturnsTransformSpec extends FreeSpec with MustMatchers with OptionValues {
+
+  private val yearsReturns: YearsReturns = YearsReturns(
+    List(
+      YearReturnType("20", taxConsequence = true)
+    )
+  )
 
   "the years returns transform should" - {
 
@@ -32,13 +39,7 @@ class YearsReturnsTransformSpec extends FreeSpec with MustMatchers with OptionVa
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-with-tax-years.json")
 
-        val transformer = YearsReturnsTransform(
-          YearsReturns(
-            List(
-              YearReturnType("20", taxConsequence = true)
-            )
-          )
-        )
+        val transformer = YearsReturnsTransform(yearsReturns)
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -51,17 +52,21 @@ class YearsReturnsTransformSpec extends FreeSpec with MustMatchers with OptionVa
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-with-tax-years.json")
 
-        val transformer = YearsReturnsTransform(
-          YearsReturns(
-            List(
-              YearReturnType("20", taxConsequence = true)
-            )
-          )
-        )
+        val transformer = YearsReturnsTransform(yearsReturns)
 
         val result = transformer.applyTransform(trustJson).get
 
         result mustBe afterJson
+      }
+
+      "when the document is empty" in {
+        val transformer = YearsReturnsTransform(yearsReturns)
+
+        val result = transformer.applyTransform(Json.obj()).get
+
+        result mustBe Json.obj(
+          "yearsReturns" -> Json.toJson(yearsReturns)
+        )
       }
     }
   }

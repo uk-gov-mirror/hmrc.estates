@@ -19,7 +19,7 @@ package uk.gov.hmrc.estates.controllers
 import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
@@ -49,6 +49,14 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
         }
       )
     }
+  }
+
+  def get(): Action[AnyContent] = identifierAction.async {
+    implicit request =>
+
+      registrationService
+        .getRegistration()
+        .map(response => Ok(Json.toJson(response)))
   }
 
 }

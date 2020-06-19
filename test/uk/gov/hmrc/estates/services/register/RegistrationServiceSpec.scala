@@ -27,70 +27,131 @@ import play.api.libs.json.JsString
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.estates.BaseSpec
-import uk.gov.hmrc.estates.exceptions.AlreadyRegisteredException
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.services.{AuditService, DesService}
+import uk.gov.hmrc.estates.services.DesService
 import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, DeceasedTransform, YearsReturnsTransform}
 import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, AddEstatePerRepTransform, ComposedDeltaTransform, DeclarationTransformer}
-import uk.gov.hmrc.estates.utils.{Constants, JsonUtils}
+import uk.gov.hmrc.estates.utils.JsonUtils
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
 class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutures with MustMatchers with OptionValues {
 
-  ".submit" must {
+  val mockTransformationRepository: TransformationRepository = mock[TransformationRepository]
+  val mockDesService: DesService = mock[DesService]
+  val declarationTransformer = new DeclarationTransformer
 
-    val mockTransformationRepository = mock[TransformationRepository]
-    val mockDesService = mock[DesService]
-    val auditService = injector.instanceOf[AuditService]
-    val declarationTransformer = new DeclarationTransformer
+  val service = new RegistrationService(mockTransformationRepository, mockDesService, declarationTransformer)
 
-    val service = new RegistrationService(mockTransformationRepository, mockDesService, auditService, declarationTransformer)
+  val deceased: EstateWillType = EstateWillType(
+    name = NameType("Mr TRS Reference 31", None, "TaxPayer 31"),
+    dateOfBirth = None,
+    dateOfDeath = LocalDate.parse("2013-04-07"),
+    identification = Some(IdentificationType(Some("MT939555B"), None, None))
+  )
 
-    val deceasedTransform = Seq(ComposedDeltaTransform(Seq(DeceasedTransform(
-      EstateWillType(
-        name = NameType("Mr TRS Reference 31", None, "TaxPayer 31"),
-        dateOfBirth = None,
-        dateOfDeath = LocalDate.parse("2013-04-07"),
-        identification = Some(IdentificationType(Some("MT939555B"), None, None))
-      )
-    ))))
+  val personalRepInd: EstatePerRepIndType = EstatePerRepIndType(
+    name =  NameType("Alister", None, "Mc'Lovern"),
+    dateOfBirth = LocalDate.parse("1955-09-08"),
+    identification = IdentificationType(
+      Some("JS123456A"),
+      None,
+      Some(AddressType("AEstateAddress1", "AEstateAddress2", Some("AEstateAddress3"), Some("AEstateAddress4"), Some("TF3 4ER"), "GB"))
+    ),
+    phoneNumber = "078888888",
+    email = Some("test@abc.com")
+  )
 
-    val amountOfTaxOwedTransform = Seq(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(TaxAmount.AmountMoreThanTwoHalfMillion))))
+  val estateName: String = "Estate of Mr A Deceased"
 
-    val addCorrespondenceNameTransform = Seq(ComposedDeltaTransform(Seq(AddCorrespondenceNameTransform(JsString("Estate of Mr A Deceased")))))
+  val taxAmount: TaxAmount = TaxAmount.AmountMoreThanTwoHalfMillion
 
-    val addEstatePerRepTransform = Seq(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(
-      Some(EstatePerRepIndType(
-        name =  NameType("Alister", None, "Mc'Lovern"),
-        dateOfBirth = LocalDate.parse("1955-09-08"),
-        identification = IdentificationType(
-          Some("JS123456A"),
-          None,
-          Some(AddressType("AEstateAddress1", "AEstateAddress2", Some("AEstateAddress3"), Some("AEstateAddress4"), Some("TF3 4ER"), "GB"))
+  val deceasedTransform = Seq(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))
+
+  val amountOfTaxOwedTransform = Seq(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(taxAmount))))
+
+  val addCorrespondenceNameTransform = Seq(ComposedDeltaTransform(Seq(AddCorrespondenceNameTransform(JsString(estateName)))))
+
+  val addEstatePerRepTransform = Seq(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(
+    Some(personalRepInd),
+    None
+  ))))
+
+  val transforms: ComposedDeltaTransform = ComposedDeltaTransform(
+    deceasedTransform ++ amountOfTaxOwedTransform ++ addCorrespondenceNameTransform ++ addEstatePerRepTransform
+  )
+
+  implicit val request : IdentifierRequest[_] = IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation)
+
+  ".getRegistration" must {
+
+    val registration = EstateRegistrationNoDeclaration(
+      None,
+      CorrespondenceName(estateName),
+      None,
+      Estate(
+        EntitiesType(
+          PersonalRepresentativeType(
+            Some(personalRepInd),
+            None
+          ),
+          deceased
         ),
-        phoneNumber = "078888888",
-        email = Some("test@abc.com")
-      )),
+        None,
+        taxAmount.toString
+      ),
       None
-    ))))
-
-    val transforms: ComposedDeltaTransform = ComposedDeltaTransform(
-      deceasedTransform ++ amountOfTaxOwedTransform ++ addCorrespondenceNameTransform ++ addEstatePerRepTransform
     )
 
-    implicit val request : IdentifierRequest[_] = IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation)
+    "successfully return a registration" in {
+
+      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
+
+      val result = service.getRegistration()
+
+      result.futureValue mustBe registration
+    }
+
+    "return run time exception" when {
+
+      "no transforms" in {
+
+        when(mockTransformationRepository.get(any())).thenReturn(Future.successful(None))
+
+        val result = service.getRegistration()
+
+        assertThrows[RuntimeException] {
+          result.futureValue
+        }
+      }
+
+      "transformed json cannot be parsed as EstateRegistration" in {
+
+        val transforms: ComposedDeltaTransform = ComposedDeltaTransform(deceasedTransform)
+
+        when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
+
+        val result = service.getRegistration()
+
+        assertThrows[RuntimeException] {
+          result.futureValue
+        }
+      }
+    }
+  }
+
+  ".submit" must {
 
     "successfully submit the payload" in {
 
       when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
       when(mockDesService.registerEstate(any())).thenReturn(Future.successful(RegistrationTrnResponse("trn")))
 
-      val result = service.submit(RegistrationDeclaration(NameType("John",None, "Doe")))
+      val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
 
       result.futureValue mustBe RegistrationTrnResponse("trn")
     }

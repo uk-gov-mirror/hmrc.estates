@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.models.{AddressType, Declaration, NameType}
 
-class DeclarationTransformer {
+class DeclarationTransform {
 
   def transform(actor: AffinityGroup, body: JsValue, declarationName: NameType): JsResult[JsValue] = {
     addDeclaration(actor, declarationName, body)

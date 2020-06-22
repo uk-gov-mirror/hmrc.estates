@@ -18,9 +18,10 @@ package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.YearsReturns
-import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
+import uk.gov.hmrc.estates.transformers.JsonOperations
 
-case class YearsReturnsTransform(years: YearsReturns) extends DeltaTransform with JsonOperations {
+case class YearsReturnsTransform(years: YearsReturns)
+  extends SetValueAtPathDeltaTransform with JsonOperations {
 
   override val path: JsPath =  __ \ 'yearsReturns
 

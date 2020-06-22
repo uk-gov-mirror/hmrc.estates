@@ -32,8 +32,8 @@ import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.services.DesService
-import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, DeceasedTransform, YearsReturnsTransform}
-import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, AddEstatePerRepTransform, ComposedDeltaTransform, DeclarationTransformer}
+import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, CorrespondenceNameTransform, DeceasedTransform, DeclarationTransform, PersonalRepTransform, YearsReturnsTransform}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 import scala.concurrent.ExecutionContext.Implicits._
@@ -43,7 +43,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
   val mockTransformationRepository: TransformationRepository = mock[TransformationRepository]
   val mockDesService: DesService = mock[DesService]
-  val declarationTransformer = new DeclarationTransformer
+  val declarationTransformer = new DeclarationTransform
 
   val service = new RegistrationService(mockTransformationRepository, mockDesService, declarationTransformer)
 
@@ -74,9 +74,9 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
   val amountOfTaxOwedTransform = Seq(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(taxAmount))))
 
-  val addCorrespondenceNameTransform = Seq(ComposedDeltaTransform(Seq(AddCorrespondenceNameTransform(JsString(estateName)))))
+  val addCorrespondenceNameTransform = Seq(ComposedDeltaTransform(Seq(CorrespondenceNameTransform(JsString(estateName)))))
 
-  val addEstatePerRepTransform = Seq(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(
+  val addEstatePerRepTransform = Seq(ComposedDeltaTransform(Seq(PersonalRepTransform(
     Some(personalRepInd),
     None
   ))))
@@ -200,8 +200,8 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
           )
         ),
         AmountOfTaxOwedTransform(TaxAmount.AmountMoreThanTwoHalfMillion),
-        AddCorrespondenceNameTransform(JsString("Estate of Mr A Deceased")),
-        AddEstatePerRepTransform(
+        CorrespondenceNameTransform(JsString("Estate of Mr A Deceased")),
+        PersonalRepTransform(
           Some(EstatePerRepIndType(
             name =  NameType("Alister", None, "Mc'Lovern"),
             dateOfBirth = LocalDate.parse("1955-09-08"),
@@ -242,8 +242,8 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
           )
         ),
         AmountOfTaxOwedTransform(TaxAmount.AmountMoreThanTwoHalfMillion),
-        AddCorrespondenceNameTransform(JsString("Estate of Mr A Deceased")),
-        AddEstatePerRepTransform(
+        CorrespondenceNameTransform(JsString("Estate of Mr A Deceased")),
+        PersonalRepTransform(
           Some(EstatePerRepIndType(
             name =  NameType("Alister", None, "Mc'Lovern"),
             dateOfBirth = LocalDate.parse("1955-09-08"),
@@ -283,8 +283,8 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
           identification = Some(IdentificationType(Some("MT939555B"), None, None))
         )),
         AmountOfTaxOwedTransform(TaxAmount.AmountMoreThanTwoHalfMillion),
-        AddCorrespondenceNameTransform(JsString("Estate of Mr A Deceased")),
-        AddEstatePerRepTransform(
+        CorrespondenceNameTransform(JsString("Estate of Mr A Deceased")),
+        PersonalRepTransform(
           Some(EstatePerRepIndType(
             name =  NameType("Alister", None, "Mc'Lovern"),
             dateOfBirth = LocalDate.parse("1955-09-08"),

@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.transformers.register
 
-import play.api.libs.json._
-import uk.gov.hmrc.estates.models.EstatePerRepOrgType
+import play.api.libs.json.{JsPath, JsResult, JsValue, Json, __}
+import uk.gov.hmrc.estates.transformers.DeltaTransform
 
-case class AddCorrespondenceNameTransform(newCorrespondenceName: JsString)
-  extends DeltaTransform with JsonOperations {
+abstract class SetValueAtPathDeltaTransform extends DeltaTransform {
 
-  override val path: JsPath = __ \ 'correspondence \ 'name
+  val path: JsPath
+
+  val value: JsValue
 
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
-    input.transform(
-      __.json.update(path.json.put(newCorrespondenceName))
-    )
+    if (input.transform(path.json.pick).isSuccess) {
+      input.transform(
+        path.json.prune andThen __.json.update(path.json.put(Json.toJson(value)))
+      )
+    } else {
+      input.transform(
+        __.json.update(path.json.put(Json.toJson(value)))
+      )
+    }
   }
 
-}
-
-object AddCorrespondenceNameTransform {
-
-  val key = "AddCorrespondenceNameTransform"
-
-  implicit val format: Format[AddCorrespondenceNameTransform] = Json.format[AddCorrespondenceNameTransform]
 }

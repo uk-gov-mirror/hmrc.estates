@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.transformers.register
 
 import java.time.LocalDate
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import play.api.libs.json.{JsError, Json}
-import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, EstatePerRepOrgType, IdentificationOrgType, IdentificationType, NameType, PassportType}
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with OptionValues {
+class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionValues {
 
   val newPersonalRepInd = EstatePerRepIndType(
     name =  NameType("Alister", None, "Mc'Lovern"),
@@ -93,7 +93,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
-        val transformer = new AddEstatePerRepTransform(Some(newPersonalRepInd), None)
+        val transformer = new PersonalRepTransform(Some(newPersonalRepInd), None)
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -105,7 +105,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
-        val transformer = new AddEstatePerRepTransform(Some(newPersonalRepInd), None)
+        val transformer = new PersonalRepTransform(Some(newPersonalRepInd), None)
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -113,7 +113,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
       }
 
       "when the document is empty" in {
-        val transformer = AddEstatePerRepTransform(Some(newPersonalRepInd), None)
+        val transformer = PersonalRepTransform(Some(newPersonalRepInd), None)
 
         val result = transformer.applyTransform(Json.obj()).get
 
@@ -136,7 +136,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed.json")
 
-        val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
+        val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -148,7 +148,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed.json")
 
-        val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
+        val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -163,7 +163,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
     "when personal rep doesn't have an address" in {
       val document = Json.obj()
 
-      val transformer = new AddEstatePerRepTransform(Some(newPersonalRepInd), None)
+      val transformer = new PersonalRepTransform(Some(newPersonalRepInd), None)
 
       val result = transformer.applyDeclarationTransform(document)
 
@@ -190,7 +190,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-03-personal-rep-ind-transformed.json")
 
-      val transformer = new AddEstatePerRepTransform(Some(personalRepInd), None)
+      val transformer = new PersonalRepTransform(Some(personalRepInd), None)
 
       val result = transformer.applyDeclarationTransform(trustJson).get
 
@@ -207,7 +207,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
             val document = Json.obj()
 
-            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+            val transformer = new PersonalRepTransform(Some(newPersonalRepIndWithUkAddress), None)
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -223,7 +223,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
               )
             )
 
-            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+            val transformer = new PersonalRepTransform(Some(newPersonalRepIndWithUkAddress), None)
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -243,7 +243,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
             val document = Json.obj()
 
-            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+            val transformer = new PersonalRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -259,7 +259,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
               )
             )
 
-            val transformer = new AddEstatePerRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
+            val transformer = new PersonalRepTransform(Some(newPersonalRepIndWithNonUkAddress), None)
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -282,7 +282,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
             val document = Json.obj()
 
-            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
+            val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -298,7 +298,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
               )
             )
 
-            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
+            val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -318,7 +318,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
             val document = Json.obj()
 
-            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
+            val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
 
             val result = transformer.applyDeclarationTransform(document).get
 
@@ -334,7 +334,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
               )
             )
 
-            val transformer = new AddEstatePerRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
+            val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
 
             val result = transformer.applyDeclarationTransform(document).get
 

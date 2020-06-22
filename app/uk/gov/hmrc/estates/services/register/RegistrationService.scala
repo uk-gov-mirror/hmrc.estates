@@ -25,13 +25,14 @@ import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration, NameType, RegistrationResponse}
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.services.DesService
-import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeclarationTransformer}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.DeclarationTransform
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
-                                    declarationTransformer: DeclarationTransformer
+                                    declarationTransformer: DeclarationTransform
                                    )(implicit ec: ExecutionContext) {
 
   def getRegistration()(implicit request: IdentifierRequest[_]): Future[EstateRegistrationNoDeclaration] = {

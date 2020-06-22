@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json.{JsPath, _}
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.models.JsonWithoutNulls._
-import uk.gov.hmrc.estates.models.AddressType
+import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, EstatePerRepOrgType}
+import uk.gov.hmrc.estates.transformers.JsonOperations
 import uk.gov.hmrc.estates.utils.JsonOps._
 
-case class AddEstatePerRepTransform(
+case class PersonalRepTransform(
                                      newPersonalIndRep: Option[EstatePerRepIndType],
                                      newPersonalOrgRep: Option[EstatePerRepOrgType]
                                    )
-  extends DeltaTransform with JsonOperations {
+  extends SetValueAtPathDeltaTransform with JsonOperations {
 
   override val path: JsPath = __ \ 'estate \ 'entities \ 'personalRepresentative
 
@@ -62,7 +62,7 @@ case class AddEstatePerRepTransform(
     }
 
     this match {
-      case AddEstatePerRepTransform(Some(newPersonalIndRep), None) =>
+      case PersonalRepTransform(Some(newPersonalIndRep), None) =>
         for {
           inputWithCorrespondence <- transformCorrespondence(newPersonalIndRep.identification.address, newPersonalIndRep.phoneNumber)
           inputWithAddressRemoved <- {
@@ -74,7 +74,7 @@ case class AddEstatePerRepTransform(
           }
         } yield removeIsPassportField(inputWithAddressRemoved).applyRules
 
-      case AddEstatePerRepTransform(None, Some(newPersonalOrgRep)) =>
+      case PersonalRepTransform(None, Some(newPersonalOrgRep)) =>
         for {
           inputWithCorrespondence <- transformCorrespondence(newPersonalOrgRep.identification.address, newPersonalOrgRep.phoneNumber)
           inputWithAddressRemoved <- {
@@ -101,9 +101,9 @@ case class AddEstatePerRepTransform(
   }
 }
 
-object AddEstatePerRepTransform {
+object PersonalRepTransform {
 
   val key = "AddEstatePerRepTransform"
 
-  implicit val format: Format[AddEstatePerRepTransform] = Json.format[AddEstatePerRepTransform]
+  implicit val format: Format[PersonalRepTransform] = Json.format[PersonalRepTransform]
 }

@@ -18,11 +18,11 @@ package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json.{JsPath, _}
 import uk.gov.hmrc.estates.models.AgentDetails
-import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
+import uk.gov.hmrc.estates.transformers.JsonOperations
 import uk.gov.hmrc.estates.utils.JsonOps._
 
 case class AgentDetailsTransform(agentDetails: AgentDetails)
-    extends DeltaTransform with JsonOperations {
+    extends SetValueAtPathDeltaTransform with JsonOperations {
 
   override val path: JsPath = __ \ 'agentDetails
 

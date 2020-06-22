@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers.register
+package uk.gov.hmrc.estates.utils
 
-import play.api.libs.json._
-import uk.gov.hmrc.estates.models.EstateWillType
-import uk.gov.hmrc.estates.transformers.JsonOperations
+object Auditing {
 
-case class DeceasedTransform(deceased: EstateWillType)
-    extends SetValueAtPathDeltaTransform with JsonOperations {
+  val GET_REGISTRATION = "GetRegistration"
+  val REGISTRATION_TRANSFORMS = "RegistrationTransformations"
+  val REGISTRATION_SUBMITTED = "RegistrationSubmitted"
+  val REGISTRATION_SUBMISSION_FAILED = "RegistrationSubmissionFailed"
 
-  override val path: JsPath = __ \ 'estate \ 'entities \ 'deceased
-
-  override val value: JsValue = Json.toJson(deceased)
-}
-
-object DeceasedTransform {
-
-  val key = "DeceasedTransform"
-
-  implicit val format: Format[DeceasedTransform] = Json.format[DeceasedTransform]
 }

@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
-import uk.gov.hmrc.estates.models.register.AgentDetails
+import uk.gov.hmrc.estates.models.AgentDetails
 import uk.gov.hmrc.estates.services.LocalDateService
 import uk.gov.hmrc.estates.services.register.AgentDetailsTransformationService
 

@@ -16,196 +16,175 @@
 
 package uk.gov.hmrc.estates.controllers
 
-import org.mockito.Matchers
+import java.time.LocalDate
+
 import org.mockito.Matchers.any
-import org.mockito.Mockito.{when, _}
+import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.inject.bind
 import play.api.libs.json.Json
-import play.api.mvc.{BodyParsers, ControllerComponents}
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Organisation}
 import uk.gov.hmrc.estates.BaseSpec
-import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models._
-import uk.gov.hmrc.estates.services.{DesService, FakeAuditService, RosmPatternService, ValidationService}
+import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
+import uk.gov.hmrc.estates.services.register.RegistrationService
 import uk.gov.hmrc.estates.utils.JsonRequests
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite with JsonRequests {
 
-  private val mockDesService = mock[DesService]
-  private val rosmPatternService = mock[RosmPatternService]
-
-  private implicit val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
-  private val bodyParsers = injector.instanceOf[BodyParsers.Default]
-
-  val fakeOrganisationAuthAction = new FakeIdentifierAction(bodyParsers, Organisation)
-  val fakeAgentAuthAction = new FakeIdentifierAction(bodyParsers, Agent)
-
-  lazy val validationService: ValidationService = new ValidationService()
-
-  lazy val mockedAuditService = injector.instanceOf[FakeAuditService]
+  lazy val mockRegistrationService: RegistrationService = mock[RegistrationService]
 
   private val estateTrnResponse = "XTRN123456"
 
-  before {
-    reset(rosmPatternService)
-  }
+  ".submit" should {
 
-  ".registration of estate " should {
+    val application = applicationBuilder()
+      .overrides(
+        bind[RegistrationService].toInstance(mockRegistrationService)
+      ).build()
+
+    val controller = application.injector.instanceOf[RegisterEstateController]
+
+    val registrationDeclaration = RegistrationDeclaration(NameType("John", None, "Doe"))
+
+    val request = FakeRequest("POST", "path")
+      .withBody(Json.toJson(registrationDeclaration))
+      .withHeaders(CONTENT_TYPE -> "application/json")
 
     "return 200 with TRN" when {
 
-      "individual user called the register endpoint with a valid json payload " in {
-        mockRosmResponse(TaxEnrolmentSuccess)
-        mockDesServiceResponse
+      "valid payload submitted" in {
 
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction, rosmPatternService, mockedAuditService)
+        when(mockRegistrationService.submit(any())(any(), any()))
+          .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
 
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
+        val result = controller.register().apply(request)
+
         status(result) mustBe OK
+
         (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
-        verify(rosmPatternService, times(1)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
       }
 
-      "individual user called the register endpoint with a valid json payload " when {
-
-        "tax enrolment failed to enrol user " in {
-          mockRosmResponse(TaxEnrolmentFailure)
-          mockDesServiceResponse
-
-          val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction, rosmPatternService, mockedAuditService)
-
-          val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
-          status(result) mustBe OK
-          (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
-          verify(rosmPatternService, times(1)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-        }
-      }
-
-      "agent user submits estates payload" in {
-        mockRosmResponse(TaxEnrolmentSuccess)
-        mockDesServiceResponse
-
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeAgentAuthAction,rosmPatternService, mockedAuditService)
-
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration03)))
-        status(result) mustBe OK
-        (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
-
-        verify(rosmPatternService, times(1)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-      }
     }
 
-    "return a Conflict" when {
+    "return conflict" when {
 
-      "estates is already registered with provided details." in {
-        when(mockDesService.registerEstate(any[EstateRegistration]))
+      "estate already registered" in {
+
+        when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.failed(AlreadyRegisteredException))
 
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
+        val result = controller.register().apply(request)
 
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
         status(result) mustBe CONFLICT
         val output = contentAsJson(result)
-        (output \ "code").as[String] mustBe "ALREADY_REGISTERED"
-        (output \ "message").as[String] mustBe "The estate is already registered."
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
+        (output \ "code").as[String] mustBe "DUPLICATE_SUBMISSION"
+        (output \ "message").as[String] mustBe "Duplicate Correlation Id was submitted."
       }
     }
 
-    "return a Forbidden" when {
-      "no match found for provided existing estate details." in {
+    "return internal server error" when {
 
-        when(mockDesService.registerEstate(any[EstateRegistration]))
-          .thenReturn(Future.failed(NoMatchException))
+      "error" in {
 
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
-
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
-        status(result) mustBe FORBIDDEN
-        val output = contentAsJson(result)
-        (output \ "code").as[String] mustBe "NO_MATCH"
-        (output \ "message").as[String] mustBe "No match has been found in HMRC's records."
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-      }
-    }
-
-
-    "return a BAD REQUEST" when {
-      "input request fails schema validation" in {
-
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
-
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(invalidEstateRegistrationJson)))
-        status(result) mustBe BAD_REQUEST
-        val output = contentAsJson(result)
-        (output \ "code").as[String] mustBe "BAD_REQUEST"
-        (output \ "message").as[String] mustBe "Provided request is invalid."
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-      }
-    }
-
-
-    "return an internal server error" when {
-      "the register endpoint called and something goes wrong." in {
-        when(mockDesService.registerEstate(any[EstateRegistration]))
-          .thenReturn(Future.failed(InternalServerErrorException("some error")))
-
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
-
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
-        status(result) mustBe INTERNAL_SERVER_ERROR
-        val output = contentAsJson(result)
-        (output \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
-        (output \ "message").as[String] mustBe "Internal server error."
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-      }
-    }
-
-    "return an internal server error" when {
-      "the des returns BAD REQUEST" in {
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
-        when(mockDesService.registerEstate(any[EstateRegistration])).
-          thenReturn(Future.failed(BadRequestException))
-
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
-        status(result) mustBe INTERNAL_SERVER_ERROR
-        val output = contentAsJson(result)
-        (output \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
-        (output \ "message").as[String] mustBe "Internal server error."
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
-      }
-    }
-
-    "return an internal server error" when {
-      "the des returns Service Unavailable as dependent service is down. " in {
-
-        val SUT = new RegisterEstateController(mockDesService, appConfig, validationService, fakeOrganisationAuthAction,rosmPatternService, mockedAuditService)
-        when(mockDesService.registerEstate(any[EstateRegistration]))
+        when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.failed(ServiceNotAvailableException("dependent service is down")))
 
-        val result = SUT.registration().apply(postRequestWithPayload(Json.parse(estateRegistration01)))
+        val result = controller.register().apply(request)
+
         status(result) mustBe INTERNAL_SERVER_ERROR
         val output = contentAsJson(result)
         (output \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
         (output \ "message").as[String] mustBe "Internal server error."
-        verify(rosmPatternService, times(0)).enrolAndLogResult(any(), any())(any[HeaderCarrier])
       }
     }
   }
 
-  private def mockDesServiceResponse = {
-    when(mockDesService.registerEstate(any[EstateRegistration]))
-      .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
-  }
+  ".get" should {
 
-  private def mockRosmResponse(response : TaxEnrolmentSuscriberResponse) = {
-    when(rosmPatternService.enrolAndLogResult(Matchers.eq(estateTrnResponse), any())(any[HeaderCarrier]))
-      .thenReturn(Future.successful(response))
+    val application = applicationBuilder()
+      .overrides(
+        bind[RegistrationService].toInstance(mockRegistrationService)
+      ).build()
+
+    val controller = application.injector.instanceOf[RegisterEstateController]
+
+    val request = FakeRequest("GET", "path")
+      .withHeaders(CONTENT_TYPE -> "application/json")
+
+    val deceased: EstateWillType = EstateWillType(
+      name = NameType("Mr TRS Reference 31", None, "TaxPayer 31"),
+      dateOfBirth = None,
+      dateOfDeath = LocalDate.parse("2013-04-07"),
+      identification = Some(IdentificationType(Some("MT939555B"), None, None))
+    )
+
+    val personalRepInd: EstatePerRepIndType = EstatePerRepIndType(
+      name =  NameType("Alister", None, "Mc'Lovern"),
+      dateOfBirth = LocalDate.parse("1955-09-08"),
+      identification = IdentificationType(
+        Some("JS123456A"),
+        None,
+        Some(AddressType("AEstateAddress1", "AEstateAddress2", Some("AEstateAddress3"), Some("AEstateAddress4"), Some("TF3 4ER"), "GB"))
+      ),
+      phoneNumber = "078888888",
+      email = Some("test@abc.com")
+    )
+
+    val estateName: String = "Estate of Mr A Deceased"
+
+    val taxAmount: TaxAmount = TaxAmount.AmountMoreThanTwoHalfMillion
+
+    val registration = EstateRegistrationNoDeclaration(
+      None,
+      CorrespondenceName(estateName),
+      None,
+      Estate(
+        EntitiesType(
+          PersonalRepresentativeType(
+            Some(personalRepInd),
+            None
+          ),
+          deceased
+        ),
+        None,
+        taxAmount.toString
+      ),
+      None
+    )
+
+    "return registration" when {
+
+      "document successfully built from transforms" in {
+        when(mockRegistrationService.getRegistration()(any(), any()))
+          .thenReturn(Future.successful(registration))
+
+        val result = controller.get().apply(request)
+
+        status(result) mustBe OK
+
+        contentAsJson(result) mustBe Json.toJson(registration)
+      }
+    }
+
+    "return internal server error" when {
+
+      "there is an error" in {
+        when(mockRegistrationService.getRegistration()(any(), any()))
+          .thenReturn(Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration")))
+
+        val result = controller.get().apply(request)
+
+        status(result) mustBe INTERNAL_SERVER_ERROR
+        val output = contentAsJson(result)
+        (output \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        (output \ "message").as[String] mustBe "Internal server error."
+      }
+
+    }
   }
 }

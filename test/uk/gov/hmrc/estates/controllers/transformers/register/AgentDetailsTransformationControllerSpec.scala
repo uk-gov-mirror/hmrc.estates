@@ -28,8 +28,7 @@ import play.api.test.Helpers.{CONTENT_TYPE, _}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
-import uk.gov.hmrc.estates.models.Success
-import uk.gov.hmrc.estates.models.register.{AddressType, AgentDetails}
+import uk.gov.hmrc.estates.models.{AddressType, AgentDetails, Success}
 import uk.gov.hmrc.estates.services.register.AgentDetailsTransformationService
 
 import scala.concurrent.Future

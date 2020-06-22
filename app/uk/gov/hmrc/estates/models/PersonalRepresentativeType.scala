@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.estates.models
 
-import play.api.libs.json.{Json, Reads, Writes}
+import play.api.libs.json.{Format, Json, Writes}
 
 case class PersonalRepresentativeType (
                                         estatePerRepInd : Option[EstatePerRepIndType] = None,
@@ -24,9 +24,9 @@ case class PersonalRepresentativeType (
                                       )
 
 object PersonalRepresentativeType {
-  implicit val personalRepTypeReads:Reads[PersonalRepresentativeType] = Json.reads[PersonalRepresentativeType]
+  implicit val personalRepTypeFormat: Format[PersonalRepresentativeType] = Json.format[PersonalRepresentativeType]
 
-  implicit val personalRepTypeWritesToDes : Writes[PersonalRepresentativeType] = Writes {
+  val personalRepTypeWritesToDes: Writes[PersonalRepresentativeType] = Writes {
     personalRepType => personalRepType.estatePerRepInd match {
       case Some(indPerRep) => Json.toJson(indPerRep)
       case None => Json.toJson(personalRepType.estatePerRepOrg)

@@ -31,11 +31,9 @@ object EstateRegistrationSubmissionAuditEvent {
 
 }
 
-case class GetTrustOrEstateAuditEvent(
-                                request: JsValue,
+case class GetTrustOrEstateAuditEvent(request: JsValue,
                                 internalAuthId : String,
-                                response: JsValue
-                                                 )
+                                response: Option[JsValue])
 
 object GetTrustOrEstateAuditEvent {
 

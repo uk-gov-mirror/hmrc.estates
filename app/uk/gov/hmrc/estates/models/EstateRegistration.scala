@@ -28,13 +28,14 @@ case class EstateRegistration(matchData: Option[MatchData],
                              )
 
 object EstateRegistration {
-  implicit val estateRegistrationReads :Reads[EstateRegistration] = Json.reads[EstateRegistration]
-  implicit val estateWriteToDes :Writes[EstateRegistration] = (
+  implicit val estateRegistrationFormat: Format[EstateRegistration] = Json.format[EstateRegistration]
+
+  val estateRegistrationWriteToDes :Writes[EstateRegistration] = (
     (JsPath \ "matchData").writeNullable[MatchData] and
       (JsPath \ "correspondence").write[Correspondence] and
       (JsPath \ "declaration").write[Declaration] and
       (JsPath \ "yearsReturns").writeNullable[YearsReturns] and
-      (JsPath \ "details" \ "estate").write[Estate] and
+      (JsPath \ "details" \ "estate").write[Estate](Estate.estateWriteToDes) and
       (JsPath \ "agentDetails" ).writeNullable[AgentDetails]
     )(r => (r.matchData, r.correspondence,r.declaration, r.yearsReturns, r.estate,r.agentDetails))
 }

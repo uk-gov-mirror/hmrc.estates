@@ -32,7 +32,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-
 class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
   private lazy val trustsServiceUrl : String = s"${config.desTrustsBaseUrl}/trusts"
@@ -81,7 +80,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     Logger.info(s"[DesConnector] registering estate for correlationId: $correlationId")
 
-    http.POST[JsValue, RegistrationResponse](estateRegistrationEndpoint, Json.toJson(registration))
+    http.POST[JsValue, RegistrationResponse](estateRegistrationEndpoint, Json.toJson(registration)(EstateRegistration.estateRegistrationWriteToDes))
   }
 
   def getSubscriptionId(trn: String): Future[SubscriptionIdResponse] = {

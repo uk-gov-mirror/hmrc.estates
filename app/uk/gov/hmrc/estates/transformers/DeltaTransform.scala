@@ -17,9 +17,10 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
-import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, DeceasedTransform}
+import uk.gov.hmrc.estates.transformers.register._
 
 trait DeltaTransform {
+
   def applyTransform(input: JsValue): JsResult[JsValue]
 
   def applyDeclarationTransform(input: JsValue): JsResult[JsValue] = JsSuccess(input)
@@ -33,11 +34,15 @@ object DeltaTransform {
   }
 
   def personalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-    readsForTransform[AddEstatePerRepTransform](AddEstatePerRepTransform.key)
+    readsForTransform[PersonalRepTransform](PersonalRepTransform.key)
   }
 
   def correspondenceNameReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-    readsForTransform[AddCorrespondenceNameTransform](AddCorrespondenceNameTransform.key)
+    readsForTransform[CorrespondenceNameTransform](CorrespondenceNameTransform.key)
+  }
+
+  def deceasedReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[DeceasedTransform](DeceasedTransform.key)
   }
 
   def agentDetailsReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
@@ -48,13 +53,19 @@ object DeltaTransform {
     readsForTransform[AmountOfTaxOwedTransform](AmountOfTaxOwedTransform.key)
   }
 
+  def yearsReturnsReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[YearsReturnsTransform](YearsReturnsTransform.key)
+  }
+
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
       (
         personalRepReads orElse
         agentDetailsReads orElse
+        deceasedReads orElse
         amountTaxOwedReads orElse
         correspondenceNameReads orElse
+        yearsReturnsReads orElse
         readsForTransform[DeceasedTransform](DeceasedTransform.key)
       )
       (value.as[JsObject]) orElse
@@ -62,13 +73,18 @@ object DeltaTransform {
   )
 
   def personalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-    case transform: AddEstatePerRepTransform =>
-      Json.obj(AddEstatePerRepTransform.key -> Json.toJson(transform)(AddEstatePerRepTransform.format))
+    case transform: PersonalRepTransform =>
+      Json.obj(PersonalRepTransform.key -> Json.toJson(transform)(PersonalRepTransform.format))
   }
 
   def correspondenceNameWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-    case transform: AddCorrespondenceNameTransform =>
-      Json.obj(AddCorrespondenceNameTransform.key -> Json.toJson(transform)(AddCorrespondenceNameTransform.format))
+    case transform: CorrespondenceNameTransform =>
+      Json.obj(CorrespondenceNameTransform.key -> Json.toJson(transform)(CorrespondenceNameTransform.format))
+  }
+
+  def yearsReturnsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: YearsReturnsTransform =>
+      Json.obj(YearsReturnsTransform.key -> Json.toJson(transform)(YearsReturnsTransform.format))
   }
 
   def agentDetailsWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
@@ -97,6 +113,7 @@ object DeltaTransform {
       amountOfTaxOwedWrites orElse
       deceasedWrites orElse
       correspondenceNameWrites orElse
+      yearsReturnsWrites orElse
       defaultWrites
       ).apply(deltaTransform)
   }

@@ -17,20 +17,24 @@
 package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
-import uk.gov.hmrc.estates.models.EstateWillType
-import uk.gov.hmrc.estates.transformers.JsonOperations
+import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
 
-case class DeceasedTransform(deceased: EstateWillType)
-    extends SetValueAtPathDeltaTransform with JsonOperations {
+case class CorrespondenceNameTransform(newCorrespondenceName: JsString)
+  extends DeltaTransform with JsonOperations {
 
-  override val path: JsPath = __ \ 'estate \ 'entities \ 'deceased
+  private val path: JsPath = __ \ 'correspondence \ 'name
 
-  override val value: JsValue = Json.toJson(deceased)
+  override def applyTransform(input: JsValue): JsResult[JsValue] = {
+    input.transform(
+      __.json.update(path.json.put(newCorrespondenceName))
+    )
+  }
+
 }
 
-object DeceasedTransform {
+object CorrespondenceNameTransform {
 
-  val key = "DeceasedTransform"
+  val key = "AddCorrespondenceNameTransform"
 
-  implicit val format: Format[DeceasedTransform] = Json.format[DeceasedTransform]
+  implicit val format: Format[CorrespondenceNameTransform] = Json.format[CorrespondenceNameTransform]
 }

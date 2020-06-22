@@ -27,7 +27,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.services.{CorrespondenceTransformationService, TransformationService}
-import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.CorrespondenceNameTransform
 
 import scala.concurrent.Future
 import scala.util.Success
@@ -89,7 +90,7 @@ class CorrespondenceTransformationControllerSpec extends BaseSpec with MockitoSu
           ).build()
 
         when(transformationService.getTransformedData(any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddCorrespondenceNameTransform(newEstateName))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(CorrespondenceNameTransform(newEstateName))))))
 
         val controller = application.injector.instanceOf[CorrespondenceTransformationController]
 

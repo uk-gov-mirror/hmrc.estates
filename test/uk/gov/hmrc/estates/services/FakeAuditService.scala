@@ -38,7 +38,10 @@ class FakeAuditService @Inject()(auditConnector: AuditConnector, config: AppConf
             response: JsValue)
            (implicit hc: HeaderCarrier): Unit = ()
 
+  override def audit(event: String, body: JsValue, internalId: String)(implicit hc: HeaderCarrier): Unit = ()
+
   override def auditErrorResponse(eventName: String, request: JsValue, internalId: String, errorReason: String)
                                  (implicit hc: HeaderCarrier): Unit = ()
+
 
 }

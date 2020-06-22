@@ -46,7 +46,6 @@ object RegistrationResponse {
     override def writes(o: RegistrationResponse): JsValue = o match {
       case x : RegistrationTrnResponse => Json.toJson(x)(RegistrationTrnResponse.formats)
       case x : RegistrationFailureResponse => Json.toJson(x)(RegistrationFailureResponse.formats)
-
     }
 
   }

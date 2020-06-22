@@ -19,17 +19,17 @@ package uk.gov.hmrc.estates.connectors
 import play.api.http.Status._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.estates.exceptions._
-import uk.gov.hmrc.estates.models.{ExistingCheckRequest, RegistrationTrnResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
+import uk.gov.hmrc.estates.models.{EstateRegistration, ExistingCheckRequest, RegistrationTrnResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.estates.utils.JsonRequests
 
 class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
   lazy val connector: DesConnector = injector.instanceOf[DesConnector]
 
-  lazy val request = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
+  lazy val request: ExistingCheckRequest = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
 
   def createTrustOrEstateEndpoint(utr: String) = s"/trusts/registration/$utr"
 
@@ -138,7 +138,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return TRN  " when {
       "valid request to des register an estate." in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
         stubForPost(server, "/estates/registration", requestBody, OK, """{"trn": "XTRN1234567"}""")
 
@@ -153,7 +153,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return BadRequestException  " when {
       "payload sent to des is invalid" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
         stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
 
         val futureResult = connector.registerEstate(estateRegRequest)
@@ -166,7 +166,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return AlreadyRegisteredException  " when {
       "estates is already registered with provided details." in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
         stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponseAlreadyRegistered))
         val futureResult = connector.registerEstate(estateRegRequest)
@@ -179,7 +179,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return NoMatchException  " when {
       "estates is already registered with provided details." in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
         stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponse403NoMatch))
         val futureResult = connector.registerEstate(estateRegRequest)
@@ -192,7 +192,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return ServiceUnavailableException  " when {
       "des dependent service is not responding " in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
         stubForPost(server, "/estates/registration", requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
         val futureResult = connector.registerEstate(estateRegRequest)
 
@@ -204,7 +204,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return InternalServerErrorException" when {
       "des is experiencing some problem." in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
         stubForPost(server, "/estates/registration", requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
 
@@ -218,7 +218,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return InternalServerErrorException" when {
       "des is returning 403 without ALREADY REGISTERED code." in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest))
+        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
         stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, "{}")
         val futureResult = connector.registerEstate(estateRegRequest)

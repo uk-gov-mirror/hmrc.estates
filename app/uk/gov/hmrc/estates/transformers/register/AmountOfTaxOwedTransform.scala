@@ -18,18 +18,14 @@ package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.register.TaxAmount
-import uk.gov.hmrc.estates.transformers.{DeltaTransform, JsonOperations}
+import uk.gov.hmrc.estates.transformers.JsonOperations
 
 case class AmountOfTaxOwedTransform(amount: TaxAmount)
-    extends DeltaTransform with JsonOperations {
+    extends SetValueAtPathDeltaTransform with JsonOperations {
 
-  private val path = __ \ 'estate \ 'periodTaxDues
+  override val path: JsPath = __ \ 'estate \ 'periodTaxDues
 
-  override def applyTransform(input: JsValue): JsResult[JsValue] = {
-    input.transform(
-      path.json.prune andThen __.json.update(path.json.put(Json.toJson(amount)))
-    )
-  }
+  override val value: JsValue = Json.toJson(amount)
 
 }
 

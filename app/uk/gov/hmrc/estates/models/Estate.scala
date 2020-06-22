@@ -18,7 +18,8 @@ package uk.gov.hmrc.estates.models
 
 import java.time.LocalDate
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, JsPath, Json, Writes}
 
 case class Estate(entities: EntitiesType,
                   administrationEndDate: Option[LocalDate],
@@ -26,4 +27,10 @@ case class Estate(entities: EntitiesType,
 
 object Estate {
   implicit val estateFormat: Format[Estate] = Json.format[Estate]
+
+  val estateWriteToDes: Writes[Estate] = (
+    (JsPath \ "entities").write[EntitiesType](EntitiesType.entitiesWriteToDes) and
+      (JsPath \ "administrationEndDate").writeNullable[LocalDate] and
+      (JsPath \ "periodTaxDues").write[String]
+    ).apply(unlift(Estate.unapply))
 }

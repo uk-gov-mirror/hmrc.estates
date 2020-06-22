@@ -1,0 +1,12 @@
+{
+  "correspondence": {
+    "abroadIndicator": false,
+    "address": {
+      "line1": "Line 1",
+      "line2": "Line 2",
+      "postCode": "NE981ZZ",
+      "country": "GB"
+    },
+    "phoneNumber": "078888888"
+  }
+}

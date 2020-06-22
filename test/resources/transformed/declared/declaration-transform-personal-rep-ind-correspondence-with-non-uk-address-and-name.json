@@ -1,0 +1,12 @@
+{
+  "correspondence": {
+    "abroadIndicator": true,
+    "name": "Estate of Personal Rep",
+    "address": {
+      "line1": "Line 1",
+      "line2": "Line 2",
+      "country": "DE"
+    },
+    "phoneNumber": "078888888"
+  }
+}

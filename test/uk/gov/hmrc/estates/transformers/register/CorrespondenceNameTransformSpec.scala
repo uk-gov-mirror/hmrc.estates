@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
-
-import java.time.LocalDate
+package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import play.api.libs.json.JsString
-import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class AddCorrespondenceNameTransformSpec extends FreeSpec with MustMatchers with OptionValues {
+class CorrespondenceNameTransformSpec extends FreeSpec with MustMatchers with OptionValues {
 
   val newEstateName = JsString("New Estate Name")
 
@@ -37,7 +34,7 @@ class AddCorrespondenceNameTransformSpec extends FreeSpec with MustMatchers with
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-correspondence-name-transformed.json")
 
-        val transformer = new AddCorrespondenceNameTransform(newEstateName)
+        val transformer = new CorrespondenceNameTransform(newEstateName)
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -49,7 +46,7 @@ class AddCorrespondenceNameTransformSpec extends FreeSpec with MustMatchers with
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-correspondence-name-only-transformed.json")
 
-        val transformer = new AddCorrespondenceNameTransform(newEstateName)
+        val transformer = new CorrespondenceNameTransform(newEstateName)
 
         val result = transformer.applyTransform(trustJson).get
 

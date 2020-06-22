@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
-import uk.gov.hmrc.estates.models.EstatePerRepOrgType
+import uk.gov.hmrc.estates.models.YearsReturns
+import uk.gov.hmrc.estates.transformers.JsonOperations
 
-case class AddCorrespondenceNameTransform(newCorrespondenceName: JsString)
-  extends DeltaTransform with JsonOperations {
+case class YearsReturnsTransform(years: YearsReturns)
+  extends SetValueAtPathDeltaTransform with JsonOperations {
 
-  private lazy val path = __ \ 'correspondence \ 'name
+  override val path: JsPath =  __ \ 'yearsReturns
 
-  override def applyTransform(input: JsValue): JsResult[JsValue] = {
-    input.transform(
-      __.json.update(path.json.put(newCorrespondenceName))
-    )
-  }
-
+  override val value: JsValue = Json.toJson(years)
 }
 
-object AddCorrespondenceNameTransform {
 
-  val key = "AddCorrespondenceNameTransform"
+object YearsReturnsTransform {
 
-  implicit val format: Format[AddCorrespondenceNameTransform] = Json.format[AddCorrespondenceNameTransform]
+  val key = "YearsReturnsTransform"
+
+  implicit val format: Format[YearsReturnsTransform] = Json.format[YearsReturnsTransform]
 }
+

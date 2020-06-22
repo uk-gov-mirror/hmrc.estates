@@ -16,21 +16,25 @@
 
 package uk.gov.hmrc.estates.transformers.register
 
-import play.api.libs.json._
-import uk.gov.hmrc.estates.models.EstateWillType
-import uk.gov.hmrc.estates.transformers.JsonOperations
+import play.api.libs.json.{JsPath, JsResult, JsValue, Json, __}
+import uk.gov.hmrc.estates.transformers.DeltaTransform
 
-case class DeceasedTransform(deceased: EstateWillType)
-    extends SetValueAtPathDeltaTransform with JsonOperations {
+abstract class SetValueAtPathDeltaTransform extends DeltaTransform {
 
-  override val path: JsPath = __ \ 'estate \ 'entities \ 'deceased
+  val path: JsPath
 
-  override val value: JsValue = Json.toJson(deceased)
-}
+  val value: JsValue
 
-object DeceasedTransform {
+  override def applyTransform(input: JsValue): JsResult[JsValue] = {
+    if (input.transform(path.json.pick).isSuccess) {
+      input.transform(
+        path.json.prune andThen __.json.update(path.json.put(Json.toJson(value)))
+      )
+    } else {
+      input.transform(
+        __.json.update(path.json.put(Json.toJson(value)))
+      )
+    }
+  }
 
-  val key = "DeceasedTransform"
-
-  implicit val format: Format[DeceasedTransform] = Json.format[DeceasedTransform]
 }

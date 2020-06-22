@@ -17,12 +17,13 @@
 package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import uk.gov.hmrc.estates.models.register.{AddressType, AgentDetails}
+import play.api.libs.json.Json
+import uk.gov.hmrc.estates.models.{AddressType, AgentDetails}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionValues {
 
-  private val agentDetails = AgentDetails(
+  private def agentDetails(phoneNumber: String) = AgentDetails(
     arn = "SARN1234567",
     agentName = "Agent name",
     agentAddress = AddressType(
@@ -70,17 +71,43 @@ class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionVa
       }
 
       "when there is no existing agent details" in {
+        val details = agentDetails("07701086492")
+
         val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-agent-details.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
 
-        val transformer = new AgentDetailsTransform(agentDetails)
+        val transformer = new AgentDetailsTransform(details)
 
         val result = transformer.applyTransform(trustJson).get
 
         result mustBe afterJson
       }
+
+      "when the document is empty" in {
+        val details = agentDetails("07701086492")
+
+        val transformer = AgentDetailsTransform(details)
+
+        val result = transformer.applyTransform(Json.obj()).get
+
+        result mustBe Json.obj(
+          "agentDetails" -> Json.toJson(details)
+        )
+      }
     }
 
+  }
+
+  "the agent details declaration transform should" - {
+    "reformat agent telephone numbers" in {
+      val details = agentDetails("(0)07701086492")
+
+      val transformer = AgentDetailsTransform(details)
+
+      val result = transformer.applyDeclarationTransform(Json.toJson(details)).get
+
+      result.as[AgentDetails].agentTelephoneNumber mustBe "07701086492"
+    }
   }
 }

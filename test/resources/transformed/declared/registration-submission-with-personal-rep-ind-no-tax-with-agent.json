@@ -1,0 +1,66 @@
+{
+  "correspondence": {
+    "abroadIndicator": false,
+    "name": "Estate of Mr A Deceased",
+    "address": {
+      "line1": "AEstateAddress1",
+      "line2": "AEstateAddress2",
+      "line3": "AEstateAddress3",
+      "line4": "AEstateAddress4",
+      "postCode": "TF3 4ER",
+      "country": "GB"
+    },
+    "phoneNumber": "078888888"
+  },
+  "declaration": {
+    "name": {
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "address": {
+      "line1": "line1",
+      "line2": "line2",
+      "country": "FR"
+    }
+  },
+  "agentDetails": {
+    "arn": "arn",
+    "agentName": "Agency Ltd",
+    "agentAddress": {
+      "line1": "line1",
+      "line2": "line2",
+      "country": "FR"
+    },
+    "agentTelephoneNumber": "tel",
+    "clientReference": "crn"
+  },
+  "estate": {
+    "entities": {
+      "deceased": {
+        "name": {
+          "firstName": "Mr TRS Reference 31",
+          "lastName": "TaxPayer 31"
+        },
+        "dateOfDeath": "2013-04-07",
+        "identification": {
+          "nino": "MT939555B"
+        }
+      },
+      "personalRepresentative": {
+        "estatePerRepInd": {
+          "name": {
+            "firstName": "Alister",
+            "lastName": "Mc'Lovern"
+          },
+          "dateOfBirth": "1955-09-08",
+          "identification": {
+            "nino": "JS123456A"
+          },
+          "phoneNumber": "078888888",
+          "email": "test@abc.com"
+        }
+      }
+    },
+    "periodTaxDues": "04"
+  }
+}

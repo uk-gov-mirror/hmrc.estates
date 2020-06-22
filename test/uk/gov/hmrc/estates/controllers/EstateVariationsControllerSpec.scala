@@ -67,56 +67,6 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
   ".estateVariation" should {
 
-    "not perform auditing" when {
-      "the feature toggle is set to false" in {
-
-        when(mockDesService.estateVariation(any[EstateVariation]))
-          .thenReturn(Future.successful(VariationResponse(tvnResponse)))
-
-        when(mockConfig.auditingEnabled).thenReturn(false)
-        when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
-
-        val requestPayLoad = Json.parse(validEstateVariationsRequestJson)
-
-        val SUT = new EstateVariationsController(new FakeIdentifierAction(bodyParsers, Organisation), mockDesService, mockAuditService, validationService, mockConfig, responseHandler)
-
-        val result = SUT.estateVariation()(
-          postRequestWithPayload(requestPayLoad, withDraftId = false)
-            .withHeaders(Headers.CORRELATION_HEADER -> UUID.randomUUID().toString)
-        )
-
-        whenReady(result) { _ =>
-
-          verify(mockAuditConnector, times(0)).sendExplicitAudit[Any](any(), any())(any(), any(), any())
-        }
-      }
-    }
-
-    "perform auditing" when {
-      "the feature toggle is set to true" in {
-
-        when(mockDesService.estateVariation(any[EstateVariation]))
-          .thenReturn(Future.successful(VariationResponse(tvnResponse)))
-
-        when(mockConfig.auditingEnabled).thenReturn(true)
-        when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
-
-        val requestPayLoad = Json.parse(validEstateVariationsRequestJson)
-
-        val SUT = new EstateVariationsController(new FakeIdentifierAction(bodyParsers, Organisation),mockDesService, auditService, validationService, mockConfig, responseHandler)
-
-        val result = SUT.estateVariation()(
-          postRequestWithPayload(requestPayLoad, withDraftId = false)
-            .withHeaders(Headers.CORRELATION_HEADER -> UUID.randomUUID().toString)
-        )
-
-        whenReady(result) { _ =>
-
-          verify(mockAuditConnector, times(1)).sendExplicitAudit[Any](any(), any())(any(), any(), any())
-        }
-      }
-    }
-
     "return 200 with TVN" when {
 
       "individual user called the register endpoint with a valid json payload " in {

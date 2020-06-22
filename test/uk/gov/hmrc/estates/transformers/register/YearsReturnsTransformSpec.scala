@@ -18,34 +18,41 @@ package uk.gov.hmrc.estates.transformers.register
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import play.api.libs.json.Json
-import uk.gov.hmrc.estates.models.register.TaxAmount.AmountMoreThanTwoFiftyThousand
+import uk.gov.hmrc.estates.models.{YearReturnType, YearsReturns}
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class AmountOfTaxOwedTransformSpec extends FreeSpec with MustMatchers with OptionValues {
+class YearsReturnsTransformSpec extends FreeSpec with MustMatchers with OptionValues {
 
-  "the amount of tax transform should" - {
+  private val yearsReturns: YearsReturns = YearsReturns(
+    List(
+      YearReturnType("20", taxConsequence = true)
+    )
+  )
 
-    "add an amount" - {
+  "the years returns transform should" - {
 
-      "when there is an existing period tax dues" in {
+    "set the years" - {
+
+      "where there are existing years" in {
 
         val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
 
-        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-period-tax-dues-transformed.json")
+        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-with-tax-years.json")
 
-        val transformer = new AmountOfTaxOwedTransform(AmountMoreThanTwoFiftyThousand)
+        val transformer = YearsReturnsTransform(yearsReturns)
 
         val result = transformer.applyTransform(trustJson).get
 
         result mustBe afterJson
       }
 
-      "when there is no existing period tax dues" in {
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-tax-dues.json")
+      "where there are no existing years" in {
 
-        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-period-tax-dues-transformed.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-tax-years.json")
 
-        val transformer = new AmountOfTaxOwedTransform(AmountMoreThanTwoFiftyThousand)
+        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-with-tax-years.json")
+
+        val transformer = YearsReturnsTransform(yearsReturns)
 
         val result = transformer.applyTransform(trustJson).get
 
@@ -53,17 +60,15 @@ class AmountOfTaxOwedTransformSpec extends FreeSpec with MustMatchers with Optio
       }
 
       "when the document is empty" in {
-        val transformer = AmountOfTaxOwedTransform(AmountMoreThanTwoFiftyThousand)
+        val transformer = YearsReturnsTransform(yearsReturns)
 
         val result = transformer.applyTransform(Json.obj()).get
 
         result mustBe Json.obj(
-          "estate" -> Json.obj(
-            "periodTaxDues" -> Json.toJson(AmountMoreThanTwoFiftyThousand.toString)
-          )
+          "yearsReturns" -> Json.toJson(yearsReturns)
         )
       }
     }
-
   }
+
 }

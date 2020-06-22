@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers.register
+package uk.gov.hmrc.estates.models.register
 
-import play.api.libs.json._
-import uk.gov.hmrc.estates.models.EstateWillType
-import uk.gov.hmrc.estates.transformers.JsonOperations
+import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.estates.models.NameType
 
-case class DeceasedTransform(deceased: EstateWillType)
-    extends SetValueAtPathDeltaTransform with JsonOperations {
+case class RegistrationDeclaration(name: NameType)
 
-  override val path: JsPath = __ \ 'estate \ 'entities \ 'deceased
+object RegistrationDeclaration {
 
-  override val value: JsValue = Json.toJson(deceased)
-}
+  implicit val formats : Format[RegistrationDeclaration] = Json.format[RegistrationDeclaration]
 
-object DeceasedTransform {
-
-  val key = "DeceasedTransform"
-
-  implicit val format: Format[DeceasedTransform] = Json.format[DeceasedTransform]
 }

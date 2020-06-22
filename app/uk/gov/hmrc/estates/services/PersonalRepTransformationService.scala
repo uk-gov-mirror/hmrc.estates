@@ -18,7 +18,8 @@ package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
-import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.PersonalRepTransform
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
@@ -28,10 +29,10 @@ class PersonalRepTransformationService @Inject()(
                                                 )(implicit val ec: ExecutionContext) {
 
   def addAmendEstatePerRepIndTransformer(internalId: String, newPersonalRep: EstatePerRepIndType): Future[Success.type] =
-    transformationService.addNewTransform(internalId, AddEstatePerRepTransform(Some(newPersonalRep), None)).map(_ => Success)
+    transformationService.addNewTransform(internalId, PersonalRepTransform(Some(newPersonalRep), None)).map(_ => Success)
 
   def addAmendEstatePerRepOrgTransformer(internalId: String, newPersonalRep: EstatePerRepOrgType): Future[Success.type] =
-    transformationService.addNewTransform(internalId, AddEstatePerRepTransform(None, Some(newPersonalRep))).map(_ => Success)
+    transformationService.addNewTransform(internalId, PersonalRepTransform(None, Some(newPersonalRep))).map(_ => Success)
 
   def getPersonalRepInd(internalId: String): Future[Option[EstatePerRepIndType]] = {
     getMostRecentPerRepTransform(internalId).map {
@@ -47,11 +48,11 @@ class PersonalRepTransformationService @Inject()(
     }
   }
 
-  private def getMostRecentPerRepTransform(internalId: String): Future[Option[AddEstatePerRepTransform]] = {
+  private def getMostRecentPerRepTransform(internalId: String): Future[Option[PersonalRepTransform]] = {
     transformationService.getTransformedData(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
-          case transform: AddEstatePerRepTransform => Some(transform)
+          case transform: PersonalRepTransform => Some(transform)
           case _ => None
         }.lastOption
       case _ => None

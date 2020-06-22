@@ -17,8 +17,7 @@
 package uk.gov.hmrc.estates.services.register
 
 import com.google.inject.Inject
-import uk.gov.hmrc.estates.models.Success
-import uk.gov.hmrc.estates.models.register.AgentDetails
+import uk.gov.hmrc.estates.models.{AgentDetails, Success}
 import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.AgentDetailsTransform

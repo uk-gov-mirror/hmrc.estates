@@ -57,6 +57,9 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
       registrationService
         .getRegistration()
         .map(response => Ok(Json.toJson(response)))
+        .recover {
+          case _ => internalServerErrorErrorResponse
+        }
   }
 
 }

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.estates.controllers
 
+import java.time.LocalDate
+
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -26,7 +28,7 @@ import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models._
-import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
+import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
 import uk.gov.hmrc.estates.services.register.RegistrationService
 import uk.gov.hmrc.estates.utils.JsonRequests
 
@@ -99,6 +101,90 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
         (output \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
         (output \ "message").as[String] mustBe "Internal server error."
       }
+    }
+  }
+
+  ".get" should {
+
+    val application = applicationBuilder()
+      .overrides(
+        bind[RegistrationService].toInstance(mockRegistrationService)
+      ).build()
+
+    val controller = application.injector.instanceOf[RegisterEstateController]
+
+    val request = FakeRequest("GET", "path")
+      .withHeaders(CONTENT_TYPE -> "application/json")
+
+    val deceased: EstateWillType = EstateWillType(
+      name = NameType("Mr TRS Reference 31", None, "TaxPayer 31"),
+      dateOfBirth = None,
+      dateOfDeath = LocalDate.parse("2013-04-07"),
+      identification = Some(IdentificationType(Some("MT939555B"), None, None))
+    )
+
+    val personalRepInd: EstatePerRepIndType = EstatePerRepIndType(
+      name =  NameType("Alister", None, "Mc'Lovern"),
+      dateOfBirth = LocalDate.parse("1955-09-08"),
+      identification = IdentificationType(
+        Some("JS123456A"),
+        None,
+        Some(AddressType("AEstateAddress1", "AEstateAddress2", Some("AEstateAddress3"), Some("AEstateAddress4"), Some("TF3 4ER"), "GB"))
+      ),
+      phoneNumber = "078888888",
+      email = Some("test@abc.com")
+    )
+
+    val estateName: String = "Estate of Mr A Deceased"
+
+    val taxAmount: TaxAmount = TaxAmount.AmountMoreThanTwoHalfMillion
+
+    val registration = EstateRegistrationNoDeclaration(
+      None,
+      CorrespondenceName(estateName),
+      None,
+      Estate(
+        EntitiesType(
+          PersonalRepresentativeType(
+            Some(personalRepInd),
+            None
+          ),
+          deceased
+        ),
+        None,
+        taxAmount.toString
+      ),
+      None
+    )
+
+    "return registration" when {
+
+      "document successfully built from transforms" in {
+        when(mockRegistrationService.getRegistration()(any()))
+          .thenReturn(Future.successful(registration))
+
+        val result = controller.get().apply(request)
+
+        status(result) mustBe OK
+
+        contentAsJson(result) mustBe Json.toJson(registration)
+      }
+    }
+
+    "return internal server error" when {
+
+      "there is an error" in {
+        when(mockRegistrationService.getRegistration()(any()))
+          .thenReturn(Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration")))
+
+        val result = controller.get().apply(request)
+
+        status(result) mustBe INTERNAL_SERVER_ERROR
+        val output = contentAsJson(result)
+        (output \ "code").as[String] mustBe "INTERNAL_SERVER_ERROR"
+        (output \ "message").as[String] mustBe "Internal server error."
+      }
+
     }
   }
 }

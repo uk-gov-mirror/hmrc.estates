@@ -167,7 +167,7 @@ class AddEstatePerRepTransformSpec extends FreeSpec with MustMatchers with Optio
 
       val result = transformer.applyDeclarationTransform(document)
 
-      val expectedResult = JsError("No address on personal rep individual to apply to correspondence")
+      val expectedResult = JsError("No address on personal rep to apply to correspondence")
 
       result mustBe expectedResult
     }

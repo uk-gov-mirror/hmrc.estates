@@ -28,64 +28,60 @@ import scala.concurrent.ExecutionContext
 
 class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)(implicit ec: ExecutionContext) {
 
-  def audit(event: String,
-            registration: EstateRegistration,
-            internalId: String,
-            response: RegistrationResponse)(implicit hc: HeaderCarrier): Unit = {
-
-    if (config.auditingEnabled) {
-      val auditPayload = EstateRegistrationSubmissionAuditEvent(
-        registration = registration,
-        internalAuthId = internalId,
-        response = response
-      )
-
-      auditConnector.sendExplicitAudit(
-        event,
-        auditPayload
-      )
-    } else {
-      ()
-    }
-
-  }
-
-  def audit(event: String,
-            request: JsValue,
-            internalId: String,
-            response: JsValue)
+  def audit(event: String, registration: EstateRegistration, internalId: String, response: RegistrationResponse)
            (implicit hc: HeaderCarrier): Unit = {
 
-    if (config.auditingEnabled) {
-      val auditPayload = GetTrustOrEstateAuditEvent(
-        request = request,
-        internalAuthId = internalId,
-        response = response
-      )
+    val auditPayload = EstateRegistrationSubmissionAuditEvent(
+      registration = registration,
+      internalAuthId = internalId,
+      response = response
+    )
 
-      auditConnector.sendExplicitAudit(
-        event,
-        auditPayload
-      )
-    } else {
-      ()
-    }
+    auditConnector.sendExplicitAudit(
+      event,
+      auditPayload
+    )
+  }
+
+  def audit(event: String, body: JsValue, internalId: String)(implicit hc: HeaderCarrier) = {
+
+    val auditPayload = GetTrustOrEstateAuditEvent(
+      request = body,
+      internalAuthId = internalId,
+      response = None
+    )
+
+    auditConnector.sendExplicitAudit(
+      event,
+      auditPayload
+    )
+  }
+
+  def audit(event: String, request: JsValue, internalId: String, response: JsValue)
+           (implicit hc: HeaderCarrier): Unit = {
+
+    val auditPayload = GetTrustOrEstateAuditEvent(
+      request = request,
+      internalAuthId = internalId,
+      response = Some(response)
+    )
+
+    auditConnector.sendExplicitAudit(
+      event,
+      auditPayload
+    )
   }
 
   def auditErrorResponse(eventName: String, request: JsValue, internalId: String, errorReason: String)
                         (implicit hc: HeaderCarrier): Unit = {
 
-    if (config.auditingEnabled) {
-      val response = Json.obj("errorReason" -> errorReason)
+    val response = Json.obj("errorReason" -> errorReason)
 
-      audit(
-        event = eventName,
-        request = request,
-        internalId = internalId,
-        response = response
-      )
-    } else {
-      ()
-    }
+    audit(
+      event = eventName,
+      request = request,
+      internalId = internalId,
+      response = response
+    )
   }
 }

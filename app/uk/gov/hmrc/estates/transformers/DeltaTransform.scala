@@ -55,6 +55,10 @@ object DeltaTransform {
     readsForTransform[AddCorrespondenceNameTransform](AddCorrespondenceNameTransform.key)
   }
 
+  def deceasedReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[DeceasedTransform](DeceasedTransform.key)
+  }
+
   def agentDetailsReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
     readsForTransform[AgentDetailsTransform](AgentDetailsTransform.key)
   }
@@ -72,6 +76,7 @@ object DeltaTransform {
       (
         personalRepReads orElse
         agentDetailsReads orElse
+        deceasedReads orElse
         amountTaxOwedReads orElse
         correspondenceNameReads orElse
         yearsReturnsReads orElse

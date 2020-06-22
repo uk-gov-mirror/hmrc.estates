@@ -31,7 +31,7 @@ import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.services.DesService
+import uk.gov.hmrc.estates.services.{DesService, FakeAuditService}
 import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, DeceasedTransform, YearsReturnsTransform}
 import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, AddEstatePerRepTransform, ComposedDeltaTransform, DeclarationTransformer}
 import uk.gov.hmrc.estates.utils.JsonUtils
@@ -44,8 +44,9 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
   val mockTransformationRepository: TransformationRepository = mock[TransformationRepository]
   val mockDesService: DesService = mock[DesService]
   val declarationTransformer = new DeclarationTransformer
+  val mockAuditService = injector.instanceOf[FakeAuditService]
 
-  val service = new RegistrationService(mockTransformationRepository, mockDesService, declarationTransformer)
+  val service = new RegistrationService(mockTransformationRepository, mockDesService, declarationTransformer, mockAuditService)
 
   val deceased: EstateWillType = EstateWillType(
     name = NameType("Mr TRS Reference 31", None, "TaxPayer 31"),
@@ -70,20 +71,22 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
   val taxAmount: TaxAmount = TaxAmount.AmountMoreThanTwoHalfMillion
 
-  val deceasedTransform = Seq(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))
+  val deceasedTransform = DeceasedTransform(deceased)
 
-  val amountOfTaxOwedTransform = Seq(ComposedDeltaTransform(Seq(AmountOfTaxOwedTransform(taxAmount))))
+  val amountOfTaxOwedTransform = AmountOfTaxOwedTransform(taxAmount)
 
-  val addCorrespondenceNameTransform = Seq(ComposedDeltaTransform(Seq(AddCorrespondenceNameTransform(JsString(estateName)))))
+  val addCorrespondenceNameTransform = AddCorrespondenceNameTransform(JsString(estateName))
 
-  val addEstatePerRepTransform = Seq(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(
+  val addEstatePerRepTransform = AddEstatePerRepTransform(
     Some(personalRepInd),
     None
-  ))))
-
-  val transforms: ComposedDeltaTransform = ComposedDeltaTransform(
-    deceasedTransform ++ amountOfTaxOwedTransform ++ addCorrespondenceNameTransform ++ addEstatePerRepTransform
   )
+
+  val allTransforms = ComposedDeltaTransform(Seq(
+      deceasedTransform,
+      amountOfTaxOwedTransform,
+      addCorrespondenceNameTransform,
+      addEstatePerRepTransform))
 
   implicit val request : IdentifierRequest[_] = IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation)
 
@@ -109,7 +112,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
     "successfully return a registration" in {
 
-      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
+      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(allTransforms)))
 
       val result = service.getRegistration()
 
@@ -131,7 +134,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
       "transformed json cannot be parsed as EstateRegistration" in {
 
-        val transforms: ComposedDeltaTransform = ComposedDeltaTransform(deceasedTransform)
+        val transforms: ComposedDeltaTransform = ComposedDeltaTransform(Seq(deceasedTransform))
 
         when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
 
@@ -148,7 +151,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
     "successfully submit the payload" in {
 
-      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
+      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(allTransforms)))
       when(mockDesService.registerEstate(any())).thenReturn(Future.successful(RegistrationTrnResponse("trn")))
 
       val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
@@ -171,7 +174,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
       "transformed json cannot be parsed as EstateRegistration" in {
 
-        val transforms: ComposedDeltaTransform = ComposedDeltaTransform(deceasedTransform)
+        val transforms: ComposedDeltaTransform = ComposedDeltaTransform(Seq(deceasedTransform))
 
         when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
 

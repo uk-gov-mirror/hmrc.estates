@@ -22,19 +22,22 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration, NameType, RegistrationResponse}
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.services.DesService
+import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeclarationTransformer}
+import uk.gov.hmrc.estates.utils.Auditing
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
-                                    declarationTransformer: DeclarationTransformer
+                                    declarationTransformer: DeclarationTransformer,
+                                    auditService: AuditService
                                    )(implicit ec: ExecutionContext) {
 
-  def getRegistration()(implicit request: IdentifierRequest[_]): Future[EstateRegistrationNoDeclaration] = {
+  def getRegistration()(implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[EstateRegistrationNoDeclaration] = {
 
     repository.get(request.identifier) flatMap {
       case Some(transforms) =>
@@ -42,6 +45,14 @@ class RegistrationService @Inject()(repository: TransformationRepository,
           case JsSuccess(json, _) =>
             json.asOpt[EstateRegistrationNoDeclaration] match {
               case Some(payload) =>
+
+                auditService.audit(
+                  Auditing.GET_REGISTRATION,
+                  Json.toJson(payload),
+                  request.identifier,
+                  Json.toJson(payload)
+                )
+
                 Future.successful(payload)
               case None =>
                 Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistrationNoDeclaration"))
@@ -55,28 +66,67 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   }
 
   def submit(declaration: RegistrationDeclaration)
-            (implicit request: IdentifierRequest[_]): Future[RegistrationResponse] = {
+            (implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[RegistrationResponse] = {
 
     repository.get(request.identifier) flatMap {
       case Some(transforms) =>
+
+        auditService.audit(Auditing.REGISTRATION_TRANSFORMS, Json.obj("transformations" -> transforms.deltaTransforms), request.identifier)
+
         buildSubmissionFromTransforms(declaration.name, transforms) match {
           case JsSuccess(json, _) =>
+
             json.asOpt[EstateRegistration] match {
               case Some(payload) =>
-                desService.registerEstate(payload)
+                submitAndAuditResponse(payload)
               case None =>
+                auditService.auditErrorResponse(
+                  Auditing.REGISTRATION_SUBMISSION_FAILED,
+                  json,
+                  request.identifier,
+                  "Unable to build model EstateRegistration from transforms"
+                )
                 Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration"))
             }
           case JsError(errors) =>
+            auditService.audit(Auditing.REGISTRATION_SUBMISSION_FAILED, Json.toJson(transforms), request.identifier, JsError.toJson(errors))
+
             Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
         }
       case None =>
+        auditService.auditErrorResponse(
+          Auditing.REGISTRATION_SUBMISSION_FAILED,
+          Json.toJson(declaration),
+          request.identifier,
+          "Unable to build model EstateRegistration from transforms"
+        )
         Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
     }
   }
 
+  private def submitAndAuditResponse(payload: EstateRegistration)
+                                    (implicit request: IdentifierRequest[_], hc: HeaderCarrier) : Future[RegistrationResponse] = {
+    desService.registerEstate(payload) map {
+      case r@RegistrationTrnResponse(trn) =>
+        auditService.audit(Auditing.REGISTRATION_SUBMITTED,
+          Json.toJson(payload),
+          request.identifier,
+          Json.obj("trn" -> trn)
+        )
+        r
+      case r @RegistrationFailureResponse(_, _, message) =>
+        auditService.auditErrorResponse(
+          Auditing.REGISTRATION_SUBMISSION_FAILED,
+          Json.toJson(payload),
+          request.identifier,
+          s"Unable to submit registration due to $message"
+        )
+        r
+    }
+  }
+
   private def buildPrintFromTransforms(transforms: ComposedDeltaTransform)
-                                   (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
+                                      (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
     for {
       result <- applyTransforms(transforms)
     } yield result

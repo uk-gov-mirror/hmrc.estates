@@ -59,7 +59,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
 
       "valid payload submitted" in {
 
-        when(mockRegistrationService.submit(any())(any()))
+        when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
 
         val result = controller.register().apply(request)
@@ -75,7 +75,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
 
       "estate already registered" in {
 
-        when(mockRegistrationService.submit(any())(any()))
+        when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.failed(AlreadyRegisteredException))
 
         val result = controller.register().apply(request)
@@ -91,7 +91,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
 
       "error" in {
 
-        when(mockRegistrationService.submit(any())(any()))
+        when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.failed(ServiceNotAvailableException("dependent service is down")))
 
         val result = controller.register().apply(request)
@@ -160,7 +160,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
     "return registration" when {
 
       "document successfully built from transforms" in {
-        when(mockRegistrationService.getRegistration()(any()))
+        when(mockRegistrationService.getRegistration()(any(), any()))
           .thenReturn(Future.successful(registration))
 
         val result = controller.get().apply(request)
@@ -174,7 +174,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
     "return internal server error" when {
 
       "there is an error" in {
-        when(mockRegistrationService.getRegistration()(any()))
+        when(mockRegistrationService.getRegistration()(any(), any()))
           .thenReturn(Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration")))
 
         val result = controller.get().apply(request)

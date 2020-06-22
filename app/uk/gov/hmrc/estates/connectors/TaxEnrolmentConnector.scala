@@ -39,7 +39,7 @@ class TaxEnrolmentConnectorImpl @Inject()(http: WSHttp, config: AppConfig) exten
     val taxEnolmentHeaders = hc.withExtraHeaders(headers: _*)
 
     val taxEnrolmentSubscriptionRequest = TaxEnrolmentSubscription(
-      serviceName = config.taxEnrolmentsPayloadBodyServiceName,
+      serviceName = "HMRC-TERS-ORG",
       callback = config.taxEnrolmentsPayloadBodyCallback,
       etmpId = subscriptionId)
 

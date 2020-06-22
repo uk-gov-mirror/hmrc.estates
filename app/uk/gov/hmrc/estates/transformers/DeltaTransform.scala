@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
-import uk.gov.hmrc.estates.transformers.register.{AgentDetailsTransform, AmountOfTaxOwedTransform, CorrespondenceNameTransform, DeceasedTransform, PersonalRepTransform, YearsReturnsTransform}
+import uk.gov.hmrc.estates.transformers.register._
 
 trait DeltaTransform {
 

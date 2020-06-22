@@ -40,9 +40,7 @@ class DeclarationTransform {
       address <- addressJson.validate[AddressType]
       declaration = Declaration(name, address)
       updated <- responseJson.transform(putNewValue(__ \ 'declaration, Json.toJson(declaration)))
-    } yield {
-      updated
-    }
+    } yield updated
   }
 
   private def takeAddressFromPath(path: JsPath, responseJson: JsValue): JsResult[JsValue] = {

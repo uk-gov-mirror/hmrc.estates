@@ -79,7 +79,7 @@ case class PersonalRepTransform(
           inputWithCorrespondence <- transformCorrespondence(newPersonalOrgRep.identification.address, newPersonalOrgRep.phoneNumber)
           inputWithAddressRemoved <- {
             if (newPersonalOrgRep.identification.utr.isDefined) {
-              inputWithCorrespondence.transform(__.json.update((path \ 'estatePerRepOrg \ 'identification \ 'address).json.prune))
+              inputWithCorrespondence.transform((path \ 'estatePerRepOrg \ 'identification \ 'address).json.prune)
             } else {
               JsSuccess(inputWithCorrespondence)
             }

@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.estates.controllers.transformers.register
 
+import java.time.LocalDate
+
 import javax.inject.Inject
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsBoolean, JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
@@ -51,6 +53,44 @@ class DeceasedTransformationController @Inject()(
       result.map {
         case Some(json) => Ok(json)
         case None => Ok(Json.obj())
+      }
+  }
+
+  def getDateOfDeath: Action[AnyContent] = identify.async {
+    request =>
+      val result = transformationService.getTransformedData(request.identifier) map {
+        case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
+          transforms.flatMap {
+            case DeceasedTransform(deceased) => Some(Json.toJson(deceased.dateOfDeath))
+            case _ => None
+          }.lastOption
+        case _ => None
+      }
+      result.map {
+        case Some(json) => Ok(json)
+        case None => Ok(Json.obj())
+      }
+  }
+
+  def getIsTaxRequired: Action[AnyContent] = identify.async {
+    request =>
+      val result = transformationService.getTransformedData(request.identifier) map {
+        case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
+          transforms.flatMap {
+            case DeceasedTransform(deceased) =>
+
+              def withinCurrentTaxYear(dateOfDeath: LocalDate): Boolean =
+              (dateOfDeath.isEqual(LocalDate.of(LocalDate.now().getYear, 4,6)) || dateOfDeath.isAfter(LocalDate.of(LocalDate.now().getYear, 4,6))) &&
+                (dateOfDeath.isBefore(LocalDate.of(LocalDate.now().getYear + 1, 4,5)) || dateOfDeath.isEqual(LocalDate.of(LocalDate.now().getYear + 1, 4,5)))
+
+              Some(JsBoolean(!withinCurrentTaxYear(deceased.dateOfDeath)))
+            case _ => None
+          }.lastOption
+        case _ => None
+      }
+      result.map {
+        case Some(json) => Ok(json)
+        case None => Ok(JsBoolean(false))
       }
   }
 

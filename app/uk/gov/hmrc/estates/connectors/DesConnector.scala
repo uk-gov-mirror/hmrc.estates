@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
-  private lazy val trustsServiceUrl : String = s"${config.desTrustsBaseUrl}/trusts"
+  private lazy val trustsServiceUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
 
   private lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"

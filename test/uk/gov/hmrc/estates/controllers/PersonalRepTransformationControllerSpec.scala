@@ -30,7 +30,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.services.{PersonalRepTransformationService, TransformationService}
-import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.PersonalRepTransform
 
 import scala.concurrent.Future
 import scala.util.Success
@@ -149,7 +150,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
           ).build()
 
         when(transformationService.getTransformedData(any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(Some(personalRepInd), None))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(Some(personalRepInd), None))))))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
 
@@ -194,7 +195,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
           ).build()
 
         when(transformationService.getTransformedData(any[String]))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(None, Some(personalRepOrg)))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(None, Some(personalRepOrg)))))))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
 

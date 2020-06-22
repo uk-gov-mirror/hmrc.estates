@@ -24,7 +24,8 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.estates.models._
-import uk.gov.hmrc.estates.transformers.{AddEstatePerRepTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.PersonalRepTransform
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -62,7 +63,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val result = service.addAmendEstatePerRepIndTransformer("internalId", personalRepInd)
         whenReady(result) { _ =>
 
-          verify(transformationService).addNewTransform("internalId", AddEstatePerRepTransform(Some(personalRepInd), None))
+          verify(transformationService).addNewTransform("internalId", PersonalRepTransform(Some(personalRepInd), None))
 
         }
       }
@@ -76,7 +77,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val result = service.addAmendEstatePerRepOrgTransformer("internalId", personalRepOrg)
         whenReady(result) { _ =>
 
-          verify(transformationService).addNewTransform("internalId", AddEstatePerRepTransform(None, Some(personalRepOrg)))
+          verify(transformationService).addNewTransform("internalId", PersonalRepTransform(None, Some(personalRepOrg)))
 
         }
       }
@@ -90,7 +91,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val service = new PersonalRepTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(Some(personalRepInd), None))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(Some(personalRepInd), None))))))
 
         whenReady(service.getPersonalRepInd("internalId")) { result =>
 
@@ -130,8 +131,8 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
-                AddEstatePerRepTransform(Some(personalRep1), None),
-                AddEstatePerRepTransform(Some(personalRep2), None)
+                PersonalRepTransform(Some(personalRep1), None),
+                PersonalRepTransform(Some(personalRep2), None)
               )
             ))))
 
@@ -151,8 +152,8 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
-                AddEstatePerRepTransform(None, Some(personalRepOrg)),
-                AddEstatePerRepTransform(Some(personalRepInd), None)
+                PersonalRepTransform(None, Some(personalRepOrg)),
+                PersonalRepTransform(Some(personalRepInd), None)
               )
             ))))
 
@@ -172,8 +173,8 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         when(transformationService.getTransformedData(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(
             Seq(
-              AddEstatePerRepTransform(Some(personalRepInd), None),
-              AddEstatePerRepTransform(None, Some(personalRepOrg))
+              PersonalRepTransform(Some(personalRepInd), None),
+              PersonalRepTransform(None, Some(personalRepOrg))
             )
           ))))
 
@@ -195,7 +196,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val service = new PersonalRepTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddEstatePerRepTransform(None, Some(personalRepOrg)))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(None, Some(personalRepOrg)))))))
 
         whenReady(service.getPersonalRepOrg("internalId")) { result =>
 
@@ -231,8 +232,8 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
-                AddEstatePerRepTransform(None, Some(personalRep1)),
-                AddEstatePerRepTransform(None, Some(personalRep2)))
+                PersonalRepTransform(None, Some(personalRep1)),
+                PersonalRepTransform(None, Some(personalRep2)))
             ))))
 
           whenReady(service.getPersonalRepOrg("internalId")) { result =>
@@ -251,8 +252,8 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           when(transformationService.getTransformedData(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
-                AddEstatePerRepTransform(Some(personalRepInd), None),
-                AddEstatePerRepTransform(None, Some(personalRepOrg)))
+                PersonalRepTransform(Some(personalRepInd), None),
+                PersonalRepTransform(None, Some(personalRepOrg)))
             ))))
 
           whenReady(service.getPersonalRepOrg("internalId")) { result =>
@@ -272,8 +273,8 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       when(transformationService.getTransformedData(any[String]))
         .thenReturn(Future.successful(Some(ComposedDeltaTransform(
           Seq(
-            AddEstatePerRepTransform(None, Some(personalRepOrg)),
-            AddEstatePerRepTransform(Some(personalRepInd), None))
+            PersonalRepTransform(None, Some(personalRepOrg)),
+            PersonalRepTransform(Some(personalRepInd), None))
         ))))
 
       whenReady(service.getPersonalRepOrg("internalId")) { result =>

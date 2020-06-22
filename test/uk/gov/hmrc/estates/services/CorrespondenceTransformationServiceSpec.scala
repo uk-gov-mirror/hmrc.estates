@@ -22,7 +22,8 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsString
-import uk.gov.hmrc.estates.transformers.{AddCorrespondenceNameTransform, ComposedDeltaTransform}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.CorrespondenceNameTransform
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -43,7 +44,7 @@ class CorrespondenceTransformationServiceSpec extends FreeSpec with MockitoSugar
       val result = service.addAmendCorrespondenceNameTransformer("internalId", newEstateName)
       whenReady(result) { _ =>
 
-        verify(transformationService).addNewTransform("internalId", AddCorrespondenceNameTransform(newEstateName))
+        verify(transformationService).addNewTransform("internalId", CorrespondenceNameTransform(newEstateName))
 
       }
     }
@@ -56,7 +57,7 @@ class CorrespondenceTransformationServiceSpec extends FreeSpec with MockitoSugar
         val service = new CorrespondenceTransformationService(transformationService)
 
         when(transformationService.getTransformedData(any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AddCorrespondenceNameTransform(newEstateName))))))
+          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(CorrespondenceNameTransform(newEstateName))))))
 
         whenReady(service.getCorrespondenceName("internalId")) { result =>
 
@@ -76,8 +77,8 @@ class CorrespondenceTransformationServiceSpec extends FreeSpec with MockitoSugar
         when(transformationService.getTransformedData(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(
             Seq(
-              AddCorrespondenceNameTransform(correspondenceName1),
-              AddCorrespondenceNameTransform(correspondenceName2)
+              CorrespondenceNameTransform(correspondenceName1),
+              CorrespondenceNameTransform(correspondenceName2)
             )
           ))))
 

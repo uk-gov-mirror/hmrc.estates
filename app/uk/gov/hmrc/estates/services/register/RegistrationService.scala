@@ -20,12 +20,13 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
-import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeclarationTransformer}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import uk.gov.hmrc.estates.transformers.register.DeclarationTransform
 import uk.gov.hmrc.estates.utils.Auditing
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -33,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
-                                    declarationTransformer: DeclarationTransformer,
+                                    declarationTransformer: DeclarationTransform,
                                     auditService: AuditService
                                    )(implicit ec: ExecutionContext) {
 

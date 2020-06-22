@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.transformers.register
 
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.models.{AddressType, Declaration, NameType}
 
-class DeclarationTransformer {
+class DeclarationTransform {
 
   def transform(actor: AffinityGroup, body: JsValue, declarationName: NameType): JsResult[JsValue] = {
     addDeclaration(actor, declarationName, body)
@@ -40,9 +40,7 @@ class DeclarationTransformer {
       address <- addressJson.validate[AddressType]
       declaration = Declaration(name, address)
       updated <- responseJson.transform(putNewValue(__ \ 'declaration, Json.toJson(declaration)))
-    } yield {
-      updated
-    }
+    } yield updated
   }
 
   private def takeAddressFromPath(path: JsPath, responseJson: JsValue): JsResult[JsValue] = {

@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import javax.inject.Inject
 import play.api.Logger
 import uk.gov.hmrc.auth.core.AffinityGroup
-import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentNotProcessed, TaxEnrolmentSuccess, TaxEnrolmentSuscriberResponse}
+import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentNotProcessed, TaxEnrolmentSuccess, TaxEnrolmentSubscriberResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -28,9 +28,11 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 
-class RosmPatternServiceImpl @Inject()( desService :DesService, taxEnrolmentService : TaxEnrolmentsService) extends RosmPatternService{
+class RosmPatternServiceImpl @Inject()(desService: DesService,
+                                       taxEnrolmentService : TaxEnrolmentsService
+                                      ) extends RosmPatternService {
 
-  override def setSubscriptionId(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSuscriberResponse] ={
+  override def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
 
     for {
       subscriptionIdResponse <- desService.getSubscriptionId(trn = trn)
@@ -41,20 +43,19 @@ class RosmPatternServiceImpl @Inject()( desService :DesService, taxEnrolmentServ
   }
 
   override def enrolAndLogResult(trn: String, affinityGroup: AffinityGroup)
-                                                    (implicit hc: HeaderCarrier) : Future[TaxEnrolmentSuscriberResponse] = {
+                                                    (implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse] = {
     affinityGroup match {
       case AffinityGroup.Organisation =>
-        setSubscriptionId(trn) map {
+        getSubscriptionIdAndEnrol(trn) map {
           case TaxEnrolmentSuccess =>
-            Logger.info(s"Rosm completed successfully for provided trn : $trn.")
+            Logger.info(s"Rosm completed successfully for provided trn: $trn.")
             TaxEnrolmentSuccess
           case TaxEnrolmentFailure =>
-            Logger.error(s"Rosm pattern is not completed for trn:  $trn.")
+            Logger.error(s"Rosm pattern is not completed for trn: $trn.")
             TaxEnrolmentFailure
         } recover {
-          case NonFatal(exception) =>
-            Logger.error(s"Rosm pattern is not completed for trn:  $trn.")
-            Logger.error(s"Rosm Exception received : $exception.")
+          case NonFatal(_) =>
+            Logger.error(s"Rosm pattern is not completed for trn: $trn.")
             TaxEnrolmentFailure
           }
       case _ =>
@@ -66,6 +67,6 @@ class RosmPatternServiceImpl @Inject()( desService :DesService, taxEnrolmentServ
 }
 @ImplementedBy(classOf[RosmPatternServiceImpl])
 trait RosmPatternService {
-  def setSubscriptionId(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSuscriberResponse]
-  def enrolAndLogResult(trn: String, affinityGroup: AffinityGroup)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSuscriberResponse]
+  def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse]
+  def enrolAndLogResult(trn: String, affinityGroup: AffinityGroup)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse]
 }

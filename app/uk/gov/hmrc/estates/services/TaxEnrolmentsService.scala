@@ -23,7 +23,7 @@ import javax.inject.Inject
 import play.api.Logger
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.connectors.TaxEnrolmentConnector
-import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentSuscriberResponse}
+import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentSubscriberResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,18 +32,20 @@ import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.control.NonFatal
 
 
-class TaxEnrolmentsServiceImpl @Inject()(taxEnrolmentConnector :TaxEnrolmentConnector, config: AppConfig) extends TaxEnrolmentsService {
+class TaxEnrolmentsServiceImpl @Inject()(taxEnrolmentConnector: TaxEnrolmentConnector,
+                                         config: AppConfig
+                                        ) extends TaxEnrolmentsService {
 
   private val DELAY_SECONDS_BETWEEN_REQUEST = config.delayToConnectTaxEnrolment
   private val MAX_TRIES = config.maxRetry
 
-  override def setSubscriptionId(subscriptionId: String)(implicit hc: HeaderCarrier): Future[TaxEnrolmentSuscriberResponse] = {
+  override def setSubscriptionId(subscriptionId: String)(implicit hc: HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] = {
     implicit val as: ActorSystem = ActorSystem()
     enrolSubscriberWithRetry(subscriptionId, 1)
   }
 
   private def enrolSubscriberWithRetry(subscriptionId: String, acc: Int)
-                                      (implicit as: ActorSystem, hc: HeaderCarrier): Future[TaxEnrolmentSuscriberResponse] = {
+                                      (implicit as: ActorSystem, hc: HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] = {
     makeRequest(subscriptionId) recoverWith {
       case NonFatal(_) =>
         if (isMaxRetryReached(acc)) {
@@ -65,7 +67,7 @@ class TaxEnrolmentsServiceImpl @Inject()(taxEnrolmentConnector :TaxEnrolmentConn
     after(duration, as.scheduler, global, Future.successful(1))
   }
 
-  private def makeRequest(subscriptionId: String)(implicit hc: HeaderCarrier): Future[TaxEnrolmentSuscriberResponse] = {
+  private def makeRequest(subscriptionId: String)(implicit hc: HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] = {
     taxEnrolmentConnector.enrolSubscriber(subscriptionId)
   }
 
@@ -73,5 +75,5 @@ class TaxEnrolmentsServiceImpl @Inject()(taxEnrolmentConnector :TaxEnrolmentConn
 
 @ImplementedBy(classOf[TaxEnrolmentsServiceImpl])
 trait TaxEnrolmentsService{
-   def setSubscriptionId(subscriptionId: String)(implicit hc: HeaderCarrier): Future[TaxEnrolmentSuscriberResponse]
+   def setSubscriptionId(subscriptionId: String)(implicit hc: HeaderCarrier): Future[TaxEnrolmentSubscriberResponse]
 }

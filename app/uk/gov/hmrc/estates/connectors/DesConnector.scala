@@ -90,8 +90,6 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
     val subscriptionIdEndpointUrl = s"$trustsServiceUrl/trn/$trn/subscription"
-    Logger.debug(s"[getSubscriptionId] Sending get subscription id request to DES, url=$subscriptionIdEndpointUrl")
-
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 

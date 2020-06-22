@@ -43,7 +43,7 @@ object SubscriptionIdResponse {
             throw NotFoundException
           case SERVICE_UNAVAILABLE =>
             Logger.error("[SubscriptionIdResponse] Service unavailable response from des.")
-            throw ServiceNotAvailableException("Des depdedent service is down.")
+            throw ServiceNotAvailableException("Des dependent service is down.")
           case status =>
             Logger.error(s"[SubscriptionIdResponse]  Error response from des : $status")
             throw InternalServerErrorException(s"Error response from des $status")

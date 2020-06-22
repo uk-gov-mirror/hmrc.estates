@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import javax.inject.Inject
 import play.api.libs.json.{JsValue, Json, Writes}
 import uk.gov.hmrc.estates.config.{AppConfig, WSHttp}
-import uk.gov.hmrc.estates.models.{TaxEnrolmentSubscription, TaxEnrolmentSuscriberResponse}
+import uk.gov.hmrc.estates.models.{TaxEnrolmentSubscription, TaxEnrolmentSubscriberResponse}
 import uk.gov.hmrc.estates.utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -34,7 +34,7 @@ class TaxEnrolmentConnectorImpl @Inject()(http: WSHttp, config: AppConfig) exten
       CONTENT_TYPE -> CONTENT_TYPE_JSON
     )
 
-  override  def enrolSubscriber(subscriptionId: String)(implicit hc: HeaderCarrier) :  Future[TaxEnrolmentSuscriberResponse] = {
+  override def enrolSubscriber(subscriptionId: String)(implicit hc: HeaderCarrier) :  Future[TaxEnrolmentSubscriberResponse] = {
     val taxEnrolmentsEndpoint = s"${config.taxEnrolmentsBaseUrl}/tax-enrolments/subscriptions/$subscriptionId/subscriber"
     val taxEnolmentHeaders = hc.withExtraHeaders(headers: _*)
 
@@ -43,8 +43,8 @@ class TaxEnrolmentConnectorImpl @Inject()(http: WSHttp, config: AppConfig) exten
       callback = config.taxEnrolmentsPayloadBodyCallback,
       etmpId = subscriptionId)
 
-    val response = http.PUT[JsValue, TaxEnrolmentSuscriberResponse](taxEnrolmentsEndpoint, Json.toJson(taxEnrolmentSubscriptionRequest))
-    (Writes.JsValueWrites ,TaxEnrolmentSuscriberResponse.httpReads,taxEnolmentHeaders.headers, global)
+    val response = http.PUT[JsValue, TaxEnrolmentSubscriberResponse](taxEnrolmentsEndpoint, Json.toJson(taxEnrolmentSubscriptionRequest))
+    (Writes.JsValueWrites, TaxEnrolmentSubscriberResponse.httpReads, taxEnolmentHeaders.headers, global)
     response
   }
 
@@ -52,5 +52,5 @@ class TaxEnrolmentConnectorImpl @Inject()(http: WSHttp, config: AppConfig) exten
 
 @ImplementedBy(classOf[TaxEnrolmentConnectorImpl])
 trait TaxEnrolmentConnector {
-  def enrolSubscriber(subscriptionId: String)(implicit hc: HeaderCarrier):  Future[TaxEnrolmentSuscriberResponse]
+  def enrolSubscriber(subscriptionId: String)(implicit hc: HeaderCarrier):  Future[TaxEnrolmentSubscriberResponse]
 }

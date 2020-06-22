@@ -56,7 +56,7 @@ case class AddEstatePerRepTransform(
             )
           )
         case None =>
-          JsError("No address on personal rep individual to apply to correspondence")
+          JsError("No address on personal rep to apply to correspondence")
       }
 
     }

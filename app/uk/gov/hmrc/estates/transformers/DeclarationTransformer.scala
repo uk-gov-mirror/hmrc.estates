@@ -32,7 +32,7 @@ class DeclarationTransformer {
 
   private def addDeclaration(actor: AffinityGroup, name: NameType, responseJson: JsValue): JsResult[JsObject] = {
     for {
-      addressJson <- if (actor == Agent){
+      addressJson <- if (actor == Agent) {
         takeAddressFromPath(agentAddressPath ,responseJson)
       } else {
         takeAddressFromPath(correspondenceAddressPath, responseJson)

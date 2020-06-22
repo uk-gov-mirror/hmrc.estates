@@ -50,7 +50,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
             Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
         }
       case None =>
-        Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
+        Future.failed(new RuntimeException("Unable to get registration due to there being no transforms"))
     }
   }
 

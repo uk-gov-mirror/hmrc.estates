@@ -29,7 +29,6 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
 
-  val desTrustsBaseUrl : String = servicesConfig.baseUrl("des-trusts")
   val desEstatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
 
   val getEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-playback")
@@ -39,8 +38,8 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val desToken : String = loadConfig("microservice.services.des-estates.token")
 
   val taxEnrolmentsBaseUrl : String = servicesConfig.baseUrl("tax-enrolments")
-  val taxEnrolmentsPayloadBodyServiceName : String = loadConfig("microservice.services.tax-enrolments.serviceName")
   val taxEnrolmentsPayloadBodyCallback : String = loadConfig("microservice.services.tax-enrolments.callback")
+
   val delayToConnectTaxEnrolment : Int = loadConfig("microservice.services.estates.delayToConnectTaxEnrolment").toInt
 
   val estatesApiRegistrationSchema : String  = "/resources/schemas/estates-api-schema-5.0.json"

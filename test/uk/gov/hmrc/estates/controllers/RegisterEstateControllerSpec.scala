@@ -19,7 +19,7 @@ package uk.gov.hmrc.estates.controllers
 import java.time.LocalDate
 
 import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{times, verify, when}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.bind
 import play.api.libs.json.Json
@@ -29,14 +29,17 @@ import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
+import uk.gov.hmrc.estates.services.RosmPatternService
 import uk.gov.hmrc.estates.services.register.RegistrationService
 import uk.gov.hmrc.estates.utils.JsonRequests
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite with JsonRequests {
 
   lazy val mockRegistrationService: RegistrationService = mock[RegistrationService]
+  lazy val mockRosmPatternService: RosmPatternService = mock[RosmPatternService]
 
   private val estateTrnResponse = "XTRN123456"
 
@@ -44,7 +47,8 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
 
     val application = applicationBuilder()
       .overrides(
-        bind[RegistrationService].toInstance(mockRegistrationService)
+        bind[RegistrationService].toInstance(mockRegistrationService),
+        bind[RosmPatternService].toInstance(mockRosmPatternService)
       ).build()
 
     val controller = application.injector.instanceOf[RegisterEstateController]
@@ -62,11 +66,15 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
         when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
 
+        when(mockRosmPatternService.enrol(any(), any())(any())).thenReturn(Future.successful(TaxEnrolmentSuccess))
+
         val result = controller.register().apply(request)
 
         status(result) mustBe OK
 
         (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
+
+        verify(mockRosmPatternService, times(1)).enrol(any(), any())(any[HeaderCarrier])
       }
 
     }

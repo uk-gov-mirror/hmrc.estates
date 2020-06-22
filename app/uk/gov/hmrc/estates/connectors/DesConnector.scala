@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
-  private lazy val trustsServiceUrl : String = s"${config.desTrustsBaseUrl}/trusts"
+  private lazy val trustsServiceUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
 
   private lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"
@@ -90,8 +90,6 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
     val subscriptionIdEndpointUrl = s"$trustsServiceUrl/trn/$trn/subscription"
-    Logger.debug(s"[getSubscriptionId] Sending get subscription id request to DES, url=$subscriptionIdEndpointUrl")
-
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 

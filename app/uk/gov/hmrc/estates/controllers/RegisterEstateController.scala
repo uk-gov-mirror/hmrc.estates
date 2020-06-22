@@ -22,14 +22,17 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.exceptions._
+import uk.gov.hmrc.estates.models.RegistrationTrnResponse
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
+import uk.gov.hmrc.estates.services.RosmPatternService
 import uk.gov.hmrc.estates.services.register.RegistrationService
 import uk.gov.hmrc.estates.utils.ErrorResponses._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
-                                         registrationService: RegistrationService)
+                                         registrationService: RegistrationService,
+                                         rosmPatternService: RosmPatternService)
                                         (implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
 
   def register(): Action[JsValue] = identifierAction.async(parse.json) {
@@ -42,7 +45,14 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
         declaration => {
           registrationService
             .submit(declaration)
-            .map(response => Ok(Json.toJson(response)))
+            .flatMap {
+              case response @ RegistrationTrnResponse(trn) =>
+                rosmPatternService.enrol(trn, request.affinityGroup) map { _ =>
+                    Ok(Json.toJson(response))
+                }
+              case _ =>
+                Future.successful(internalServerErrorErrorResponse)
+            }
         } recover {
           case AlreadyRegisteredException => duplicateSubmissionErrorResponse
           case _ => internalServerErrorErrorResponse

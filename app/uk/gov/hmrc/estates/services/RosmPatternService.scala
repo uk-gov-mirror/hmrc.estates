@@ -42,8 +42,8 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
     }
   }
 
-  override def enrolAndLogResult(trn: String, affinityGroup: AffinityGroup)
-                                                    (implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse] = {
+  override def enrol(trn: String, affinityGroup: AffinityGroup)
+                    (implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse] = {
     affinityGroup match {
       case AffinityGroup.Organisation =>
         getSubscriptionIdAndEnrol(trn) map {
@@ -68,5 +68,5 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
 @ImplementedBy(classOf[RosmPatternServiceImpl])
 trait RosmPatternService {
   def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse]
-  def enrolAndLogResult(trn: String, affinityGroup: AffinityGroup)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse]
+  def enrol(trn: String, affinityGroup: AffinityGroup)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse]
 }

@@ -79,8 +79,8 @@ class DeceasedTransformationController @Inject()(
         case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
           transforms.flatMap {
             case DeceasedTransform(deceased) =>
-
-              Some(JsBoolean(deceased.dateOfDeath isBefore LocalDate.parse(TaxYear.current.starts.toString)))
+              val taxYearStart = TaxYear.current.starts
+              Some(JsBoolean(deceased.dateOfDeath isBefore LocalDate.of(taxYearStart.getYear, taxYearStart.getMonthOfYear, taxYearStart.getDayOfMonth)))
             case _ => None
           }.lastOption
         case _ => None

@@ -10,6 +10,9 @@ POST        /amount-tax-owed            uk.gov.hmrc.estates.controllers.transfor
 GET         /deceased                   uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.get
 POST        /deceased                   uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.save
 
+GET         /date-of-death              uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.getDateOfDeath
+GET         /is-tax-required            uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.getIsTaxRequired
+
 GET         /agent-details              uk.gov.hmrc.estates.controllers.transformers.register.AgentDetailsTransformationController.get
 POST        /agent-details              uk.gov.hmrc.estates.controllers.transformers.register.AgentDetailsTransformationController.save
 

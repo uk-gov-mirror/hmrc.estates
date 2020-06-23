@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.estates.controllers.transformers.register
 
+import java.time.LocalDate
+
 import javax.inject.Inject
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsBoolean, JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
@@ -26,6 +28,7 @@ import uk.gov.hmrc.estates.models.EstateWillType
 import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
 import uk.gov.hmrc.estates.transformers.register.DeceasedTransform
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,6 +54,40 @@ class DeceasedTransformationController @Inject()(
       result.map {
         case Some(json) => Ok(json)
         case None => Ok(Json.obj())
+      }
+  }
+
+  def getDateOfDeath: Action[AnyContent] = identify.async {
+    request =>
+      val result = transformationService.getTransformedData(request.identifier) map {
+        case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
+          transforms.flatMap {
+            case DeceasedTransform(deceased) => Some(Json.toJson(deceased.dateOfDeath))
+            case _ => None
+          }.lastOption
+        case _ => None
+      }
+      result.map {
+        case Some(json) => Ok(json)
+        case None => Ok(Json.obj())
+      }
+  }
+
+  def getIsTaxRequired: Action[AnyContent] = identify.async {
+    request =>
+      val result = transformationService.getTransformedData(request.identifier) map {
+        case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
+          transforms.flatMap {
+            case DeceasedTransform(deceased) =>
+              val taxYearStart = TaxYear.current.starts
+              Some(JsBoolean(deceased.dateOfDeath isBefore LocalDate.of(taxYearStart.getYear, taxYearStart.getMonthOfYear, taxYearStart.getDayOfMonth)))
+            case _ => None
+          }.lastOption
+        case _ => None
+      }
+      result.map {
+        case Some(json) => Ok(json)
+        case None => Ok(JsBoolean(false))
       }
   }
 

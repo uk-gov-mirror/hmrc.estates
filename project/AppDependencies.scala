@@ -10,7 +10,8 @@ object AppDependencies {
     "uk.gov.hmrc"                %% "bootstrap-play-26"        % "1.8.0",
     "uk.gov.hmrc"                %% "microservice-bootstrap"   % "10.9.0",
     "uk.gov.hmrc"                %% "http-caching-client"      % "8.5.0-play-26",
-    "com.github.java-json-tools" % "json-schema-validator"     % "2.2.8"
+    "com.github.java-json-tools" % "json-schema-validator"     % "2.2.8",
+    "uk.gov.hmrc"                %% "tax-year"                 % "1.1.0"
   )
 
   val test: Seq[ModuleID] = Seq(

@@ -153,6 +153,98 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
 
     }
 
+    ".getDateOfDeath" must {
+
+      "return the deceased person date of death" in {
+        val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
+
+        when(mockTransformationService.getTransformedData(any())).thenReturn(
+          Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
+
+        val request = FakeRequest("GET", "path")
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        val result = controller.getDateOfDeath.apply(request)
+
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.parse(
+          """
+            |"2016-07-02"
+            |""".stripMargin)
+      }
+    }
+
+    ".getIsTaxRequired" must {
+
+      "return true if the date of death is before the current tax year" in {
+        val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
+
+        when(mockTransformationService.getTransformedData(any())).thenReturn(
+          Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
+
+        val request = FakeRequest("GET", "path")
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        val result = controller.getIsTaxRequired.apply(request)
+
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.parse(
+          """
+            |true
+            |""".stripMargin)
+      }
+
+      "return false if the date of death is in the current tax year" in {
+        val deceased = EstateWillType(
+          NameType("First", None, "Last"),
+          Some(LocalDate.of(1996, 4, 15)),
+          LocalDate.now(),
+          Some(IdentificationType(
+            nino = Some("AB000000C"),
+            address = None,
+            passport = None
+          ))
+        )
+
+        val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
+
+        when(mockTransformationService.getTransformedData(any())).thenReturn(
+          Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
+
+        val request = FakeRequest("GET", "path")
+          .withHeaders(CONTENT_TYPE -> "application/json")
+
+        val result = controller.getIsTaxRequired.apply(request)
+
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe Json.parse(
+          """
+            |false
+            |""".stripMargin)
+      }
+    }
+
+    "return false if the transform does not exist" in {
+      val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
+
+      when(mockTransformationService.getTransformedData(any())).thenReturn(Future.successful(None))
+
+      val request = FakeRequest("GET", "path")
+        .withHeaders(CONTENT_TYPE -> "application/json")
+
+      val result = controller.getIsTaxRequired.apply(request)
+
+      status(result) mustBe OK
+      contentType(result) mustBe Some(JSON)
+      contentAsJson(result) mustBe Json.parse(
+        """
+          |false
+          |""".stripMargin)
+    }
+
     ".save" must {
 
       "add a transform" in {

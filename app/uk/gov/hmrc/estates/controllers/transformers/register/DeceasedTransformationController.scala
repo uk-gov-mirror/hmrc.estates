@@ -28,6 +28,7 @@ import uk.gov.hmrc.estates.models.EstateWillType
 import uk.gov.hmrc.estates.services.TransformationService
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
 import uk.gov.hmrc.estates.transformers.register.DeceasedTransform
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -79,11 +80,7 @@ class DeceasedTransformationController @Inject()(
           transforms.flatMap {
             case DeceasedTransform(deceased) =>
 
-              def withinCurrentTaxYear(dateOfDeath: LocalDate): Boolean =
-              (dateOfDeath.isEqual(LocalDate.of(LocalDate.now().getYear, 4,6)) || dateOfDeath.isAfter(LocalDate.of(LocalDate.now().getYear, 4,6))) &&
-                (dateOfDeath.isBefore(LocalDate.of(LocalDate.now().getYear + 1, 4,5)) || dateOfDeath.isEqual(LocalDate.of(LocalDate.now().getYear + 1, 4,5)))
-
-              Some(JsBoolean(!withinCurrentTaxYear(deceased.dateOfDeath)))
+              Some(JsBoolean(deceased.dateOfDeath isBefore LocalDate.parse(TaxYear.current.starts.toString)))
             case _ => None
           }.lastOption
         case _ => None

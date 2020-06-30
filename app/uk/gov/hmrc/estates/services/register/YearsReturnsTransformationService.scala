@@ -46,4 +46,10 @@ class YearsReturnsTransformationService @Inject()(
     }
   }
 
+  def removeTransforms(internalId: String) : Future[Success.type] = {
+    transformationService.removeYearsReturnsTransform(internalId) map {
+      _ => Success
+    }
+  }
+
 }

@@ -24,10 +24,10 @@ import org.scalatest.time.{Millis, Span}
 import org.scalatest.{FreeSpec, MustMatchers}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType}
+import uk.gov.hmrc.estates.models.{EstatePerRepIndType, IdentificationType, NameType, YearReturnType, YearsReturns}
 import uk.gov.hmrc.estates.repositories.TransformationRepositoryImpl
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.register.PersonalRepTransform
+import uk.gov.hmrc.estates.transformers.register.{PersonalRepTransform, YearsReturnsTransform}
 
 import scala.concurrent.Future
 
@@ -106,4 +106,81 @@ class TransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFut
 
   }
 
+  "removeYearsReturnsTransform" - {
+
+    "must remove all YearsReturnsTransforms from the transformation repository" - {
+      "with no existing transforms" in {
+
+        val repository = mock[TransformationRepositoryImpl]
+        val service = new TransformationService(repository)
+
+        when(repository.get(any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
+        when(repository.set(any(), any())).thenReturn(Future.successful(true))
+
+        val result = service.removeYearsReturnsTransform("internalId")
+
+        whenReady(result) { _ =>
+
+          verify(repository).set(
+            "internalId",
+            ComposedDeltaTransform(Seq())
+          )
+        }
+
+      }
+
+      "with existing transforms" in {
+
+        val repository = mock[TransformationRepositoryImpl]
+        val service = new TransformationService(repository)
+
+        val personalRep = EstatePerRepIndType(
+          name =  NameType("First", None, "Last"),
+          dateOfBirth = LocalDate.of(2000,1,1),
+          identification = IdentificationType(None, None, None),
+          phoneNumber = "07987654",
+          email = None
+        )
+
+        val existingTransforms = Seq(PersonalRepTransform(Some(personalRep), None), YearsReturnsTransform(YearsReturns(List(YearReturnType("19", true)))))
+
+        when(repository.get(any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
+        when(repository.set(any(), any())).thenReturn(Future.successful(true))
+
+        val result = service.removeYearsReturnsTransform("internalId")
+
+        whenReady(result) { _ =>
+
+          verify(repository).set(
+            "internalId",
+            ComposedDeltaTransform(Seq(PersonalRepTransform(Some(personalRep), None)))
+          )
+        }
+
+      }
+
+      "with only YearsReturns existing transform" in {
+
+        val repository = mock[TransformationRepositoryImpl]
+        val service = new TransformationService(repository)
+
+        val existingTransforms = Seq(YearsReturnsTransform(YearsReturns(List(YearReturnType("19", false)))), YearsReturnsTransform(YearsReturns(List(YearReturnType("19", true)))))
+
+        when(repository.get(any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
+        when(repository.set(any(), any())).thenReturn(Future.successful(true))
+
+        val result = service.removeYearsReturnsTransform("internalId")
+
+        whenReady(result) { _ =>
+
+          verify(repository).set(
+            "internalId",
+            ComposedDeltaTransform(Seq())
+          )
+        }
+
+      }
+    }
+
+  }
 }

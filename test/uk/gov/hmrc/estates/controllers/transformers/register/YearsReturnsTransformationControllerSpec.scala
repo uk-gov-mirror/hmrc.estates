@@ -81,7 +81,7 @@ class YearsReturnsTransformationControllerSpec extends BaseSpec with MockitoSuga
             |""".stripMargin)
       }
 
-      "return an empty json object when there is no amount" in {
+      "return an empty json object when there is no years returns" in {
         val controller = new YearsReturnsTransformationController(identifierAction, cc, mockTransformationService)
 
         when(mockTransformationService.get(any())).thenReturn(Future.successful(None))
@@ -128,6 +128,21 @@ class YearsReturnsTransformationControllerSpec extends BaseSpec with MockitoSuga
         status(result) mustBe BAD_REQUEST
       }
 
+    }
+
+    ".reset" must {
+
+      "remove all YearsReturns transforms" in {
+        val controller = new YearsReturnsTransformationController(identifierAction, cc, mockTransformationService)
+
+        val request = FakeRequest("POST", "path")
+
+        when(mockTransformationService.removeTransforms(any())).thenReturn(Future.successful(Success))
+
+        val result = controller.reset().apply(request)
+
+        status(result) mustBe OK
+      }
     }
 
   }

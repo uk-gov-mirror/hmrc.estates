@@ -23,9 +23,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.YearsReturns
-import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.services.LocalDateService
-import uk.gov.hmrc.estates.services.register.{AmountOfTaxTransformationService, YearsReturnsTransformationService}
+import uk.gov.hmrc.estates.services.register.YearsReturnsTransformationService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -61,4 +59,10 @@ class YearsReturnsTransformationController @Inject()(
     }
   }
 
+  def reset : Action[AnyContent] = identify.async {
+    implicit request =>
+      yearsReturnsService.removeTransforms(request.identifier) map { _ =>
+        Ok
+      }
+  }
 }

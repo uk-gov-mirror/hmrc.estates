@@ -100,5 +100,18 @@ class YearsReturnsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         }
       }
     }
+
+    "must reset all corresponding transforms using the transformation service" in {
+
+      val transformationService = mock[TransformationService]
+      val service = new YearsReturnsTransformationService(transformationService)
+
+      when(transformationService.removeYearsReturnsTransform(any())).thenReturn(Future.successful(true))
+
+      val result = service.removeTransforms("internalId")
+      whenReady(result) { _ =>
+        verify(transformationService).removeYearsReturnsTransform("internalId")
+      }
+    }
   }
 }

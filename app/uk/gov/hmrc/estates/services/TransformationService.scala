@@ -20,6 +20,7 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.estates.repositories.TransformationRepository
+import uk.gov.hmrc.estates.transformers.register.YearsReturnsTransform
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,6 +41,23 @@ class TransformationService @Inject()(repository: TransformationRepository){
     } recoverWith {
       case e =>
         Logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
+        Future.failed(e)
+    }
+  }
+
+  def removeYearsReturnsTransform(internalId: String) : Future[Boolean] = {
+    repository.get(internalId) map {
+      case None =>
+        ComposedDeltaTransform(Seq())
+
+      case Some(composedTransform) =>
+        ComposedDeltaTransform(composedTransform.deltaTransforms.filterNot(_.isInstanceOf[YearsReturnsTransform]))
+
+    } flatMap { newTransforms =>
+      repository.set(internalId, newTransforms)
+    } recoverWith {
+      case e =>
+        Logger.error(s"[TransformationService] exception removing transform: ${e.getMessage}")
         Future.failed(e)
     }
   }

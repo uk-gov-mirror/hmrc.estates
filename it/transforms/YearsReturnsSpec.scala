@@ -61,14 +61,14 @@ class YearsReturnsSpec extends WordSpec with MustMatchers with MockitoSugar with
   }
 
   private def roundTripTest(yearsReturns: YearsReturns) = {
-    val amendRequest = FakeRequest(POST, "/estates/years-returns")
+    val amendRequest = FakeRequest(POST, "/estates/tax-liability")
       .withBody(Json.toJson(yearsReturns))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
     val amendResult = route(application, amendRequest).get
     status(amendResult) mustBe OK
 
-    val newResult = route(application, FakeRequest(GET, "/estates/years-returns")).get
+    val newResult = route(application, FakeRequest(GET, "/estates/tax-liability")).get
     status(newResult) mustBe OK
     contentAsJson(newResult) mustBe Json.toJson(yearsReturns)
   }

@@ -29,7 +29,7 @@ class AmountOfTaxOwedTransformSpec extends FreeSpec with MustMatchers with Optio
 
       "when there is an existing period tax dues" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-period-tax-dues-transformed.json")
 
@@ -41,7 +41,7 @@ class AmountOfTaxOwedTransformSpec extends FreeSpec with MustMatchers with Optio
       }
 
       "when there is no existing period tax dues" in {
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-tax-dues.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01-no-tax-dues.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-period-tax-dues-transformed.json")
 

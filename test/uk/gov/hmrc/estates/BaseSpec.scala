@@ -28,6 +28,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.inject.bind
+import play.api.mvc.ControllerComponents
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}

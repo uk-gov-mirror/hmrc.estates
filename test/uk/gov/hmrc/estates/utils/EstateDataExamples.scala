@@ -24,7 +24,7 @@ trait EstateDataExamples  extends  JsonRequests {
 
 
   def estatePerRepIndWithValues(estatePerRepIndDob : String ="2001-01-01"): EstateRegistration = {
-    val json = getJsonValueFromFile("estate-registration-dynamic-01.json")
+    val json = getJsonValueFromFile("mdtp/estate-registration-dynamic-01.json")
     getJsonValueFromString(json.toString().
       replace("{estatePerRepIndDob}", estatePerRepIndDob)).validate[EstateRegistration].get
   }
@@ -36,7 +36,7 @@ trait EstateDataExamples  extends  JsonRequests {
   }
 
   def estateWithoutCorrespondenceAddress : String = {
-    val json = getJsonValueFromFile("valid-estate-registration-01.json")
+    val json = getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
     val jsonTransformer = (__  \ 'correspondence \  'address ).json.prune
     json.transform(jsonTransformer).get.toString()
   }

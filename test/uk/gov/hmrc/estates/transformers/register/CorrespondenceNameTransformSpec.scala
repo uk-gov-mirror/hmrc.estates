@@ -30,7 +30,7 @@ class CorrespondenceNameTransformSpec extends FreeSpec with MustMatchers with Op
 
       "when there is an existing correspondence name" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-correspondence-name-transformed.json")
 
@@ -42,7 +42,7 @@ class CorrespondenceNameTransformSpec extends FreeSpec with MustMatchers with Op
       }
 
       "when there are no existing correspondence names" in {
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-without-correspondence-details.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01-without-correspondence-details.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-correspondence-name-only-transformed.json")
 

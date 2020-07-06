@@ -89,7 +89,7 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
 
       "when there is an existing personal rep" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
@@ -101,7 +101,7 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
       }
 
       "when there are no existing personal reps" in {
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-ind-transformed.json")
 
@@ -132,7 +132,7 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
 
       "when there is an existing personal rep" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed.json")
 
@@ -144,7 +144,7 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
       }
 
       "when there are no existing personal reps" in {
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed.json")
 
@@ -186,7 +186,7 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
         email = Some("test@abc.com")
       )
 
-      val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-03-with-is-passport-field.json")
+      val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-03-with-is-passport-field.json")
 
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-03-personal-rep-ind-transformed.json")
 

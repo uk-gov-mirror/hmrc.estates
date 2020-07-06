@@ -59,7 +59,7 @@ class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionVa
 
       "when there is an existing agent details" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-agent-details-transformed.json")
 
@@ -73,9 +73,9 @@ class AgentDetailsTransformSpec extends FreeSpec with MustMatchers with OptionVa
       "when there is no existing agent details" in {
         val details = agentDetails("07701086492")
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-agent-details.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01-no-agent-details.json")
 
-        val afterJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val afterJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val transformer = new AgentDetailsTransform(details)
 

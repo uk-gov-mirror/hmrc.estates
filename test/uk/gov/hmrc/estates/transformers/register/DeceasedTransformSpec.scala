@@ -42,7 +42,7 @@ class DeceasedTransformSpec extends FreeSpec with MustMatchers with OptionValues
 
       "when there is an existing deceased" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-deceased-transformed.json")
 

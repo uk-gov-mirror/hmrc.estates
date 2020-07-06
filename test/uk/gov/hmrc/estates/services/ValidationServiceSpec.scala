@@ -31,21 +31,21 @@ class ValidationServiceSpec extends BaseSpec with EitherValues with EstateDataEx
   "a validator " should {
     "return an empty list of errors when " when {
       "estate payload json having all required fields" in {
-        val jsonString = JsonUtils.getJsonFromFile("valid-estate-registration-01.json")
+        val jsonString = JsonUtils.getJsonFromFile("mdtp/valid-estate-registration-01.json")
 
         estateValidator.validate[EstateRegistration](jsonString) must not be 'left
         estateValidator.validate[EstateRegistration](jsonString).right.value mustBe a[EstateRegistration]
       }
 
       "estate payload json having required fields for estate type 02" in {
-        val jsonString = JsonUtils.getJsonFromFile("valid-estate-registration-02.json")
+        val jsonString = JsonUtils.getJsonFromFile("mdtp/valid-estate-registration-02.json")
 
         estateValidator.validate[EstateRegistration](jsonString) must not be 'left
         estateValidator.validate[EstateRegistration](jsonString).right.value mustBe a[EstateRegistration]
       }
 
       "estate payload json having required fields for estate type 04" in {
-        val jsonString = JsonUtils.getJsonFromFile("valid-estate-registration-04.json")
+        val jsonString = JsonUtils.getJsonFromFile("mdtp/valid-estate-registration-04.json")
 
         estateValidator.validate[EstateRegistration](jsonString) must not be 'left
         val rightValue = estateValidator.validate[EstateRegistration](jsonString).right.value
@@ -60,7 +60,7 @@ class ValidationServiceSpec extends BaseSpec with EitherValues with EstateDataEx
     "return registration domain" when {
 
       "no personal representative provided" in {
-        val jsonString = JsonUtils.getJsonFromFile("invalid-estate-registration-01.json")
+        val jsonString = JsonUtils.getJsonFromFile("mdtp/invalid-estate-registration-01.json")
         val errorList = estateValidator.validate[EstateRegistration](jsonString).left.get.
           filter(_.message =="object has missing required properties ([\"personalRepresentative\"])")
         errorList.size mustBe 1
@@ -75,7 +75,7 @@ class ValidationServiceSpec extends BaseSpec with EitherValues with EstateDataEx
 
     "return a list of validaton errors for estates " when {
       "individual personal representative has future date of birth" in {
-        val jsonString = JsonUtils.getJsonFromFile("estate-registration-dynamic-01.json").
+        val jsonString = JsonUtils.getJsonFromFile("mdtp/estate-registration-dynamic-01.json").
           replace("{estatePerRepIndDob}", "2030-01-01")
         val errorList =estateValidator.validate[EstateRegistration](jsonString).left.get.
           filter(_.message=="Date of birth must be today or in the past.")

@@ -50,7 +50,7 @@ object GetEstateResponse extends GetEstateHttpReads {
   }
 
   implicit val writes: Writes[GetEstateResponse] = Writes {
-    case GetEstateProcessedResponse(estate, header) => Json.obj("responseHeader" -> header, "getEstate" -> Json.toJson(estate))
+    case GetEstateProcessedResponse(estate, header) => Json.obj("responseHeader" -> header, "getEstate" -> Json.toJson(estate.as[GetEstate]))
     case GetEstateStatusResponse(header) => Json.obj("responseHeader" -> header)
     case NotEnoughDataResponse(_, errors) => Json.obj("error" -> errors)
     case _ => Json.obj("error" -> "There was an internal server error parsing response as GetEstateResponse")

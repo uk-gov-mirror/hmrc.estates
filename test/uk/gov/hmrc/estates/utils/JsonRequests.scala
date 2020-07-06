@@ -34,6 +34,7 @@ trait JsonRequests extends JsonUtils {
   lazy val invalidEstateVariationsRequest: JsValue = getJsonValueFromFile("invalid-estate-variation-api.json")
 
   lazy val getEstateResponseJson: String = getJsonFromFile("valid-get-estate-response.json")
+  lazy val getEstateInvalidResponseJson: JsValue = getJsonValueFromFile("valid-get-estate-invalid-response.json")
   lazy val getEstateExpectedResponse: JsValue = getJsonValueFromFile("valid-get-estate-expected-response.json")
 
   lazy val getTrustOrEstateProcessingResponseJson: String = getJsonFromFile("valid-get-trust-or-estate-in-processing-response.json")

@@ -180,12 +180,12 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
 
         val utr = "1234567890"
 
-        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(EstateFoundResponse(None, ResponseHeader("In Processing", "1"))))
+        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("In Processing", "1"))))
 
         val futureResult = SUT.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("In Processing", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
         }
       }
     }

@@ -80,7 +80,7 @@ sealed trait GetEstateHttpReads {
         Logger.info("[GetEstateResponse] response successfully parsed as EstateFoundResponse")
         estateFound
       case JsError(errors) =>
-        Logger.info(s"[GetTrustResponse] Cannot parse as EstateFoundResponse due to $errors")
+        Logger.info(s"[GetEstateResponse] Cannot parse as EstateFoundResponse due to $errors")
         NotEnoughDataResponse(response.json, JsError.toJson(errors))
     }
 

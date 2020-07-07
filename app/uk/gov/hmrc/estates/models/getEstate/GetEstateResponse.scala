@@ -18,58 +18,84 @@ package uk.gov.hmrc.estates.models.getEstate
 
 import play.api.Logger
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.DesErrorResponse
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 trait GetEstateResponse
 
-case class EstateFoundResponse(getEstate: Option[GetEstate],
-                              responseHeader: ResponseHeader) extends GetEstateResponse
+object GetEstateResponse extends GetEstateHttpReads {
 
-object EstateFoundResponse {
-  implicit val writes: Writes[EstateFoundResponse] = Json.writes[EstateFoundResponse]
-  implicit val reads: Reads[EstateFoundResponse] = (
-    (JsPath \ "trustOrEstateDisplay").readNullable[GetEstate] and
-    (JsPath \ "responseHeader").read[ResponseHeader]
-  )(EstateFoundResponse.apply _)
+  implicit val reads: Reads[GetEstateResponse] = new Reads[GetEstateResponse] {
+    override def reads(json: JsValue): JsResult[GetEstateResponse] = {
+      val header = (json \ "responseHeader").asOpt[ResponseHeader]
+
+      header match {
+        case Some(parsedHeader) =>
+          (json \ "trustOrEstateDisplay").toOption match {
+            case None =>
+              JsSuccess(GetEstateStatusResponse(parsedHeader))
+            case Some(x) =>
+              x.validate[GetEstate] match {
+                case JsSuccess(_, _) =>
+                  JsSuccess(GetEstateProcessedResponse(x, parsedHeader))
+                case x : JsError =>
+                  JsSuccess(NotEnoughDataResponse(json, JsError.toJson(x)))
+              }
+          }
+        case None =>
+          JsSuccess(NotEnoughDataResponse(json, JsError.toJson(JsError("responseHeader not defined on response"))))
+      }
+    }
+  }
+
+  implicit val writes: Writes[GetEstateResponse] = Writes {
+    case GetEstateProcessedResponse(estate, header) => Json.obj("responseHeader" -> header, "getEstate" -> Json.toJson(estate.as[GetEstate]))
+    case GetEstateStatusResponse(header) => Json.obj("responseHeader" -> header)
+    case NotEnoughDataResponse(_, errors) => Json.obj("error" -> errors)
+    case _ => Json.obj("error" -> "There was an internal server error parsing response as GetEstateResponse")
+  }
+
 }
 
-object GetEstateResponse {
+sealed trait GetEstateHttpReads {
 
   implicit lazy val httpReads: HttpReads[GetEstateResponse] =
     new HttpReads[GetEstateResponse] {
       override def read(method: String, url: String, response: HttpResponse): GetEstateResponse = {
-        Logger.info(s"[GetEstateResonse] response status received from des: ${response.status}")
+        Logger.info(s"[GetEstateResponse] response status received from des: ${response.status}")
         response.status match {
-          case OK =>
-            response.json.validate[EstateFoundResponse] match {
-              case JsSuccess(estateFound,_) =>
-                Logger.info("[GetEstateResponse] response successfully parsed as EstateFoundResponse")
-                estateFound
-              case JsError(errors) =>
-                Logger.info(s"[GetTrustResponse] Cannot parse as EstateFoundResponse due to $errors")
-                NotEnoughDataResponse(response.json, JsError.toJson(errors))
-            }
-          case BAD_REQUEST =>
-            response.json.asOpt[DesErrorResponse] match {
-              case Some(desErrorResponse) =>
-                desErrorResponse.code match {
-                  case "INVALID_UTR" =>
-                    InvalidUTRResponse
-                  case "INVALID_REGIME" =>
-                    InvalidRegimeResponse
-                  case _ =>
-                    BadRequestResponse
-                }
-              case None =>
-                InternalServerErrorResponse
-            }
+          case OK => readProcessedResponse(response)
+          case BAD_REQUEST => readClientErrorResponse(response)
           case NOT_FOUND => ResourceNotFoundResponse
           case SERVICE_UNAVAILABLE => ServiceUnavailableResponse
           case _ => InternalServerErrorResponse
         }
       }
+    }
+
+  private def readProcessedResponse(response: HttpResponse) =
+    response.json.validate[GetEstateResponse] match {
+      case JsSuccess(estateFound,_) =>
+        Logger.info("[GetEstateResponse] response successfully parsed as EstateFoundResponse")
+        estateFound
+      case JsError(errors) =>
+        Logger.info(s"[GetEstateResponse] Cannot parse as EstateFoundResponse due to $errors")
+        NotEnoughDataResponse(response.json, JsError.toJson(errors))
+    }
+
+  private def readClientErrorResponse(response: HttpResponse) =
+    response.json.asOpt[DesErrorResponse] match {
+      case Some(desErrorResponse) =>
+        desErrorResponse.code match {
+          case "INVALID_UTR" =>
+            InvalidUTRResponse
+          case "INVALID_REGIME" =>
+            InvalidRegimeResponse
+          case _ =>
+            BadRequestResponse
+        }
+      case None =>
+        InternalServerErrorResponse
     }
 }

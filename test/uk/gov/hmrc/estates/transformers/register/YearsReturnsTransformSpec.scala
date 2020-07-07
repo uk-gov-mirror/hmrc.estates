@@ -35,7 +35,7 @@ class YearsReturnsTransformSpec extends FreeSpec with MustMatchers with OptionVa
 
       "where there are existing years" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-with-tax-years.json")
 
@@ -48,7 +48,7 @@ class YearsReturnsTransformSpec extends FreeSpec with MustMatchers with OptionVa
 
       "where there are no existing years" in {
 
-        val trustJson = JsonUtils.getJsonValueFromFile("valid-estate-registration-01-no-tax-years.json")
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-01-no-tax-years.json")
 
         val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-with-tax-years.json")
 

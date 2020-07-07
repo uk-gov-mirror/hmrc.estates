@@ -16,22 +16,4 @@
 
 package uk.gov.hmrc.estates.models.getEstate
 
-import play.api.libs.json.JsValue
-
-sealed trait TrustErrorResponse extends GetEstateResponse
-
-case object InvalidUTRResponse extends TrustErrorResponse
-
-case object InvalidRegimeResponse extends TrustErrorResponse
-
-case object BadRequestResponse extends TrustErrorResponse
-
-case object ResourceNotFoundResponse extends TrustErrorResponse
-
-case object InternalServerErrorResponse extends TrustErrorResponse
-
-case class NotEnoughDataResponse(json: JsValue, errors: JsValue) extends TrustErrorResponse
-
-case object ServiceUnavailableResponse extends TrustErrorResponse
-
-case class TransformationErrorResponse(errors: String) extends TrustErrorResponse
+case class GetEstateStatusResponse(responseHeader: ResponseHeader) extends GetEstateResponse

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.connectors
 
 import play.api.http.Status._
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{JsError, Json, Reads}
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models.getEstate._
@@ -306,19 +306,15 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
   ".getEstateInfo" should {
 
     "return EstateFoundResponse" when {
+
       "des has returned a 200 with estate details" in {
         val utr = "1234567890"
         stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getEstateResponseJson)
 
         val futureResult = connector.getEstateInfo(utr)
 
-        whenReady(futureResult) {
-          case estateFoundResponse: EstateFoundResponse =>
-            val actualResult = Json.toJson(estateFoundResponse)
-
-            actualResult mustBe getEstateExpectedResponse
-          case _ =>
-            fail("Test Failed: Should have parsed the json into EstateFoundResponse model.")
+        whenReady(futureResult) { result =>
+          Json.toJson(result) mustBe getEstateExpectedResponse
         }
       }
 
@@ -329,7 +325,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("In Processing", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
         }
       }
 
@@ -340,7 +336,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("Pending Closure", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("Pending Closure", "1"))
         }
       }
 
@@ -351,7 +347,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("Closed", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("Closed", "1"))
         }
       }
 
@@ -362,7 +358,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("Suspended", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("Suspended", "1"))
         }
       }
 
@@ -373,7 +369,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("Parked", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("Parked", "1"))
         }
       }
 
@@ -384,7 +380,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe EstateFoundResponse(None, ResponseHeader("Obsoleted", "1"))
+          result mustBe GetEstateStatusResponse(ResponseHeader("Obsoleted", "1"))
         }
       }
     }
@@ -446,17 +442,25 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     "return NotEnoughDataResponse" when {
 
-      "des has returned a 204" in {
+      "no response header" in {
         val utr = "6666666666"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, Json.stringify(jsonResponse204))
+        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, Json.obj().toString())
 
         val futureResult = connector.getEstateInfo(utr)
 
         whenReady(futureResult) { result =>
-          result mustBe NotEnoughDataResponse(jsonResponse204, Json.parse(
-            """
-              |{"obj.responseHeader":[{"msg":["error.path.missing"],"args":[]}]}
-              |""".stripMargin))
+          result mustBe NotEnoughDataResponse(Json.obj(), JsError.toJson(JsError("responseHeader not defined on response")))
+        }
+      }
+
+      "body does not validate as GetEstate" in {
+        val utr = "2000000000"
+        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getEstateInvalidResponseJson.toString())
+
+        val futureResult = connector.getEstateInfo(utr)
+
+        whenReady(futureResult) { result =>
+          result mustBe NotEnoughDataResponse(getEstateInvalidResponseJson, Json.parse("{\"obj.details.estate.entities.personalRepresentative\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}"))
         }
       }
     }

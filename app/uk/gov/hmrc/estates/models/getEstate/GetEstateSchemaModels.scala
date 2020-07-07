@@ -29,14 +29,7 @@ case class PersonalRepresentativeType (
 
 object PersonalRepresentativeType {
 
-  implicit object PersonalRepFormats extends Format[PersonalRepresentativeType] {
-
-    override def writes(o: PersonalRepresentativeType): JsValue = {
-      o.estatePerRepInd match {
-        case Some(ind) => Json.toJson(ind)
-        case None => Json.toJson(o.estatePerRepOrg)
-      }
-    }
+  implicit object PersonalRepReads extends Reads[PersonalRepresentativeType] {
 
     override def reads(json: JsValue): JsResult[PersonalRepresentativeType] = {
       json.validate[EstatePerRepIndType].map {
@@ -51,7 +44,7 @@ object PersonalRepresentativeType {
     }
   }
 
-  implicit val personalRepFormats : Format[PersonalRepresentativeType] = PersonalRepFormats
+  implicit val writes : Writes[PersonalRepresentativeType] = Json.writes[PersonalRepresentativeType]
 }
 
 case class EstatePerRepIndType(name: NameType,

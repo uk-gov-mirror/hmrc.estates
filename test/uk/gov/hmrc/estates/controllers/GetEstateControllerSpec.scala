@@ -53,15 +53,17 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
 
     "return 200" when {
 
-      "estate is processed" ignore {
+      "estate is processed" in {
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
-        
-        val expectedJson = getJsonValueFromFile("mdtp/valid-estate-registration-01.json")
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(GetEstateProcessedResponse(expectedJson, ResponseHeader("Processed", "1"))))
+        val expectedJson = getJsonValueFromFile("mdtp/playback/valid-estate-playback-01.json")
+
+        val etmpJson = (getJsonValueFromFile("etmp/playback/valid-estate-playback-01.json") \ "trustOrEstateDisplay").get
+
+        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
 
         val controller = application.injector.instanceOf[GetEstateController]
 

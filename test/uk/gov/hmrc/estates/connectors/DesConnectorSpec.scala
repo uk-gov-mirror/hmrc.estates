@@ -306,6 +306,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
   ".getEstateInfo" should {
 
     "return EstateFoundResponse" when {
+
       "des has returned a 200 with estate details" in {
         val utr = "1234567890"
         stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getEstateResponseJson)

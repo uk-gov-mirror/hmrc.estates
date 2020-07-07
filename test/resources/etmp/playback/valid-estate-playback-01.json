@@ -1,5 +1,10 @@
 {
-  "getEstate": {
+  "responseHeader": {
+    "dfmcaReturnUserStatus": "Processed",
+    "formBundleNo": "1"
+  },
+  "trustOrEstateDisplay": {
+    "applicationType": "02",
     "matchData": {
       "utr": "2000000000"
     },
@@ -29,10 +34,13 @@
         "country": "GB"
       }
     },
-    "estate": {
-      "entities": {
-        "personalRepresentative": {
-          "estatePerRepInd": {
+    "details": {
+      "estate": {
+        "entities": {
+          "personalRepresentative": {
+            "lineNo": "1",
+            "bpMatchStatus": "01",
+            "entityStart": "2017-02-28",
             "name": {
               "firstName": "Alister",
               "lastName": "Mc'Govern"
@@ -41,32 +49,25 @@
             "identification": {
               "nino": "JS123456A"
             },
-            "phoneNumber": "078888888",
+            "phoneNumber": "078888888"
+          },
+          "deceased": {
             "lineNo": "1",
             "bpMatchStatus": "01",
-            "entityStart": "2017-02-28"
+            "entityStart": "2017-02-28",
+            "name": {
+              "firstName": "Wilbert",
+              "lastName": "Jefferies"
+            },
+            "dateOfDeath": "2016-04-06",
+            "identification": {
+              "nino": "JS123456A"
+            }
           }
         },
-        "deceased": {
-          "name": {
-            "firstName": "Wilbert",
-            "lastName": "Jefferies"
-          },
-          "dateOfDeath": "2016-04-06",
-          "identification": {
-            "nino": "JS123456A"
-          },
-          "lineNo": "1",
-          "bpMatchStatus": "01",
-          "entityStart": "2017-02-28"
-        }
-      },
-      "administrationEndDate": "2017-06-01",
-      "periodTaxDues": "01"
+        "administrationEndDate": "2017-06-01",
+        "periodTaxDues": "01"
+      }
     }
-  },
-  "responseHeader": {
-    "status": "Processed",
-    "formBundleNo": "1"
   }
 }

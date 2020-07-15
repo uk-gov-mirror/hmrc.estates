@@ -31,5 +31,6 @@ POST        /variation                  uk.gov.hmrc.estates.controllers.EstateVa
 
 POST        /tax-enrolment/callback/subscriptions   uk.gov.hmrc.estates.controllers.TaxEnrolmentCallbackController.subscriptionCallback
 
-GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)
+GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = false)
 
+GET         /:utr/transformed           uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = true)

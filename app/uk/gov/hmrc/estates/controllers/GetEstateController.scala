@@ -23,7 +23,7 @@ import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRAct
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.services.{AuditService, DesService}
+import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,13 +32,19 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class GetEstateController @Inject()(identify: IdentifierAction,
                                     auditService: AuditService,
                                     desService: DesService,
+                                    variationsTransformationService: VariationsTransformationService,
                                     validateUTRActionFactory: ValidateUTRActionFactory
                                    )(implicit cc: ControllerComponents) extends BackendController(cc) {
 
-  def get(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
+  def get(utr: String, applyTransforms: Boolean): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
     implicit request =>
+      val data = if (applyTransforms) {
+        variationsTransformationService.getTransformedData(utr, request.identifier)
+      } else {
+        desService.getEstateInfo(utr, request.identifier)
+      }
 
-    desService.getEstateInfo(utr, request.identifier) map {
+      data map {
       case processed : GetEstateProcessedResponse =>
         processedResponse(utr, processed)
       case status: GetEstateStatusResponse =>

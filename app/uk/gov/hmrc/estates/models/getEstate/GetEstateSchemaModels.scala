@@ -52,7 +52,7 @@ case class EstatePerRepIndType(name: NameType,
                                identification: IdentificationType,
                                phoneNumber: String,
                                email: Option[String],
-                               lineNo: String,
+                               lineNo: Option[String],
                                bpMatchStatus: Option[String],
                                entityStart: LocalDate)
 
@@ -64,7 +64,7 @@ case class EstatePerRepOrgType(orgName: String,
                                phoneNumber: String,
                                email: Option[String] = None,
                                identification: IdentificationOrgType,
-                               lineNo: String,
+                               lineNo: Option[String],
                                bpMatchStatus: Option[String],
                                entityStart: LocalDate)
 

@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.estates.services
 
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when}
 import org.mockito.Matchers._
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.connectors.DesConnector
 import uk.gov.hmrc.estates.exceptions._
@@ -25,6 +26,7 @@ import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.VariationResponse
+import uk.gov.hmrc.estates.repositories.CacheRepositoryImpl
 import uk.gov.hmrc.estates.utils.JsonRequests
 
 import scala.concurrent.Future
@@ -32,11 +34,14 @@ import scala.concurrent.Future
 class DesServiceSpec extends BaseSpec with JsonRequests {
 
   private trait DesServiceFixture {
-    lazy val request = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
+    lazy val request = ExistingCheckRequest("estate name", postcode = Some("NE65TA"), "1234567890")
     val mockConnector: DesConnector = mock[DesConnector]
+    val mockRepository: CacheRepositoryImpl = mock[CacheRepositoryImpl]
+    when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(None))
+    when(mockRepository.resetCache(any[String], any[String])).thenReturn(Future.successful(None))
     val myId = "myId"
 
-    val SUT = new DesService(mockConnector)
+    val SUT = new DesService(mockConnector, mockRepository)
   }
 
   ".checkExistingEstate" should {
@@ -176,16 +181,36 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
 
   ".getEstateInfo" should {
     "return EstateFoundResponse" when {
-      "EstateFoundResponse is returned from DES Connector" in new DesServiceFixture {
-
+      "EstateFoundResponse is returned from DES Connector with a Processed flag and an estate body when not cached" in new DesServiceFixture {
         val utr = "1234567890"
+        val fullEtmpResponseJson = getEstateResponse
+        val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
 
-        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("In Processing", "1"))))
+        when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(None))
+        when(mockRepository.resetCache(any[String], any[String])).thenReturn(Future.successful(None))
+        when(mockConnector.getEstateInfo(any()))
+          .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", "1"))))
 
         val futureResult = SUT.getEstateInfo(utr, myId)
-
         whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
+          result mustBe GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", "1"))
+          verify(mockRepository, times(1)).set(utr, myId, fullEtmpResponseJson)
+        }
+      }
+
+      "EstateFoundResponse is returned from repository with a Processed flag and an estate body when cached" in new DesServiceFixture {
+        val utr = "1234567890"
+
+        val fullEtmpResponseJson = getEstateResponse
+        val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
+
+        when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(Some(fullEtmpResponseJson)))
+        when(mockConnector.getEstateInfo(any())).thenReturn(Future.failed(new Exception("Connector should not have been called")))
+
+        val futureResult = SUT.getEstateInfo(utr, myId)
+        whenReady(futureResult) { result =>
+          result mustBe GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", "1"))
+          verifyZeroInteractions(mockConnector)
         }
       }
     }

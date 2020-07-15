@@ -19,6 +19,7 @@ package uk.gov.hmrc.estates.services
 import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json._
+import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse, TransformationErrorResponse}
 import uk.gov.hmrc.estates.repositories.{TransformationRepository, VariationsTransformationRepository}
 import uk.gov.hmrc.estates.transformers.register.YearsReturnsTransform
@@ -73,6 +74,36 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
         JsSuccess(json)
       case Some(transformations) =>
         transformations.applyTransform(json)
+    }
+  }
+
+  def applyDeclarationTransformations(utr: String, internalId: String, json: JsValue)(implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
+    repository.get(utr, internalId).map {
+      case None =>
+        Logger.info(s"[VariationsTransformationService] no transformations to apply")
+        JsSuccess(json)
+      case Some(transformations) =>
+
+        auditService.audit(
+          event = Auditing.ESTATE_TRANSFORMATIONS,
+          request = Json.toJson(Json.obj()),
+          internalId = internalId,
+          response = Json.obj(
+            "transformations" -> transformations,
+            "data" -> json
+          )
+        )
+
+        for {
+          initial <- {
+            Logger.info(s"[VariationsTransformationService] applying transformations")
+            transformations.applyTransform(json)
+          }
+          transformed <- {
+            Logger.info(s"[VariationsTransformationService] applying declaration transformations")
+            transformations.applyDeclarationTransform(initial)
+          }
+        } yield transformed
     }
   }
 }

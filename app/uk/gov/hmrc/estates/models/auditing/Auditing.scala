@@ -24,4 +24,5 @@ object Auditing {
 
   val ESTATE_VARIATION = "EstateVariation"
 
+  val ESTATE_TRANSFORMATIONS = "EstateTransformations"
 }

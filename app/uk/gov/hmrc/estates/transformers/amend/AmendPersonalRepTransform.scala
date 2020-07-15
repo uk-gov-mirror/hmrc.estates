@@ -17,10 +17,9 @@
 package uk.gov.hmrc.estates.transformers.amend
 
 import play.api.libs.json._
-import uk.gov.hmrc.estates.transformers.JsonOperations
 
 trait AmendPersonalRepTransform {
-  def setLeadTrustee(input: JsValue, newPersonalRepDetails: JsValue): JsResult[JsValue] = {
+  def setPersonalRep(input: JsValue, newPersonalRepDetails: JsValue): JsResult[JsValue] = {
     val personalRepPath = (__ \ 'details \ 'estate \ 'entities \ 'personalRepresentative)
     val entityStartPath = personalRepPath \ 'entityStart
 

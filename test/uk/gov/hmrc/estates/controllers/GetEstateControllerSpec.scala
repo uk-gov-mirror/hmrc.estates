@@ -67,7 +67,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
 
         val controller = application.injector.instanceOf[GetEstateController]
 
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         application.stop()
 
@@ -90,7 +90,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
 
         val controller = application.injector.instanceOf[GetEstateController]
 
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         application.stop()
 
@@ -112,7 +112,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
 
         val controller = application.injector.instanceOf[GetEstateController]
 
-        val result = controller.get(invalidUTR).apply(FakeRequest(GET, s"/estates/$invalidUTR"))
+        val result = controller.get(invalidUTR, false).apply(FakeRequest(GET, s"/estates/$invalidUTR"))
 
         whenReady(result) { _ =>
           status(result) mustBe BAD_REQUEST
@@ -133,7 +133,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
         val controller = application.injector.instanceOf[GetEstateController]
 
         val utr = "1234567890"
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$invalidUTR"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$invalidUTR"))
 
         whenReady(result) { _ =>
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
@@ -153,7 +153,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
         val controller = application.injector.instanceOf[GetEstateController]
 
         val utr = "1234567890"
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
@@ -173,7 +173,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
         val controller = application.injector.instanceOf[GetEstateController]
 
         val utr = "1234567890"
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
@@ -193,7 +193,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
         val controller = application.injector.instanceOf[GetEstateController]
 
         val utr = "1234567890"
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
@@ -213,7 +213,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
         val controller = application.injector.instanceOf[GetEstateController]
 
         val utr = "1234567890"
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
@@ -233,7 +233,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
         val controller = application.injector.instanceOf[GetEstateController]
 
         val utr = "1234567890"
-        val result = controller.get(utr).apply(FakeRequest(GET, s"/estates/$utr"))
+        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())

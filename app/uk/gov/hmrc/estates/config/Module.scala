@@ -18,7 +18,7 @@ package uk.gov.hmrc.estates.config
 
 import com.google.inject.AbstractModule
 import uk.gov.hmrc.estates.controllers.actions.{AuthenticatedIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.repositories.{EstatesMongoDriver, MongoDriver, TransformationRepository, TransformationRepositoryImpl, VariationsTransformationRepository, VariationsTransformationRepositoryImpl}
+import uk.gov.hmrc.estates.repositories._
 
 class Module extends AbstractModule {
 
@@ -29,6 +29,7 @@ class Module extends AbstractModule {
     bind(classOf[MongoDriver]).to(classOf[EstatesMongoDriver]).asEagerSingleton()
 
     bind(classOf[TransformationRepository]).to(classOf[TransformationRepositoryImpl]).asEagerSingleton()
+    bind(classOf[CacheRepository]).to(classOf[CacheRepositoryImpl]).asEagerSingleton()
     bind(classOf[VariationsTransformationRepository]).to(classOf[VariationsTransformationRepositoryImpl]).asEagerSingleton()
   }
 }

@@ -17,15 +17,19 @@
 package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
+import play.api.Logger
+import play.api.libs.json.Json
 import uk.gov.hmrc.estates.connectors.DesConnector
-import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
+import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models._
+import uk.gov.hmrc.estates.repositories.CacheRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesService @Inject()(val desConnector: DesConnector) {
+class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) {
 
   def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest): Future[ExistingCheckResponse] = {
     desConnector.checkExistingEstate(existingEstateCheckRequest)
@@ -39,8 +43,33 @@ class DesService @Inject()(val desConnector: DesConnector) {
     desConnector.getSubscriptionId(trn)
   }
 
+  def refreshCacheAndGetTrustInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+    Logger.debug("Retrieving Estate Info from DES")
+    Logger.info(s"[DesService][refreshCacheAndGetTrustInfo] refreshing cache")
+
+    repository.resetCache(utr, internalId).flatMap { _ =>
+      desConnector.getEstateInfo(utr).map {
+        case response: GetEstateProcessedResponse =>
+          repository.set(utr, internalId, Json.toJson(response)(GetEstateProcessedResponse.mongoWrites))
+          response
+        case x => x
+      }
+    }
+  }
   def getEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
-    desConnector.getEstateInfo(utr)
+    Logger.debug("Getting estate Info")
+    repository.get(utr, internalId).flatMap {
+      case Some(x) => x.validate[GetEstateResponse].fold(
+        errs => {
+          Logger.error(s"[DesService] unable to parse json from cache as GetEstateResponse $errs")
+          Future.failed[GetEstateResponse](new Exception(errs.toString))
+        },
+        response => {
+          Future.successful(response)
+        }
+      )
+      case None => refreshCacheAndGetTrustInfo(utr, internalId)
+    }
   }
 
   def estateVariation(estateVariation: EstateVariation): Future[VariationResponse] =

@@ -40,7 +40,7 @@ import scala.concurrent.Future
 
 class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
-  val getEstateResponseFromDES: GetEstateProcessedResponse = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+  val getEstateResponseFromDES: GetEstateResponse = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse]
   val expectedInitialGetJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-initial.json")
 
   "an amend personal rep call" - {

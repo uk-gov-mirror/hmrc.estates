@@ -21,6 +21,7 @@ import uk.gov.hmrc.estates.connectors.DesConnector
 import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -38,7 +39,7 @@ class DesService @Inject()(val desConnector: DesConnector) {
     desConnector.getSubscriptionId(trn)
   }
 
-  def getEstateInfo(utr: String): Future[GetEstateResponse] = {
+  def getEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     desConnector.getEstateInfo(utr)
   }
 

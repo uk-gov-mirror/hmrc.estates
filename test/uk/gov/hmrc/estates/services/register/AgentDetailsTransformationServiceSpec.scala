@@ -70,7 +70,7 @@ class AgentDetailsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         val transformationService = mock[TransformationService]
         val service = new AgentDetailsTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
 
         whenReady(service.get("internalId")) { result =>
@@ -84,7 +84,7 @@ class AgentDetailsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         val transformationService = mock[TransformationService]
         val service = new AgentDetailsTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(None))
 
         whenReady(service.get("internalId")) { result =>
@@ -100,7 +100,7 @@ class AgentDetailsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         val transformationService = mock[TransformationService]
         val service = new AgentDetailsTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(AgentDetailsTransform(agentDetails))))))
 
         whenReady(service.get("internalId")) { result =>

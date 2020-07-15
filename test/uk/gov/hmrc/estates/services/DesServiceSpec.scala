@@ -182,7 +182,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
 
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("In Processing", "1"))))
 
-        val futureResult = SUT.getEstateInfo(utr)
+        val futureResult = SUT.getEstateInfo(utr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
@@ -196,7 +196,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InvalidUTRResponse))
 
         val invalidUtr = "123456789"
-        val futureResult = SUT.getEstateInfo(invalidUtr)
+        val futureResult = SUT.getEstateInfo(invalidUtr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe InvalidUTRResponse
@@ -210,7 +210,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InvalidRegimeResponse))
 
         val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr)
+        val futureResult = SUT.getEstateInfo(utr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe InvalidRegimeResponse
@@ -224,7 +224,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(BadRequestResponse))
 
         val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr)
+        val futureResult = SUT.getEstateInfo(utr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe BadRequestResponse
@@ -238,7 +238,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
 
         val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr)
+        val futureResult = SUT.getEstateInfo(utr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe ResourceNotFoundResponse
@@ -252,7 +252,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InternalServerErrorResponse))
 
         val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr)
+        val futureResult = SUT.getEstateInfo(utr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe InternalServerErrorResponse
@@ -266,7 +266,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(ServiceUnavailableResponse))
 
         val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr)
+        val futureResult = SUT.getEstateInfo(utr, myId)
 
         whenReady(futureResult) { result =>
           result mustBe ServiceUnavailableResponse

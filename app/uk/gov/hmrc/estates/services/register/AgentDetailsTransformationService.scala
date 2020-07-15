@@ -36,7 +36,7 @@ class AgentDetailsTransformationService @Inject()(
   }
 
   def get(internalId: String): Future[Option[AgentDetails]] = {
-    transformationService.getTransformedData(internalId) map {
+    transformationService.getTransformations(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
           case AgentDetailsTransform(agentDetails) => Some(agentDetails)

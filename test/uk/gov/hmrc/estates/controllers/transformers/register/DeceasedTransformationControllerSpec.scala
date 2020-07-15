@@ -77,7 +77,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
       "return the deceased person details" in {
         val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-        when(mockTransformationService.getTransformedData(any())).thenReturn(
+        when(mockTransformationService.getTransformations(any())).thenReturn(
           Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
 
         val request = FakeRequest("GET", "path")
@@ -106,7 +106,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
       "return the most recent deceased person details" in {
         val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-        when(mockTransformationService.getTransformedData(any())).thenReturn(
+        when(mockTransformationService.getTransformations(any())).thenReturn(
           Future.successful(Some(ComposedDeltaTransform(
             Seq(
               DeceasedTransform(previousDeceased),
@@ -139,7 +139,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
       "return an empty json object when there is no amount" in {
         val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-        when(mockTransformationService.getTransformedData(any())).thenReturn(Future.successful(None))
+        when(mockTransformationService.getTransformations(any())).thenReturn(Future.successful(None))
 
         val request = FakeRequest("GET", "path")
           .withHeaders(CONTENT_TYPE -> "application/json")
@@ -158,7 +158,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
       "return the deceased person date of death" in {
         val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-        when(mockTransformationService.getTransformedData(any())).thenReturn(
+        when(mockTransformationService.getTransformations(any())).thenReturn(
           Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
 
         val request = FakeRequest("GET", "path")
@@ -180,7 +180,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
       "return true if the date of death is before the current tax year" in {
         val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-        when(mockTransformationService.getTransformedData(any())).thenReturn(
+        when(mockTransformationService.getTransformations(any())).thenReturn(
           Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
 
         val request = FakeRequest("GET", "path")
@@ -210,7 +210,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
 
         val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-        when(mockTransformationService.getTransformedData(any())).thenReturn(
+        when(mockTransformationService.getTransformations(any())).thenReturn(
           Future.successful(Some(ComposedDeltaTransform(Seq(DeceasedTransform(deceased))))))
 
         val request = FakeRequest("GET", "path")
@@ -230,7 +230,7 @@ class DeceasedTransformationControllerSpec extends BaseSpec with MockitoSugar wi
     "return false if the transform does not exist" in {
       val controller = new DeceasedTransformationController(identifierAction, cc, mockTransformationService)
 
-      when(mockTransformationService.getTransformedData(any())).thenReturn(Future.successful(None))
+      when(mockTransformationService.getTransformations(any())).thenReturn(Future.successful(None))
 
       val request = FakeRequest("GET", "path")
         .withHeaders(CONTENT_TYPE -> "application/json")

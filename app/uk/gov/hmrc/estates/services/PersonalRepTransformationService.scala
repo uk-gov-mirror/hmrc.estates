@@ -49,7 +49,7 @@ class PersonalRepTransformationService @Inject()(
   }
 
   private def getMostRecentPerRepTransform(internalId: String): Future[Option[PersonalRepTransform]] = {
-    transformationService.getTransformedData(internalId) map {
+    transformationService.getTransformations(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
           case transform: PersonalRepTransform => Some(transform)

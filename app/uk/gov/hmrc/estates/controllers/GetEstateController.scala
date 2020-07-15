@@ -38,7 +38,7 @@ class GetEstateController @Inject()(identify: IdentifierAction,
   def get(utr: String): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
     implicit request =>
 
-    desService.getEstateInfo(utr) map {
+    desService.getEstateInfo(utr, request.identifier) map {
       case processed : GetEstateProcessedResponse =>
         processedResponse(utr, processed)
       case status: GetEstateStatusResponse =>

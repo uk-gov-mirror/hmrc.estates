@@ -1,0 +1,18 @@
+{
+  "details":{
+    "estate":{
+      "entities":{
+        "personalRepresentative":{
+          "orgName":"newName",
+          "phoneNumber":"newPhone",
+          "email":"newEmail",
+          "identification":{
+            "utr":"newUtr"
+          },
+          "entityStart":"1998-02-12"
+        }
+      }
+    }
+  },
+  "otherfields" : "exist"
+}

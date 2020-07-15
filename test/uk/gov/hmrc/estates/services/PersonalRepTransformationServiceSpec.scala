@@ -90,7 +90,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(Some(personalRepInd), None))))))
 
         whenReady(service.getPersonalRepInd("internalId")) { result =>
@@ -128,7 +128,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService)
 
-          when(transformationService.getTransformedData(any[String]))
+          when(transformationService.getTransformations(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
                 PersonalRepTransform(Some(personalRep1), None),
@@ -149,7 +149,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           val transformationService = mock[TransformationService]
           val service = new PersonalRepTransformationService(transformationService)
 
-          when(transformationService.getTransformedData(any[String]))
+          when(transformationService.getTransformations(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
                 PersonalRepTransform(None, Some(personalRepOrg)),
@@ -170,7 +170,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(
             Seq(
               PersonalRepTransform(Some(personalRepInd), None),
@@ -195,7 +195,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(None, Some(personalRepOrg)))))))
 
         whenReady(service.getPersonalRepOrg("internalId")) { result =>
@@ -229,7 +229,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
         val transformationService = mock[TransformationService]
         val service = new PersonalRepTransformationService(transformationService)
 
-          when(transformationService.getTransformedData(any[String]))
+          when(transformationService.getTransformations(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
                 PersonalRepTransform(None, Some(personalRep1)),
@@ -249,7 +249,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           val transformationService = mock[TransformationService]
           val service = new PersonalRepTransformationService(transformationService)
 
-          when(transformationService.getTransformedData(any[String]))
+          when(transformationService.getTransformations(any[String]))
             .thenReturn(Future.successful(Some(ComposedDeltaTransform(
               Seq(
                 PersonalRepTransform(Some(personalRepInd), None),
@@ -270,7 +270,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       val transformationService = mock[TransformationService]
       val service = new PersonalRepTransformationService(transformationService)
 
-      when(transformationService.getTransformedData(any[String]))
+      when(transformationService.getTransformations(any[String]))
         .thenReturn(Future.successful(Some(ComposedDeltaTransform(
           Seq(
             PersonalRepTransform(None, Some(personalRepOrg)),

@@ -63,7 +63,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
 
         val etmpJson = (getJsonValueFromFile("etmp/playback/valid-estate-playback-01.json") \ "trustOrEstateDisplay").get
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -86,7 +86,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -128,7 +128,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(InvalidUTRResponse))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InvalidUTRResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -148,7 +148,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(InvalidRegimeResponse))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InvalidRegimeResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -168,7 +168,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(BadRequestResponse))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(BadRequestResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -188,7 +188,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -208,7 +208,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(InternalServerErrorResponse))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InternalServerErrorResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -228,7 +228,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           bind[AuditService].toInstance(mockedAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(ServiceUnavailableResponse))
+        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ServiceUnavailableResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 

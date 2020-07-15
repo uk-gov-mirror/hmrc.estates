@@ -89,7 +89,7 @@ class CorrespondenceTransformationControllerSpec extends BaseSpec with MockitoSu
             bind[TransformationService].toInstance(transformationService)
           ).build()
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(CorrespondenceNameTransform(newEstateName))))))
 
         val controller = application.injector.instanceOf[CorrespondenceTransformationController]
@@ -109,7 +109,7 @@ class CorrespondenceTransformationControllerSpec extends BaseSpec with MockitoSu
             bind[TransformationService].toInstance(transformationService)
           ).build()
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(None))
 
         val controller = application.injector.instanceOf[CorrespondenceTransformationController]

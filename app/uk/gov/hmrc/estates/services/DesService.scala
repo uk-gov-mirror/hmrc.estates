@@ -43,19 +43,21 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
     desConnector.getSubscriptionId(trn)
   }
 
-  def refreshCacheAndGetTrustInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+  def refreshCacheAndGetEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     Logger.debug("Retrieving Estate Info from DES")
-    Logger.info(s"[DesService][refreshCacheAndGetTrustInfo] refreshing cache")
+    Logger.info(s"[DesService][refreshCacheAndGetEstateInfo] refreshing cache")
 
     repository.resetCache(utr, internalId).flatMap { _ =>
-      desConnector.getEstateInfo(utr).map {
+      desConnector.getEstateInfo(utr).flatMap {
         case response: GetEstateProcessedResponse =>
-          repository.set(utr, internalId, Json.toJson(response)(GetEstateProcessedResponse.mongoWrites))
-          response
-        case x => x
+          repository.set(utr, internalId, Json.toJson(response)(GetEstateProcessedResponse.mongoWrites)).map{ _ =>
+            response
+          }
+        case otherResponse => Future.successful(otherResponse)
       }
     }
   }
+
   def getEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     Logger.debug("Getting estate Info")
     repository.get(utr, internalId).flatMap {
@@ -68,7 +70,7 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
           Future.successful(response)
         }
       )
-      case None => refreshCacheAndGetTrustInfo(utr, internalId)
+      case None => refreshCacheAndGetEstateInfo(utr, internalId)
     }
   }
 

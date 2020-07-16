@@ -187,6 +187,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
 
         when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(None))
+        when(mockRepository.set(any[String], any[String], any[JsValue])).thenReturn(Future.successful(true))
         when(mockRepository.resetCache(any[String], any[String])).thenReturn(Future.successful(None))
         when(mockConnector.getEstateInfo(any()))
           .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", "1"))))

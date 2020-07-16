@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.services.amend
+package uk.gov.hmrc.estates.services.variations.amend
 
 import java.time.LocalDate
 

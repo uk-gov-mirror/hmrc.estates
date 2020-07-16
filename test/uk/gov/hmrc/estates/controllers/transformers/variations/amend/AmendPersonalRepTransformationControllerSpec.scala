@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.controllers.transformers.variations
+package uk.gov.hmrc.estates.controllers.transformers.variations.amend
 
 import java.time.LocalDate
 
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, MustMatchers}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{CONTENT_TYPE, _}
@@ -30,7 +30,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
 import uk.gov.hmrc.estates.models.variation.{EstatePerRepIndType, PersonalRepresentativeType}
 import uk.gov.hmrc.estates.models.{IdentificationType, NameType, Success}
-import uk.gov.hmrc.estates.services.amend.PersonalRepTransformationService
+import uk.gov.hmrc.estates.services.variations.amend.PersonalRepTransformationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.controllers.transformers.variations
+package uk.gov.hmrc.estates.controllers.transformers.variations.add
 
 import javax.inject.Inject
 import org.slf4j.LoggerFactory
@@ -23,22 +23,21 @@ import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.variation.PersonalRepresentativeType
-import uk.gov.hmrc.estates.services.LocalDateService
-import uk.gov.hmrc.estates.services.amend.PersonalRepTransformationService
+import uk.gov.hmrc.estates.services.variations.amend.PersonalRepTransformationService
 import uk.gov.hmrc.estates.utils.ValidationUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AmendPersonalRepTransformationController @Inject()(
-                                                          identify: IdentifierAction,
-                                                          cc: ControllerComponents,
-                                                          personalRepTransformationService: PersonalRepTransformationService
-                                        )(implicit val executionContext: ExecutionContext)
-                                        extends EstatesBaseController(cc) with ValidationUtil {
+class AddPersonalRepTransformationController @Inject()(
+                                                        identify: IdentifierAction,
+                                                        cc: ControllerComponents,
+                                                        personalRepTransformationService: PersonalRepTransformationService
+                                                      )(implicit val executionContext: ExecutionContext)
+  extends EstatesBaseController(cc) with ValidationUtil {
 
   private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
 
-  def amendPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
+  def addPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[PersonalRepresentativeType] match {
         case JsSuccess(model, _) =>

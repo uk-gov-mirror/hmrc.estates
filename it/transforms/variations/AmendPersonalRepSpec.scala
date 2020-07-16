@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, MustMatchers}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
@@ -30,9 +30,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.connectors.DesConnector
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
-import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
+import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
 import uk.gov.hmrc.estates.models.variation.{EstatePerRepIndType, PersonalRepresentativeType}
+import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.utils.JsonUtils
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
@@ -45,7 +45,25 @@ class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar 
   val expectedInitialGetJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-initial.json")
 
   "an amend personal rep call" - {
-    "must return amended data in a subsequent 'get' call" in {
+
+    val stubbedDesConnector = mock[DesConnector]
+    when(stubbedDesConnector.getEstateInfo(any())).thenReturn(Future.successful(getEstateResponseFromDES))
+
+    val cc = stubControllerComponents()
+
+    val application = new GuiceApplicationBuilder()
+      .configure(Seq(
+        "mongodb.uri" -> connectionString,
+        "metrics.enabled" -> false,
+        "auditing.enabled" -> false,
+        "mongo-async-driver.akka.log-dead-letters" -> 0
+      ): _*)
+      .overrides(
+        bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)),
+        bind[DesConnector].toInstance(stubbedDesConnector)
+      )
+      .build()
+    "must return amended data in a subsequent 'get' call" in assertMongoTest(application) { app =>
 
       val newPersonalRepIndInfo = EstatePerRepIndType(
         lineNo = None,
@@ -73,26 +91,6 @@ class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar 
 
       val expectedGetAfterAmendLeadTrusteeJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-after-amend-personal-rep.json")
 
-      val stubbedDesConnector = mock[DesConnector]
-      when(stubbedDesConnector.getEstateInfo(any())).thenReturn(Future.successful(getEstateResponseFromDES))
-
-      val cc = stubControllerComponents()
-      val application = new GuiceApplicationBuilder()
-        .configure(Seq(
-          "mongodb.uri" -> connectionString,
-          "metrics.enabled" -> false,
-          "auditing.enabled" -> false,
-          "mongo-async-driver.akka.log-dead-letters" -> 0
-        ): _*)
-        .overrides(
-          bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)),
-          bind[DesConnector].toInstance(stubbedDesConnector)
-        )
-        .build()
-
-      running(application) {
-        getConnection(application).map { connection =>
-          dropTheDatabase(connection)
           val result = route(application, FakeRequest(GET, "/estates/5174384721/transformed")).get
           status(result) mustBe OK
           contentAsJson(result) mustBe expectedInitialGetJson
@@ -107,10 +105,6 @@ class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar 
           val newResult = route(application, FakeRequest(GET, "/estates/5174384721/transformed")).get
           status(newResult) mustBe OK
           contentAsJson(newResult) mustBe expectedGetAfterAmendLeadTrusteeJson
-
-          dropTheDatabase(connection)
-        }.get
-      }
     }
   }
 }

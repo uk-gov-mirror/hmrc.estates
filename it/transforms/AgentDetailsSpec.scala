@@ -18,17 +18,11 @@ package transforms
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.models.{AddressType, AgentDetails}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class AgentDetailsSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
@@ -48,11 +42,7 @@ class AgentDetailsSpec extends WordSpec with MustMatchers with MockitoSugar with
   )
 
   "an add agentDetails call" must {
-    "return added data in a subsequent 'GET' call" in {
-      running(application) {
-        getConnection(application).map { connection =>
-
-          dropTheDatabase(connection)
+    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
 
           val amendRequest = FakeRequest(POST, "/estates/agent-details")
             .withBody(Json.toJson(agentDetails))
@@ -64,10 +54,6 @@ class AgentDetailsSpec extends WordSpec with MustMatchers with MockitoSugar with
           val newResult = route(application, FakeRequest(GET, "/estates/agent-details")).get
           status(newResult) mustBe OK
           contentAsJson(newResult) mustBe Json.toJson(agentDetails)
-
-          dropTheDatabase(connection)
-        }.get
-      }
     }
   }
 }

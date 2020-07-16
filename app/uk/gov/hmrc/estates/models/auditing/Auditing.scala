@@ -23,6 +23,7 @@ object Auditing {
   val GET_ESTATE = "GetEstate"
 
   val ESTATE_VARIATION = "EstateVariation"
+  val ESTATE_VARIATION_ATTEMPT = "EstateVariationAttempt"
 
   val ESTATE_TRANSFORMATIONS = "EstateTransformations"
 }

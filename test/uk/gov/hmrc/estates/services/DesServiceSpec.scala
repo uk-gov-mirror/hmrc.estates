@@ -27,7 +27,7 @@ import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.repositories.CacheRepositoryImpl
-import uk.gov.hmrc.estates.utils.JsonRequests
+import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}
 
 import scala.concurrent.Future
 
@@ -44,6 +44,19 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
     val SUT = new DesService(mockConnector, mockRepository)
   }
 
+  ".getEstateInfoFormBundleNo should return formBundle No from ETMP Data" in {
+    val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+    val mockDesconnector = mock[DesConnector]
+    val mockRepository = mock[CacheRepositoryImpl]
+    when(mockDesconnector.getEstateInfo(any())).thenReturn(Future.successful(etmpData))
+
+    val OUT = new DesService(mockDesconnector, mockRepository)
+
+    whenReady(OUT.getEstateInfoFormBundleNo("75464876")) {formBundleNo =>
+      formBundleNo mustBe etmpData.responseHeader.formBundleNo
+    }
+  }
+  
   ".checkExistingEstate" should {
     "return Matched " when {
       "connector returns Matched." in new DesServiceFixture {
@@ -354,4 +367,3 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
   }
 
 }
-

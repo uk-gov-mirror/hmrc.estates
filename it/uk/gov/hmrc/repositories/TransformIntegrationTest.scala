@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.repositories
 
+import org.scalatest.Assertion
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.stubControllerComponents
+import play.api.test.Helpers.{running, stubControllerComponents}
 import reactivemongo.api.{DefaultDB, MongoConnection}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.repositories.EstatesMongoDriver
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.util.Try
 
 trait TransformIntegrationTest extends ScalaFutures {
@@ -67,4 +67,11 @@ trait TransformIntegrationTest extends ScalaFutures {
     bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
   ).build()
 
+  def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] =
+    running(application) {
+      for {
+        connection <- Future.fromTry(getConnection(application))
+        _ <- dropTheDatabase(connection)
+      } yield block(application)
+    }
 }

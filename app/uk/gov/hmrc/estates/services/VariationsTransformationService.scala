@@ -59,10 +59,14 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
   def getTransformedData(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     desService.getEstateInfo(utr, internalId).flatMap {
       case response: GetEstateProcessedResponse =>
-        applyTransformations(utr, internalId, response.getEstate).map {
+        populatePersonalRepAddress(response.getEstate) match {
+          case JsSuccess(fixed, _) =>
+            applyTransformations(utr, internalId, fixed).map {
           case JsSuccess(transformed, _) =>
             GetEstateProcessedResponse(transformed, response.responseHeader)
           case JsError(errors) => TransformationErrorResponse(errors.toString)
+          }
+          case JsError(errors) => Future.successful(TransformationErrorResponse(errors.toString))
         }
       case response => Future.successful(response)
     }
@@ -104,6 +108,18 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
             transformations.applyDeclarationTransform(initial)
           }
         } yield transformed
+    }
+  }
+
+  def populatePersonalRepAddress(beforeJson: JsValue): JsResult[JsValue] = {
+    val pathToPersonalRepAddress = __ \ 'details \ 'estate \ 'entities \ 'personalRepresentative \ 'identification \ 'address
+
+    if (beforeJson.transform(pathToPersonalRepAddress.json.pick).isSuccess) {
+      JsSuccess(beforeJson)
+    } else {
+      val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
+      val copyAddress = __.json.update(pathToPersonalRepAddress.json.copyFrom(pathToCorrespondenceAddress.json.pick))
+      beforeJson.transform(copyAddress)
     }
   }
 }

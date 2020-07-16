@@ -18,8 +18,9 @@ package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
 import play.api.Logger
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.estates.connectors.DesConnector
+import uk.gov.hmrc.estates.exceptions.InternalServerErrorException
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models._
@@ -30,6 +31,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) {
+
+  def getEstateInfoFormBundleNo(utr: String)(implicit hc: HeaderCarrier): Future[String] =
+    desConnector.getEstateInfo(utr).map {
+      case response: GetEstateProcessedResponse => response.responseHeader.formBundleNo
+      case response =>
+        val msg = s"Failed to retrieve latest form bundle no from ETMP : $response"
+        Logger.warn(msg)
+        throw InternalServerErrorException(s"Submission could not proceed, $msg")
+    }
 
   def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest): Future[ExistingCheckResponse] = {
     desConnector.checkExistingEstate(existingEstateCheckRequest)
@@ -74,8 +84,8 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
     }
   }
 
-  def estateVariation(estateVariation: EstateVariation): Future[VariationResponse] =
-    desConnector.estateVariation(estateVariation: EstateVariation)
+  def estateVariation(estateVariation: JsValue)(implicit hc: HeaderCarrier): Future[VariationResponse] =
+    desConnector.estateVariation(estateVariation: JsValue)
 }
 
 

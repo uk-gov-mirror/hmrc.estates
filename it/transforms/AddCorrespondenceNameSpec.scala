@@ -18,18 +18,10 @@ package transforms
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class AddCorrespondenceNameSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
@@ -37,20 +29,9 @@ class AddCorrespondenceNameSpec extends WordSpec with MustMatchers with MockitoS
   val newEstateName2 = JsString("New Estate Name 2")
 
   "an add correspondence name call" must {
-    "return added data in a subsequent 'GET' call" in {
-
-      running(application) {
-        getConnection(application).map { connection =>
-
-          dropTheDatabase(connection)
-
-
+    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
           roundTripTest(newEstateName)
           roundTripTest(newEstateName2)
-
-          dropTheDatabase(connection)
-        }.get
-      }
     }
   }
 

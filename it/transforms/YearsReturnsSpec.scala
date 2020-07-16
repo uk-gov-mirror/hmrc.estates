@@ -18,17 +18,11 @@ package transforms
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.models.{YearReturnType, YearsReturns}
-import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class YearsReturnsSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
@@ -36,19 +30,9 @@ class YearsReturnsSpec extends WordSpec with MustMatchers with MockitoSugar with
   private val cyMinusTwoReturn =  YearReturnType(taxReturnYear = "19", taxConsequence = false)
 
   "an add YearsReturns call" must {
-    "return added data in a subsequent 'GET' call" in {
-
-      running(application) {
-        getConnection(application).map { connection =>
-
-          dropTheDatabase(connection)
-
+    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
           roundTripTest(YearsReturns(List(cyMinusOneReturn, cyMinusTwoReturn)))
           roundTripTest(YearsReturns(List(cyMinusOneReturn)))
-
-          dropTheDatabase(connection)
-        }.get
-      }
     }
   }
 

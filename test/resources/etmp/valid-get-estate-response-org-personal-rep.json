@@ -41,13 +41,9 @@
             "lineNo": "1",
             "bpMatchStatus": "01",
             "entityStart": "2017-02-28",
-            "name": {
-              "firstName": "Alister",
-              "lastName": "Mc'Govern"
-            },
-            "dateOfBirth": "1980-06-01",
+            "orgName": "Business Name",
             "identification": {
-              "nino": "JS123456A",
+              "utr": "1234567890",
               "address": {
                 "line1": "Address line 1",
                 "line2": "Town or city",

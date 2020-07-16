@@ -18,23 +18,18 @@ package transforms
 
 import java.time.LocalDate
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.inject.bind
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, IdentificationType, NameType}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   "an amend personal rep call" must {
-    "return amended data in a subsequent 'get' call" in {
+    "return amended data in a subsequent 'get' call" in assertMongoTest(application) { app =>
 
       val newPersonalRep = EstatePerRepIndType(
         name = NameType("newFirstName", Some("newMiddleName"), "newLastName"),
@@ -54,11 +49,6 @@ class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSug
           )))
       )
 
-      running(application) {
-        getConnection(application).map { connection =>
-
-          dropTheDatabase(connection)
-
           val amendRequest = FakeRequest(POST, "/estates/personal-rep/individual")
             .withBody(Json.toJson(newPersonalRep))
             .withHeaders(CONTENT_TYPE -> "application/json")
@@ -69,10 +59,6 @@ class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSug
           val newResult = route(application, FakeRequest(GET, "/estates/personal-rep/individual")).get
           status(newResult) mustBe OK
           contentAsJson(newResult) mustBe Json.toJson(newPersonalRep)
-
-          dropTheDatabase(connection)
-        }.get
-      }
     }
   }
 }

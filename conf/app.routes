@@ -27,7 +27,7 @@ POST        /register                   uk.gov.hmrc.estates.controllers.Register
 
 GET         /registration               uk.gov.hmrc.estates.controllers.RegisterEstateController.get
 
-POST        /variation                  uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation
+POST        /declare/:utr               uk.gov.hmrc.estates.controllers.EstateVariationsController.declare(utr: String)
 
 POST        /tax-enrolment/callback/subscriptions   uk.gov.hmrc.estates.controllers.TaxEnrolmentCallbackController.subscriptionCallback
 

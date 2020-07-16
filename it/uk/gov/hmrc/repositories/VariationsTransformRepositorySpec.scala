@@ -19,17 +19,14 @@ package uk.gov.hmrc.repositories
 import java.time.LocalDate
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Assertion, AsyncFreeSpec, EitherValues, FreeSpec, Inside, MustMatchers, OptionValues}
-import play.api.Application
-import play.api.test.Helpers.running
-import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
+import org.scalatest._
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
+import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.amend.AmendIndividualPersonalRepTransform
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
@@ -37,14 +34,6 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
   "a cache repository" - {
 
     val internalId = "Int-328969d0-557e-4559-96ba-074d0597107e"
-
-    def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] =
-      running(application) {
-        for {
-          connection <- Future.fromTry(getConnection(application))
-          _ <- dropTheDatabase(connection)
-        } yield block(application)
-      }
 
     "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
 

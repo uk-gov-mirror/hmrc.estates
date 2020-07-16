@@ -16,38 +16,45 @@
 
 package uk.gov.hmrc.repositories
 
-import org.scalatest.{FreeSpec, MustMatchers}
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{Assertion, AsyncFreeSpec, EitherValues, FreeSpec, Inside, MustMatchers, OptionValues}
+import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.Helpers.running
 import uk.gov.hmrc.estates.repositories.CacheRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class CacheRepositorySpec extends FreeSpec with MustMatchers with TransformIntegrationTest {
+class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
+  with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
 
-  "a playback repository" - {
-    "must be able to store and retrieve a payload" in {
+  "a cache repository" - {
 
-      val application = applicationBuilder.build()
+    val internalId = "Int-328969d0-557e-4559-96ba-074d0597107e"
 
+    def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] =
       running(application) {
-        getConnection(application).map { connection =>
-
-          dropTheDatabase(connection)
-
-          val repository = application.injector.instanceOf[CacheRepository]
-
-          val storedOk = repository.set("UTRUTRUTR", "InternalId", data)
-          storedOk.futureValue mustBe true
-
-          val retrieved = repository.get("UTRUTRUTR", "InternalId")
-            .map(_.getOrElse(fail("The record was not found in the database")))
-
-          retrieved.futureValue mustBe data
-
-          dropTheDatabase(connection)
-        }.get
+        for {
+          connection <- Future.fromTry(getConnection(application))
+          _ <- dropTheDatabase(connection)
+        } yield block(application)
       }
+
+    "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
+
+      val repository = app.injector.instanceOf[CacheRepository]
+
+      val storedOk = repository.set("UTRUTRUTR", internalId, data)
+      storedOk.futureValue mustBe true
+
+      val retrieved = repository.get("UTRUTRUTR", internalId)
+        .map(_.getOrElse(fail("The record was not found in the database")))
+
+      retrieved.futureValue mustBe data
     }
   }
 

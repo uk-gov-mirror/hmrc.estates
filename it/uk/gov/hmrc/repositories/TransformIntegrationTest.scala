@@ -19,8 +19,12 @@ package uk.gov.hmrc.repositories
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.Application
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.stubControllerComponents
 import reactivemongo.api.{DefaultDB, MongoConnection}
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.repositories.EstatesMongoDriver
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,10 +36,10 @@ trait TransformIntegrationTest extends ScalaFutures {
 
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(30, Seconds), interval = Span(500, Millis))
 
-  val connectionString = "mongodb://localhost:27017/trusts-integration"
+  val connectionString = "mongodb://localhost:27017/estates-integration"
 
   def getDatabase(connection: MongoConnection): Future[DefaultDB] = {
-    connection.database("trusts-integration")
+    connection.database("estates-integration")
   }
 
   def getConnection(application: Application): Try[MongoConnection] = {
@@ -46,15 +50,21 @@ trait TransformIntegrationTest extends ScalaFutures {
     } yield connection
   }
 
-  def dropTheDatabase(connection: MongoConnection): Unit = {
-    Await.result(getDatabase(connection).flatMap(_.drop()), Duration.Inf)
+  def dropTheDatabase(connection: MongoConnection) = {
+    getDatabase(connection).flatMap(_.drop())
   }
 
-  lazy val applicationBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().configure(Seq(
+  private val cc = stubControllerComponents()
+
+  def application : Application = new GuiceApplicationBuilder()
+    .configure(Seq(
     "mongodb.uri" -> connectionString,
     "metrics.enabled" -> false,
     "auditing.enabled" -> false,
     "mongo-async-driver.akka.log-dead-letters" -> 0
   ): _*)
+    .overrides(
+    bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
+  ).build()
 
 }

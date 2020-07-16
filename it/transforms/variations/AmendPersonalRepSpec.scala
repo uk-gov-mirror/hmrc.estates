@@ -23,6 +23,7 @@ import org.mockito.Mockito._
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, MustMatchers}
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -76,7 +77,13 @@ class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar 
       when(stubbedDesConnector.getEstateInfo(any())).thenReturn(Future.successful(getEstateResponseFromDES))
 
       val cc = stubControllerComponents()
-      val application = applicationBuilder
+      val application = new GuiceApplicationBuilder()
+        .configure(Seq(
+          "mongodb.uri" -> connectionString,
+          "metrics.enabled" -> false,
+          "auditing.enabled" -> false,
+          "mongo-async-driver.akka.log-dead-letters" -> 0
+        ): _*)
         .overrides(
           bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)),
           bind[DesConnector].toInstance(stubbedDesConnector)

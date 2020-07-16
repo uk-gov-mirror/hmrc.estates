@@ -19,6 +19,7 @@ package transforms
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -30,14 +31,6 @@ import uk.gov.hmrc.repositories.TransformIntegrationTest
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class AgentDetailsSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
-
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
 
   private val agentDetails = AgentDetails(
     arn = "SARN1234567",

@@ -19,6 +19,7 @@ package transforms
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -31,14 +32,6 @@ import uk.gov.hmrc.repositories.TransformIntegrationTest
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class AddCorrespondenceNameSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
-
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
 
   val newEstateName = JsString("New Estate Name")
   val newEstateName2 = JsString("New Estate Name 2")

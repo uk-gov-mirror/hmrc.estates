@@ -33,14 +33,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class DeceasedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
-
   private val originalDeceased = EstateWillType(
     NameType("First", None, "Last"),
     Some(LocalDate.of(1996, 4, 15)),

@@ -32,14 +32,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
-
   "an add AmountOfTaxOwed call" must {
     "return added data in a subsequent 'GET' call" in {
 

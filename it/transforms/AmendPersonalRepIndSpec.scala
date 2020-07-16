@@ -33,14 +33,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
-
   "an amend personal rep call" must {
     "return amended data in a subsequent 'get' call" in {
 

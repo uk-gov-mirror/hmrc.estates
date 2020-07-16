@@ -32,14 +32,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class YearsReturnsSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
-
   private val cyMinusOneReturn =  YearReturnType(taxReturnYear = "20", taxConsequence = true)
   private val cyMinusTwoReturn =  YearReturnType(taxReturnYear = "19", taxConsequence = false)
 

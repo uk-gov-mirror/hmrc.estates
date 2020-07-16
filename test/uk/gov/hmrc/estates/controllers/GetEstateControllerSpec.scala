@@ -20,7 +20,7 @@ import org.mockito.Matchers.{any, eq => mockEq}
 import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.inject.bind
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.estates.BaseSpec
@@ -239,6 +239,58 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
           verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
           status(result) mustBe INTERNAL_SERVER_ERROR
         }
+      }
+    }
+  }
+
+  ".getTrustDetails" should {
+
+    val route: String = s"/estates/$utr/date-of-death"
+
+    "return 200 - Ok with processed content" in {
+
+      val application = applicationBuilder().overrides(
+        bind[DesService].toInstance(mockDesService),
+        bind[AuditService].toInstance(mockedAuditService)
+      ).build()
+
+      val expectedJson = Json.toJson("2016-04-06")
+
+      val etmpJson = (getJsonValueFromFile("etmp/playback/valid-estate-playback-01.json") \ "trustOrEstateDisplay").get
+
+      when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
+
+      val controller = application.injector.instanceOf[GetEstateController]
+
+      val result = controller.getDateOfDeath(utr).apply(FakeRequest(GET, route))
+
+      application.stop()
+
+      whenReady(result) { _ =>
+        contentAsJson(result) mustBe expectedJson
+        verify(mockedAuditService).audit(mockEq("GetEstate"), any[JsValue], any[String], any[JsValue])(any())
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+      }
+    }
+
+    "return 500 - Internal server error for invalid content" in {
+
+      val application = applicationBuilder().overrides(
+        bind[DesService].toInstance(mockDesService),
+        bind[AuditService].toInstance(mockedAuditService)
+      ).build()
+
+      when(mockDesService.getEstateInfo(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
+
+      val controller = application.injector.instanceOf[GetEstateController]
+
+      val result = controller.getDateOfDeath(utr).apply(FakeRequest(GET, route))
+
+      application.stop()
+
+      whenReady(result) { _ =>
+        status(result) mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

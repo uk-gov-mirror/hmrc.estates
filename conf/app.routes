@@ -33,3 +33,5 @@ POST        /tax-enrolment/callback/subscriptions   uk.gov.hmrc.estates.controll
 
 GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)
 
+GET         /:utr/date-of-death         uk.gov.hmrc.estates.controllers.GetEstateController.getDateOfDeath(utr: String)
+

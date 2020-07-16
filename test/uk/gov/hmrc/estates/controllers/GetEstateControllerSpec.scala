@@ -243,7 +243,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
     }
   }
 
-  ".getTrustDetails" should {
+  ".getEstateDetails" should {
 
     val route: String = s"/estates/$utr/date-of-death"
 

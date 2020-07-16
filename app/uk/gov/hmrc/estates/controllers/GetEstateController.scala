@@ -17,8 +17,8 @@
 package uk.gov.hmrc.estates.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{JsPath, JsValue, Json}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate._
@@ -36,34 +36,16 @@ class GetEstateController @Inject()(identify: IdentifierAction,
                                     validateUTRActionFactory: ValidateUTRActionFactory
                                    )(implicit cc: ControllerComponents) extends BackendController(cc) {
 
-  def get(utr: String, applyTransforms: Boolean): Action[AnyContent] = (validateUTRActionFactory.create(utr) andThen identify).async {
-    implicit request =>
-      val data = if (applyTransforms) {
-        variationsTransformationService.getTransformedData(utr, request.identifier)
-      } else {
-        desService.getEstateInfo(utr, request.identifier)
-      }
-
-      data map {
-      case processed : GetEstateProcessedResponse =>
-        processedResponse(utr, processed)
-      case status: GetEstateStatusResponse =>
-        statusResponse(utr, status)
-      case NotEnoughDataResponse(json, errors) =>
-        notEnoughInformationResponse(utr, json, errors)
-      case ResourceNotFoundResponse =>
-        auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "Not Found received from DES.")
-        NotFound
-      case errorResponse: GetEstateErrorResponse =>
-        auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, errorResponse.toString)
-        InternalServerError
-      case _ =>
-        auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "UNKNOWN")
-        InternalServerError
+  def get(utr: String, applyTransforms: Boolean): Action[AnyContent] =
+    doGet(utr, applyTransforms) {
+      result: GetEstateResponse => Ok(Json.toJson(result))
     }
-  }
 
-  private def notEnoughInformationResponse(utr: String, json: JsValue, errors: JsValue)(implicit request: IdentifierRequest[AnyContent]) = {
+  def getDateOfDeath(utr: String): Action[AnyContent] =
+    getItemAtPath(utr, JsPath \ 'details \'estate \ 'entities \ 'deceased \ 'dateOfDeath)
+
+  private def notEnoughInformationResponse(utr: String, json: JsValue, errors: JsValue)
+                                          (implicit request: IdentifierRequest[AnyContent]): Result = {
     val reason = Json.obj(
       "response" -> json,
       "reason" -> "Missing mandatory fields in response received from DES",
@@ -80,29 +62,84 @@ class GetEstateController @Inject()(identify: IdentifierAction,
     InternalServerError(errors)
   }
 
-  private def statusResponse(utr: String, status: GetEstateStatusResponse)(implicit request: IdentifierRequest[AnyContent]) = {
-    val response = Json.toJson(status)
-
+  private def statusResponse(utr: String, status: GetEstateStatusResponse)
+                            (implicit request: IdentifierRequest[AnyContent]): Unit = {
     auditService.audit(
       event = Auditing.GET_ESTATE,
       request = Json.obj("utr" -> utr),
       internalId = request.identifier,
-      response = response
+      response = Json.toJson(status)
     )
-
-    Ok(response)
   }
 
-  private def processedResponse(utr: String, processed: GetEstateProcessedResponse)(implicit request: IdentifierRequest[AnyContent]) = {
-    val response = Json.toJson(processed)
-
+  private def processedResponse(utr: String, processed: GetEstateProcessedResponse)
+                               (implicit request: IdentifierRequest[AnyContent]): Unit = {
     auditService.audit(
       event = Auditing.GET_ESTATE,
       request = Json.obj("utr" -> utr),
       internalId = request.identifier,
-      response = response
+      response = Json.toJson(processed)
     )
+  }
 
-    Ok(response)
+  private def getItemAtPath(utr: String, path: JsPath): Action[AnyContent] = {
+    getElementAtPath(utr,
+      path,
+      Json.obj()) {
+      json => json
+    }
+  }
+
+  private def getElementAtPath(utr: String, path: JsPath, defaultValue: JsValue)
+                              (insertIntoObject: JsValue => JsValue): Action[AnyContent] = {
+    getEtmpData(utr) {
+      data => data
+        .transform(path.json.pick)
+        .map(insertIntoObject)
+        .getOrElse(defaultValue)
+    }
+  }
+
+  private def getEtmpData(utr: String)
+                         (processObject: JsValue => JsValue): Action[AnyContent] = {
+    doGet(utr, applyTransforms = false) {
+      case processed: GetEstateProcessedResponse =>
+        Ok(processObject(processed.getEstate))
+      case _ =>
+        InternalServerError
+    }
+  }
+
+  private def doGet(utr: String, applyTransforms: Boolean)
+                   (handleResult: GetEstateResponse => Result): Action[AnyContent] = {
+
+    (validateUTRActionFactory.create(utr) andThen identify).async {
+      implicit request =>
+        val data = if (applyTransforms) {
+          variationsTransformationService.getTransformedData(utr, request.identifier)
+        } else {
+          desService.getEstateInfo(utr, request.identifier)
+        }
+
+        data map {
+          case processed: GetEstateProcessedResponse =>
+            processedResponse(utr, processed)
+            handleResult(processed)
+          case status: GetEstateStatusResponse =>
+            statusResponse(utr, status)
+            handleResult(status)
+          case NotEnoughDataResponse(json, errors) =>
+            notEnoughInformationResponse(utr, json, errors)
+          case ResourceNotFoundResponse =>
+            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "Not Found received from DES.")
+            NotFound
+          case errorResponse: GetEstateErrorResponse =>
+            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, errorResponse.toString)
+            InternalServerError
+          case _ =>
+            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "UNKNOWN")
+            InternalServerError
+        }
+    }
   }
 }

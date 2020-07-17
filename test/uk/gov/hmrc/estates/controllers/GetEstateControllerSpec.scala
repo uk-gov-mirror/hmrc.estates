@@ -26,13 +26,15 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.models.getEstate._
-import uk.gov.hmrc.estates.services.{AuditService, DesService}
+import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
+import uk.gov.hmrc.estates.utils.JsonRequests
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAndAfterEach {
+class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequests with BeforeAndAfterEach {
 
   lazy val mockDesService: DesService = mock[DesService]
   lazy val mockedAuditService: AuditService = mock[AuditService]
@@ -243,6 +245,52 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAn
     }
   }
 
+  ".getPersonalRepresentative" should {
+
+    "return 403 - Forbidden with parked content" in {
+      val variationsTransformationService = mock[VariationsTransformationService]
+
+      val application = applicationBuilder().overrides(
+        bind[VariationsTransformationService].toInstance(variationsTransformationService),
+        bind[AuditService].toInstance(mockedAuditService)
+      ).build()
+
+      when(variationsTransformationService.getTransformedData(any(), any())(any()))
+        .thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
+
+      val controller = application.injector.instanceOf[GetEstateController]
+      val result = controller.getPersonalRepresentative(utr).apply(FakeRequest(GET, s"/estates/$utr/transformed/personal-representative"))
+
+      whenReady(result) { _ =>
+        status(result) mustBe FORBIDDEN
+      }
+    }
+    "return 200 - Ok with processed content" in {
+      val variationsTransformationService = mock[VariationsTransformationService]
+
+      val application = applicationBuilder().overrides(
+        bind[VariationsTransformationService].toInstance(variationsTransformationService),
+        bind[AuditService].toInstance(mockedAuditService)
+      ).build()
+
+      val processedResponse = GetEstateProcessedResponse(getTransformedEstateResponse, ResponseHeader("Processed", "1"))
+
+      when(variationsTransformationService.getTransformedData(any[String], any[String])(any[HeaderCarrier])).thenReturn(Future.successful(processedResponse))
+
+      val controller = application.injector.instanceOf[GetEstateController]
+
+      val result = controller.getPersonalRepresentative(utr).apply(FakeRequest(GET, s"/estates/$utr/transformed/personal-representative"))
+
+      whenReady(result) { _ =>
+        verify(mockedAuditService).audit(mockEq("GetEstate"), any[JsValue], any[String], any[JsValue])(any())
+        verify(variationsTransformationService).getTransformedData(mockEq(utr), mockEq("id"))(any[HeaderCarrier])
+        status(result) mustBe OK
+        contentType(result) mustBe Some(JSON)
+        contentAsJson(result) mustBe getTransformedPersonalRepResponse
+      }
+    }
+  }
+  
   ".getEstateDetails" should {
 
     val route: String = s"/estates/$utr/date-of-death"

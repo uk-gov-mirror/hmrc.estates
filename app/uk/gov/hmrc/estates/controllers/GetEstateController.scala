@@ -41,6 +41,22 @@ class GetEstateController @Inject()(identify: IdentifierAction,
       result: GetEstateResponse => Ok(Json.toJson(result))
     }
 
+  def getPersonalRepresentative(utr: String): Action[AnyContent] =
+    doGet(utr, applyTransforms = true) {
+      case processed: GetEstateProcessedResponse =>
+        val pick = (JsPath \ 'details \ 'estate \ 'entities \ 'personalRepresentative).json.pick
+        processed.getEstate.transform(pick).fold(
+          _ => InternalServerError,
+          json => {
+            Ok(json.as[PersonalRepresentativeType] match {
+              case PersonalRepresentativeType(Some(personalRepInd), None) => Json.toJson(personalRepInd)
+              case PersonalRepresentativeType(None, Some(personalRepOrg)) => Json.toJson(personalRepOrg)
+            })
+          }
+        )
+      case _ => Forbidden
+    }
+
   def getDateOfDeath(utr: String): Action[AnyContent] =
     getItemAtPath(utr, JsPath \ 'details \'estate \ 'entities \ 'deceased \ 'dateOfDeath)
 

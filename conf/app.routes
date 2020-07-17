@@ -35,5 +35,7 @@ GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstat
 
 GET         /:utr/transformed           uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = true)
 
+GET         /:utr/transformed/personal-representative   uk.gov.hmrc.estates.controllers.GetEstateController.getPersonalRepresentative(utr: String)
+
 GET         /:utr/date-of-death         uk.gov.hmrc.estates.controllers.GetEstateController.getDateOfDeath(utr: String)
 

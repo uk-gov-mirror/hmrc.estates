@@ -30,7 +30,7 @@ import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepositoryImpl
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.amend.AmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.amend.AmendIndividualPersonalRepTransform
 import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 

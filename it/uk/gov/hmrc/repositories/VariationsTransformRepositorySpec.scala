@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.amend.AmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.amend.AmendIndividualPersonalRepTransform
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

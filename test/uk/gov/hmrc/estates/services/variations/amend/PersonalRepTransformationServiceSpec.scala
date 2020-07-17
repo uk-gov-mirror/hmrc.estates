@@ -27,7 +27,7 @@ import org.scalatest.{FreeSpec, MustMatchers}
 import uk.gov.hmrc.estates.models.variation.{EstatePerRepIndType, EstatePerRepOrgType, PersonalRepresentativeType}
 import uk.gov.hmrc.estates.models.{IdentificationOrgType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.services.{LocalDateService, VariationsTransformationService}
-import uk.gov.hmrc.estates.transformers.amend.AmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.amend.AmendIndividualPersonalRepTransform
 import uk.gov.hmrc.estates.utils.JsonRequests
 import uk.gov.hmrc.http.HeaderCarrier
 

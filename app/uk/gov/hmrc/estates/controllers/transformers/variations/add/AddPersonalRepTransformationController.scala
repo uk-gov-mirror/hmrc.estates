@@ -22,8 +22,8 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
-import uk.gov.hmrc.estates.models.variation.PersonalRepresentativeType
-import uk.gov.hmrc.estates.services.variations.amend.PersonalRepTransformationService
+import uk.gov.hmrc.estates.models.variation.EstatePerRepOrgType
+import uk.gov.hmrc.estates.services.variations.add.PersonalRepTransformationService
 import uk.gov.hmrc.estates.utils.ValidationUtil
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,15 +37,15 @@ class AddPersonalRepTransformationController @Inject()(
 
   private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
 
-  def addPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
+  def addBusinessPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
-      request.body.validate[PersonalRepresentativeType] match {
+      request.body.validate[EstatePerRepOrgType] match {
         case JsSuccess(model, _) =>
-          personalRepTransformationService.addAmendPersonalRepTransformer(utr, request.identifier, model) map { _ =>
+          personalRepTransformationService.addAddBusinessPersonalRepTransformer(utr, request.identifier, model) map { _ =>
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Supplied personal representative could not be read as PersonalRepresentativeType - $errors")
+          logger.warn(s"Supplied personal representative could not be read as EstatePerRepOrgType - $errors")
           Future.successful(BadRequest)
       }
     }

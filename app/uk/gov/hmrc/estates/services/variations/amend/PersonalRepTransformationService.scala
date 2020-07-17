@@ -21,7 +21,7 @@ import uk.gov.hmrc.estates.models.Success
 import uk.gov.hmrc.estates.models.variation.PersonalRepresentativeType
 import uk.gov.hmrc.estates.services.VariationsTransformationService
 import uk.gov.hmrc.estates.transformers.JsonOperations
-import uk.gov.hmrc.estates.transformers.amend.{AmendBusinessPersonalRepTransform, AmendIndividualPersonalRepTransform}
+import uk.gov.hmrc.estates.transformers.variations.amend.{AmendBusinessPersonalRepTransform, AmendIndividualPersonalRepTransform}
 
 import scala.concurrent.{ExecutionContext, Future}
 

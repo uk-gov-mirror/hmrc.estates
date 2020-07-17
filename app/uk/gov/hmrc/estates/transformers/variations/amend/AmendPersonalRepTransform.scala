@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers.amend
+package uk.gov.hmrc.estates.transformers.variations.amend
 
 import play.api.libs.json._
 

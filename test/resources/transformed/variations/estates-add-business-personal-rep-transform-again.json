@@ -1,0 +1,32 @@
+{
+  "details": {
+    "estate": {
+      "entities": {
+        "personalRepresentative": [
+          {
+            "lineNo": "1",
+            "bpMatchStatus": "01",
+            "orgName": "oldName",
+            "phoneNumber": "oldPhone",
+            "email": "oldEmail",
+            "identification":{
+              "utr": "oldUtr"
+            },
+            "entityStart": "1998-02-12",
+            "entityEnd": "2021-02-03"
+          },
+          {
+            "orgName": "newerName",
+            "phoneNumber": "newerPhone",
+            "email": "newerEmail",
+            "identification":{
+              "utr": "newerUtr"
+            },
+            "entityStart": "2021-02-03"
+          }
+        ]
+      }
+    }
+  },
+  "otherfields": "exist"
+}

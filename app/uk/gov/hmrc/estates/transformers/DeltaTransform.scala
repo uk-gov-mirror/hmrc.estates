@@ -17,8 +17,9 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
-import uk.gov.hmrc.estates.transformers.amend.{AmendBusinessPersonalRepTransform, AmendIndividualPersonalRepTransform}
+import uk.gov.hmrc.estates.transformers.variations.amend.{AmendBusinessPersonalRepTransform, AmendIndividualPersonalRepTransform}
 import uk.gov.hmrc.estates.transformers.register._
+import uk.gov.hmrc.estates.transformers.variations.add.AddBusinessPersonalRepTransform
 
 trait DeltaTransform {
 
@@ -58,6 +59,10 @@ object DeltaTransform {
     readsForTransform[YearsReturnsTransform](YearsReturnsTransform.key)
   }
 
+  def addBusinessPersonalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AddBusinessPersonalRepTransform](AddBusinessPersonalRepTransform.key)
+  }
+
   def amendIndividualPersonalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
     readsForTransform[AmendIndividualPersonalRepTransform](AmendIndividualPersonalRepTransform.key)
   }
@@ -70,17 +75,16 @@ object DeltaTransform {
     value =>
       (
         personalRepReads orElse
-        agentDetailsReads orElse
-        deceasedReads orElse
-        amountTaxOwedReads orElse
-        correspondenceNameReads orElse
-        yearsReturnsReads orElse
-        amendIndividualPersonalRepReads orElse
-        amendBusinessPersonalRepReads orElse
-        readsForTransform[DeceasedTransform](DeceasedTransform.key)
-      )
-      (value.as[JsObject]) orElse
-        (throw new Exception(s"Don't know how to deserialise transform"))
+          agentDetailsReads orElse
+          deceasedReads orElse
+          amountTaxOwedReads orElse
+          correspondenceNameReads orElse
+          yearsReturnsReads orElse
+          addBusinessPersonalRepReads orElse
+          amendIndividualPersonalRepReads orElse
+          amendBusinessPersonalRepReads orElse
+          readsForTransform[DeceasedTransform](DeceasedTransform.key)
+      )(value.as[JsObject]) orElse (throw new Exception(s"Don't know how to deserialise transform"))
   )
 
   def personalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
@@ -113,6 +117,11 @@ object DeltaTransform {
       Json.obj(DeceasedTransform.key -> Json.toJson(transform)(DeceasedTransform.format))
   }
 
+  def addBusinessPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AddBusinessPersonalRepTransform =>
+      Json.obj(AddBusinessPersonalRepTransform.key -> Json.toJson(transform)(AddBusinessPersonalRepTransform.format))
+  }
+
   def amendIndividualPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
     case transform: AmendIndividualPersonalRepTransform =>
       Json.obj(AmendIndividualPersonalRepTransform.key -> Json.toJson(transform)(AmendIndividualPersonalRepTransform.format))
@@ -130,14 +139,15 @@ object DeltaTransform {
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
       personalRepWrites orElse
-      agentDetailsWrites orElse
-      amountOfTaxOwedWrites orElse
-      deceasedWrites orElse
-      correspondenceNameWrites orElse
-      yearsReturnsWrites orElse
-      amendIndividualPersonalRepWrites orElse
-      amendBusinessPersonalRepWrites orElse
-      defaultWrites
+        agentDetailsWrites orElse
+        amountOfTaxOwedWrites orElse
+        deceasedWrites orElse
+        correspondenceNameWrites orElse
+        yearsReturnsWrites orElse
+        addBusinessPersonalRepWrites orElse
+        amendIndividualPersonalRepWrites orElse
+        amendBusinessPersonalRepWrites orElse
+        defaultWrites
       ).apply(deltaTransform)
   }
 

@@ -290,7 +290,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       }
     }
   }
-  
+
   ".getEstateDetails" should {
 
     val route: String = s"/estates/$utr/date-of-death"

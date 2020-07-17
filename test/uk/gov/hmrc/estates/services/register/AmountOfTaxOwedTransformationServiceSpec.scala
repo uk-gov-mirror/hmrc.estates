@@ -56,7 +56,7 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
 
         whenReady(service.get("internalId")) { result =>
@@ -70,7 +70,7 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(None))
 
         whenReady(service.get("internalId")) { result =>
@@ -86,7 +86,7 @@ class AmountOfTaxOwedTransformationServiceSpec extends FreeSpec with MockitoSuga
         val transformationService = mock[TransformationService]
         val service = new AmountOfTaxTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(
             Seq(
               AmountOfTaxOwedTransform(AmountMoreThanFiveHundredThousand),

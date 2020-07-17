@@ -17,14 +17,29 @@
 package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
+import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.estates.connectors.DesConnector
-import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
+import uk.gov.hmrc.estates.exceptions.InternalServerErrorException
+import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models._
+import uk.gov.hmrc.estates.repositories.CacheRepository
+import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesService @Inject()(val desConnector: DesConnector) {
+class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) {
+
+  def getEstateInfoFormBundleNo(utr: String)(implicit hc: HeaderCarrier): Future[String] =
+    desConnector.getEstateInfo(utr).map {
+      case response: GetEstateProcessedResponse => response.responseHeader.formBundleNo
+      case response =>
+        val msg = s"Failed to retrieve latest form bundle no from ETMP : $response"
+        Logger.warn(msg)
+        throw InternalServerErrorException(s"Submission could not proceed, $msg")
+    }
 
   def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest): Future[ExistingCheckResponse] = {
     desConnector.checkExistingEstate(existingEstateCheckRequest)
@@ -38,12 +53,39 @@ class DesService @Inject()(val desConnector: DesConnector) {
     desConnector.getSubscriptionId(trn)
   }
 
-  def getEstateInfo(utr: String): Future[GetEstateResponse] = {
-    desConnector.getEstateInfo(utr)
+  def refreshCacheAndGetEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+    Logger.debug("Retrieving Estate Info from DES")
+    Logger.info(s"[DesService][refreshCacheAndGetEstateInfo] refreshing cache")
+
+    repository.resetCache(utr, internalId).flatMap { _ =>
+      desConnector.getEstateInfo(utr).flatMap {
+        case response: GetEstateProcessedResponse =>
+          repository.set(utr, internalId, Json.toJson(response)(GetEstateProcessedResponse.mongoWrites)).map{ _ =>
+            response
+          }
+        case otherResponse => Future.successful(otherResponse)
+      }
+    }
   }
 
-  def estateVariation(estateVariation: EstateVariation): Future[VariationResponse] =
-    desConnector.estateVariation(estateVariation: EstateVariation)
+  def getEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
+    Logger.debug("Getting estate Info")
+    repository.get(utr, internalId).flatMap {
+      case Some(x) => x.validate[GetEstateResponse].fold(
+        errs => {
+          Logger.error(s"[DesService] unable to parse json from cache as GetEstateResponse $errs")
+          Future.failed[GetEstateResponse](new Exception(errs.toString))
+        },
+        response => {
+          Future.successful(response)
+        }
+      )
+      case None => refreshCacheAndGetEstateInfo(utr, internalId)
+    }
+  }
+
+  def estateVariation(estateVariation: JsValue)(implicit hc: HeaderCarrier): Future[VariationResponse] =
+    desConnector.estateVariation(estateVariation: JsValue)
 }
 
 

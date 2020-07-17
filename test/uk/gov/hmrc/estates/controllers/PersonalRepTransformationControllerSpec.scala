@@ -149,7 +149,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
             bind[TransformationService].toInstance(transformationService)
           ).build()
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(Some(personalRepInd), None))))))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
@@ -169,7 +169,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
             bind[TransformationService].toInstance(transformationService)
           ).build()
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(None))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
@@ -194,7 +194,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
             bind[TransformationService].toInstance(transformationService)
           ).build()
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(PersonalRepTransform(None, Some(personalRepOrg)))))))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]
@@ -214,7 +214,7 @@ class PersonalRepTransformationControllerSpec extends BaseSpec with MockitoSugar
             bind[TransformationService].toInstance(transformationService)
           ).build()
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(None))
 
         val controller = application.injector.instanceOf[PersonalRepTransformationController]

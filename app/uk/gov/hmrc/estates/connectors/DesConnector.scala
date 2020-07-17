@@ -103,7 +103,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
     http.GET[GetEstateResponse](createEstateEndpointForUtr(utr))
   }
 
-  def estateVariation(estateVariations: EstateVariation): Future[VariationResponse] = {
+  def estateVariation(estateVariations: JsValue): Future[VariationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))

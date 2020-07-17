@@ -20,26 +20,13 @@ import java.time.LocalDate
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import uk.gov.hmrc.estates.models.{EstateWillType, IdentificationType, NameType}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class DeceasedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
-
-  private val cc = stubControllerComponents()
-
-  private val application = applicationBuilder
-    .overrides(
-      bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-    )
-    .build()
 
   private val originalDeceased = EstateWillType(
     NameType("First", None, "Last"),
@@ -64,19 +51,9 @@ class DeceasedSpec extends WordSpec with MustMatchers with MockitoSugar with Tra
   )
 
   "an add Deceased call" must {
-    "return added data in a subsequent 'GET' call" in {
-
-      running(application) {
-        getConnection(application).map { connection =>
-
-          dropTheDatabase(connection)
-
+    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
           roundTripTest(originalDeceased)
           roundTripTest(newDeceased)
-
-          dropTheDatabase(connection)
-        }.get
-      }
     }
   }
 

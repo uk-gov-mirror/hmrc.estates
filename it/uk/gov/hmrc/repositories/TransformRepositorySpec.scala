@@ -16,43 +16,35 @@
 
 package uk.gov.hmrc.repositories
 
-import play.api.test.Helpers.running
-
-import org.scalatest.{FreeSpec, MustMatchers}
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest._
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TransformRepositorySpec extends FreeSpec with MustMatchers with TransformIntegrationTest {
+class TransformRepositorySpec  extends AsyncFreeSpec with MustMatchers
+  with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
 
   "a transform repository" - {
 
-    "must be able to store and retrieve a payload" in {
+    val internalId = "Int-328969d0-557e-4559-96ba-074d0597107e"
 
-      val application = applicationBuilder.build()
+    "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
 
-      running(application) {
-        getConnection(application).map { connection =>
+      val repository = app.injector.instanceOf[TransformationRepository]
 
-          dropTheDatabase(connection)
+      val storedOk = repository.set(internalId, data)
+      storedOk.futureValue mustBe true
 
-          val repository = application.injector.instanceOf[TransformationRepository]
+      val retrieved = repository.get(internalId)
+        .map(_.getOrElse(fail("The record was not found in the database")))
 
-          val storedOk = repository.set("InternalId", data)
-          storedOk.futureValue mustBe true
-
-          val retrieved = repository.get("InternalId")
-            .map(_.getOrElse(fail("The record was not found in the database")))
-
-          retrieved.futureValue mustBe data
-
-          dropTheDatabase(connection)
-        }.get
-      }
+      retrieved.futureValue mustBe data
     }
   }
 
-  val data = ComposedDeltaTransform(
+  private val data = ComposedDeltaTransform(
     Seq()
   )
 }

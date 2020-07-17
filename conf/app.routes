@@ -27,11 +27,15 @@ POST        /register                   uk.gov.hmrc.estates.controllers.Register
 
 GET         /registration               uk.gov.hmrc.estates.controllers.RegisterEstateController.get
 
-POST        /variation                  uk.gov.hmrc.estates.controllers.EstateVariationsController.estateVariation
+POST        /declare/:utr               uk.gov.hmrc.estates.controllers.EstateVariationsController.declare(utr: String)
 
 POST        /tax-enrolment/callback/subscriptions   uk.gov.hmrc.estates.controllers.TaxEnrolmentCallbackController.subscriptionCallback
 
-GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String)
+GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = false)
+
+GET         /:utr/transformed           uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = true)
+
+GET         /:utr/transformed/personal-representative   uk.gov.hmrc.estates.controllers.GetEstateController.getPersonalRepresentative(utr: String)
 
 GET         /:utr/date-of-death         uk.gov.hmrc.estates.controllers.GetEstateController.getDateOfDeath(utr: String)
 

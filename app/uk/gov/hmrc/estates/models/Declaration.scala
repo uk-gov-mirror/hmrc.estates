@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.estates.models
 
+import java.time.LocalDate
+
 import play.api.libs.json.{Format, Json}
 
 case class Declaration(name: NameType,
@@ -23,4 +25,18 @@ case class Declaration(name: NameType,
 
 object Declaration {
   implicit val declarationFormat: Format[Declaration] = Json.format[Declaration]
+}
+
+case class DeclarationName(name: NameType)
+
+object DeclarationName {
+  implicit val declarationFormat: Format[DeclarationName] = Json.format[DeclarationName]
+}
+
+case class DeclarationForApi(declaration: DeclarationName,
+                             agentDetails: Option[AgentDetails],
+                             endDate: Option[LocalDate])
+
+object DeclarationForApi {
+  implicit val declarationForApiFormat: Format[DeclarationForApi] = Json.format[DeclarationForApi]
 }

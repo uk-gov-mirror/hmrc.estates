@@ -58,7 +58,7 @@ class YearsReturnsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         val transformationService = mock[TransformationService]
         val service = new YearsReturnsTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
 
         whenReady(service.get("internalId")) { result =>
@@ -72,7 +72,7 @@ class YearsReturnsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         val transformationService = mock[TransformationService]
         val service = new YearsReturnsTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(None))
 
         whenReady(service.get("internalId")) { result =>
@@ -88,7 +88,7 @@ class YearsReturnsTransformationServiceSpec extends FreeSpec with MockitoSugar w
         val transformationService = mock[TransformationService]
         val service = new YearsReturnsTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(
             Seq(
               YearsReturnsTransform(YearsReturns(List(cyMinusOneReturn, cyMinusTwoReturn))),

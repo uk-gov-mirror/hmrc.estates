@@ -17,6 +17,7 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
+import uk.gov.hmrc.estates.transformers.variations.{AddAmendBusinessPersonalRepTransform, AddAmendIndividualPersonalRepTransform}
 import uk.gov.hmrc.estates.transformers.register._
 
 trait DeltaTransform {
@@ -57,6 +58,14 @@ object DeltaTransform {
     readsForTransform[YearsReturnsTransform](YearsReturnsTransform.key)
   }
 
+  def amendIndividualPersonalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AddAmendIndividualPersonalRepTransform](AddAmendIndividualPersonalRepTransform.key)
+  }
+
+  def amendBusinessPersonalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AddAmendBusinessPersonalRepTransform](AddAmendBusinessPersonalRepTransform.key)
+  }
+
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
       (
@@ -66,6 +75,8 @@ object DeltaTransform {
         amountTaxOwedReads orElse
         correspondenceNameReads orElse
         yearsReturnsReads orElse
+        amendIndividualPersonalRepReads orElse
+        amendBusinessPersonalRepReads orElse
         readsForTransform[DeceasedTransform](DeceasedTransform.key)
       )
       (value.as[JsObject]) orElse
@@ -102,6 +113,16 @@ object DeltaTransform {
       Json.obj(DeceasedTransform.key -> Json.toJson(transform)(DeceasedTransform.format))
   }
 
+  def amendIndividualPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AddAmendIndividualPersonalRepTransform =>
+      Json.obj(AddAmendIndividualPersonalRepTransform.key -> Json.toJson(transform)(AddAmendIndividualPersonalRepTransform.format))
+  }
+
+  def amendBusinessPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AddAmendBusinessPersonalRepTransform =>
+      Json.obj(AddAmendBusinessPersonalRepTransform.key -> Json.toJson(transform)(AddAmendBusinessPersonalRepTransform.format))
+  }
+
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {
     case transform => throw new Exception(s"Don't know how to serialise transform - $transform")
   }
@@ -114,6 +135,8 @@ object DeltaTransform {
       deceasedWrites orElse
       correspondenceNameWrites orElse
       yearsReturnsWrites orElse
+      amendIndividualPersonalRepWrites orElse
+      amendBusinessPersonalRepWrites orElse
       defaultWrites
       ).apply(deltaTransform)
   }

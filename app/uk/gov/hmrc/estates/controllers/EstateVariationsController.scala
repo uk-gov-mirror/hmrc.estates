@@ -20,61 +20,52 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, VariationsResponseHandler}
+import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.auditing.Auditing
-import uk.gov.hmrc.estates.models.variation.EstateVariation
-import uk.gov.hmrc.estates.services.{AuditService, DesService, ValidationService}
-import uk.gov.hmrc.estates.utils.ValidationUtil
-import uk.gov.hmrc.estates.utils.ErrorResponses._
+import uk.gov.hmrc.estates.services.{AuditService, VariationDeclarationService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class EstateVariationsController @Inject()(
                                             identify: IdentifierAction,
-                                            desService: DesService,
                                             auditService: AuditService,
-                                            validator: ValidationService,
-                                            config : AppConfig,
-                                            responseHandler: VariationsResponseHandler)
-                                          (implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) with ValidationUtil {
+                                            variationService: VariationDeclarationService,
+                                            responseHandler: VariationsResponseHandler
+                                          )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
 
-  def estateVariation(): Action[JsValue] = identify.async(parse.json) {
-    implicit request =>
 
-      val payload = request.body.toString()
-
-      validator.get(config.variationsApiSchema).validate[EstateVariation](payload).fold(
+  def declare(utr: String): Action[JsValue] = identify.async(parse.json) {
+    implicit request => {
+      request.body.validate[DeclarationForApi].fold(
         errors => {
-          Logger.error(s"[variations] estate validation errors from request body $errors.")
 
-          auditService.auditErrorResponse(
+          auditService.audit(
             Auditing.ESTATE_VARIATION,
-            request.body,
+            Json.obj("declaration" -> request.body),
             request.identifier,
-            errorReason = "Provided request is invalid."
+            Json.toJson(Json.obj())
           )
 
-
-          Future.successful(invalidRequestErrorResponse)
+          Logger.error(s"[EstateVariationsDeclarationController][declare] unable to parse json as DeclarationForApi, $errors")
+          Future.successful(BadRequest)
         },
+        declarationForApi => {
+          variationService
+            .submitDeclaration(utr, request.identifier, declarationForApi)
+            .map {
+              response =>
 
-        variationRequest => {
-          desService.estateVariation(variationRequest) map { response =>
-
-            auditService.audit(
-              Auditing.ESTATE_VARIATION,
-              request.body,
-              request.identifier,
-              response = Json.toJson(response)
-            )
-
-            Ok(Json.toJson(response))
-
-          } recover responseHandler.recoverFromException(Auditing.ESTATE_VARIATION)
-        }
+                auditService.audit(
+                  Auditing.ESTATE_VARIATION,
+                  Json.toJson(declarationForApi),
+                  request.identifier,
+                  Json.toJson(response)
+                )
+                Ok(Json.toJson(response))
+            }
+        } recover responseHandler.recoverFromException(Auditing.ESTATE_VARIATION)
       )
+    }
   }
-
 }
-

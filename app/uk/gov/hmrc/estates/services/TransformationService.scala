@@ -62,10 +62,9 @@ class TransformationService @Inject()(repository: TransformationRepository){
     }
   }
 
-  def getTransformedData(internalId: String): Future[Option[ComposedDeltaTransform]] =
+  def getTransformations(internalId: String): Future[Option[ComposedDeltaTransform]] =
     repository.get(internalId)
 
   def removeAllTransformations(internalId: String): Future[Option[JsObject]] =
     repository.resetCache(internalId)
-
 }

@@ -30,7 +30,7 @@ class YearsReturnsTransformationService @Inject()(
                                                 ) {
 
   def get(internalId: String): Future[Option[YearsReturns]] = {
-    transformationService.getTransformedData(internalId) map {
+    transformationService.getTransformations(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
           case YearsReturnsTransform(yearsReturns) => Some(yearsReturns)

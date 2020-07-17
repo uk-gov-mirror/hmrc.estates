@@ -56,7 +56,7 @@ class CorrespondenceTransformationServiceSpec extends FreeSpec with MockitoSugar
         val transformationService = mock[TransformationService]
         val service = new CorrespondenceTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any()))
+        when(transformationService.getTransformations(any()))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(Seq(CorrespondenceNameTransform(newEstateName))))))
 
         whenReady(service.getCorrespondenceName("internalId")) { result =>
@@ -74,7 +74,7 @@ class CorrespondenceTransformationServiceSpec extends FreeSpec with MockitoSugar
         val transformationService = mock[TransformationService]
         val service = new CorrespondenceTransformationService(transformationService)
 
-        when(transformationService.getTransformedData(any[String]))
+        when(transformationService.getTransformations(any[String]))
           .thenReturn(Future.successful(Some(ComposedDeltaTransform(
             Seq(
               CorrespondenceNameTransform(correspondenceName1),

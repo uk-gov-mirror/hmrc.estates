@@ -23,7 +23,7 @@ import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRAct
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.services.{AuditService, DesService}
+import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,12 +32,29 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class GetEstateController @Inject()(identify: IdentifierAction,
                                     auditService: AuditService,
                                     desService: DesService,
+                                    variationsTransformationService: VariationsTransformationService,
                                     validateUTRActionFactory: ValidateUTRActionFactory
                                    )(implicit cc: ControllerComponents) extends BackendController(cc) {
 
-  def get(utr: String): Action[AnyContent] =
-    doGet(utr) {
+  def get(utr: String, applyTransforms: Boolean): Action[AnyContent] =
+    doGet(utr, applyTransforms) {
       result: GetEstateResponse => Ok(Json.toJson(result))
+    }
+
+  def getPersonalRepresentative(utr: String): Action[AnyContent] =
+    doGet(utr, applyTransforms = true) {
+      case processed: GetEstateProcessedResponse =>
+        val pick = (JsPath \ 'details \ 'estate \ 'entities \ 'personalRepresentative).json.pick
+        processed.getEstate.transform(pick).fold(
+          _ => InternalServerError,
+          json => {
+            Ok(json.as[PersonalRepresentativeType] match {
+              case PersonalRepresentativeType(Some(personalRepInd), None) => Json.toJson(personalRepInd)
+              case PersonalRepresentativeType(None, Some(personalRepOrg)) => Json.toJson(personalRepOrg)
+            })
+          }
+        )
+      case _ => Forbidden
     }
 
   def getDateOfDeath(utr: String): Action[AnyContent] =
@@ -101,7 +118,7 @@ class GetEstateController @Inject()(identify: IdentifierAction,
 
   private def getEtmpData(utr: String)
                          (processObject: JsValue => JsValue): Action[AnyContent] = {
-    doGet(utr) {
+    doGet(utr, applyTransforms = false) {
       case processed: GetEstateProcessedResponse =>
         Ok(processObject(processed.getEstate))
       case _ =>
@@ -109,13 +126,18 @@ class GetEstateController @Inject()(identify: IdentifierAction,
     }
   }
 
-  private def doGet(utr: String)
+  private def doGet(utr: String, applyTransforms: Boolean)
                    (handleResult: GetEstateResponse => Result): Action[AnyContent] = {
 
     (validateUTRActionFactory.create(utr) andThen identify).async {
       implicit request =>
+        val data = if (applyTransforms) {
+          variationsTransformationService.getTransformedData(utr, request.identifier)
+        } else {
+          desService.getEstateInfo(utr, request.identifier)
+        }
 
-        desService.getEstateInfo(utr) map {
+        data map {
           case processed: GetEstateProcessedResponse =>
             processedResponse(utr, processed)
             handleResult(processed)

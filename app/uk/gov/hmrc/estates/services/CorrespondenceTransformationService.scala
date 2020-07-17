@@ -32,7 +32,7 @@ class CorrespondenceTransformationService @Inject()(
     transformationService.addNewTransform(internalId, CorrespondenceNameTransform(newCorrespondenceName)).map(_ => Success)
 
   def getCorrespondenceName(internalId: String): Future[Option[JsString]] = {
-    transformationService.getTransformedData(internalId) map {
+    transformationService.getTransformations(internalId) map {
       case Some(ComposedDeltaTransform(transforms)) =>
         transforms.flatMap{
           case CorrespondenceNameTransform(name) => Some(name)

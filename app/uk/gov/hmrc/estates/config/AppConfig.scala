@@ -47,6 +47,8 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val maxRetry : Int = loadConfig("microservice.services.estates.maxRetry").toInt
 
+  val auditingEnabled : Boolean = loadConfig("microservice.services.estates.features.auditing.enabled").toBoolean
+
   private def loadConfig(key: String) = config.getOptional[String](key).getOrElse(
     throw new Exception(s"Missing configuration key : $key")
   )

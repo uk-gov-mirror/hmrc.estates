@@ -30,7 +30,7 @@ import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepositoryImpl
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.amend.AddAmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.AddAddAmendIndividualPersonalRepTransform
 import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -86,7 +86,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
     val service = new VariationsTransformationService(repository, mock[DesService], auditService)
 
     val existingTransforms = Seq(
-      AddAmendIndividualPersonalRepTransform(unitTestPersonalRepInfo)
+      AddAddAmendIndividualPersonalRepTransform(unitTestPersonalRepInfo)
     )
     when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
     when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
@@ -139,7 +139,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
     )
 
     val existingTransforms = Seq(
-      AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo)
+      AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo)
     )
 
     val repository = mock[VariationsTransformationRepositoryImpl]
@@ -166,12 +166,12 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
       when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
       when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
 
-      val result = service.addNewTransform("utr", "internalId", AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
+      val result = service.addNewTransform("utr", "internalId", AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
       whenReady(result) { _ =>
 
         verify(repository).set("utr",
           "internalId",
-          ComposedDeltaTransform(Seq(AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))))
+          ComposedDeltaTransform(Seq(AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))))
       }
     }
 
@@ -179,18 +179,18 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
       val repository = mock[VariationsTransformationRepositoryImpl]
       val service = new VariationsTransformationService(repository, mock[DesService], auditService)
 
-      val existingTransforms = Seq(AddAmendIndividualPersonalRepTransform(existingPersonalRepInfo))
+      val existingTransforms = Seq(AddAddAmendIndividualPersonalRepTransform(existingPersonalRepInfo))
       when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
       when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
 
-      val result = service.addNewTransform("utr", "internalId", AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
+      val result = service.addNewTransform("utr", "internalId", AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
       whenReady(result) { _ =>
 
         verify(repository).set("utr",
           "internalId",
           ComposedDeltaTransform(Seq(
-            AddAmendIndividualPersonalRepTransform(existingPersonalRepInfo),
-            AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))))
+            AddAddAmendIndividualPersonalRepTransform(existingPersonalRepInfo),
+            AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))))
       }
     }
   }

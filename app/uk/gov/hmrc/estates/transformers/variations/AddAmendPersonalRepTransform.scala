@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers.amend
+package uk.gov.hmrc.estates.transformers.variations
 
 import play.api.libs.json._
 
-trait AmendPersonalRepTransform {
+trait AddAmendPersonalRepTransform {
   def setPersonalRep(input: JsValue, newPersonalRepDetails: JsValue): JsResult[JsValue] = {
     val personalRepPath = (__ \ 'details \ 'estate \ 'entities \ 'personalRepresentative)
     val entityStartPath = personalRepPath \ 'entityStart

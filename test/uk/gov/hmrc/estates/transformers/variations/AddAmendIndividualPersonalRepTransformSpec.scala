@@ -14,36 +14,35 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers.amend
+package uk.gov.hmrc.estates.transformers.variations
 
 import java.time.LocalDate
 
 import org.scalatest.{FreeSpec, MustMatchers}
-import uk.gov.hmrc.estates.models.IdentificationOrgType
-import uk.gov.hmrc.estates.models.variation.EstatePerRepOrgType
+import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
+import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class AddAmendBusinessPersonalRepTransformSpec extends FreeSpec with MustMatchers {
-
-  "the modify business personal rep transformer should" - {
-    "successfully set a new business personal rep details" in {
+class AddAmendIndividualPersonalRepTransformSpec extends FreeSpec with MustMatchers {
+  "the modify individual personal rep transformer should" - {
+    "successfully set a new ind individual personal rep details" in {
       val beforeJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-personal-rep-transform-before.json")
-      val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-personal-rep-transform-after-org.json")
-      val newPersonalRep = EstatePerRepOrgType(
+      val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-personal-rep-transform-after-ind.json")
+      val newTrusteeInfo = EstatePerRepIndType(
         lineNo = Some("newLineNo"),
-        bpMatchStatus = Some("newMatchStatus"),
-        orgName = "newName",
+        bpMatchStatus = Some("MatchStatus"),
+        name = NameType("newFirstName", Some("newMiddleName"), "newLastName"),
+        dateOfBirth = LocalDate.of(1965, 2, 10),
         phoneNumber = "newPhone",
         email = Some("newEmail"),
-        identification = IdentificationOrgType(Some("newUtr"), None),
-        LocalDate.now,
-        None
+        identification = IdentificationType(Some("newNino"), None, None),
+        entityStart = LocalDate.now,
+        entityEnd = None
       )
-      val transformer = AddAmendBusinessPersonalRepTransform(newPersonalRep)
+      val transformer = AddAddAmendIndividualPersonalRepTransform(newTrusteeInfo)
 
       val result = transformer.applyTransform(beforeJson).get
       result mustBe afterJson
     }
-
   }
 }

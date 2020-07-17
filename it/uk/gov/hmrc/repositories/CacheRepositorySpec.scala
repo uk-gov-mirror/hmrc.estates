@@ -28,7 +28,7 @@ class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
 
   "a cache repository" - {
 
-    val internalId = "Int-328969d0-557e-4559-96ba-074d0597107e"
+    val internalId = "Int-328969d0-96ba-4559-557e-074d0597107e"
 
     "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
 

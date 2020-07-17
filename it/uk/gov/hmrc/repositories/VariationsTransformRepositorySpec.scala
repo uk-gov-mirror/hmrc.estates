@@ -31,9 +31,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
 
-  "a cache repository" - {
+  "a variations repository" - {
 
-    val internalId = "Int-328969d0-557e-4559-96ba-074d0597107e"
+    val internalId = "Int-074d0597107e-557e-4559-96ba-328969d0"
 
     "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
 

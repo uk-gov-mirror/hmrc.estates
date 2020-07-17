@@ -35,7 +35,7 @@ import uk.gov.hmrc.estates.services.amend.PersonalRepTransformationService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AmendPersonalRepTransformationControllerSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers {
+class PersonalRepTransformationControllerSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers {
   private val cc = stubControllerComponents()
 
   val identifierAction = new FakeIdentifierAction(cc.parsers.default, Agent)
@@ -44,7 +44,7 @@ class AmendPersonalRepTransformationControllerSpec extends FreeSpec with Mockito
 
     "must add a new amend personal rep transform" in {
       val personalRepTransformationService = mock[PersonalRepTransformationService]
-      val controller = new AmendPersonalRepTransformationController(identifierAction, cc, personalRepTransformationService)
+      val controller = new PersonalRepTransformationController(identifierAction, cc, personalRepTransformationService)
 
       val newPersonalRepIndInfo = EstatePerRepIndType(
         lineNo = Some("newLineNo"),
@@ -67,7 +67,7 @@ class AmendPersonalRepTransformationControllerSpec extends FreeSpec with Mockito
         .withBody(Json.toJson(newPersonalRepInfo))
         .withHeaders(CONTENT_TYPE -> "application/json")
 
-      val result = controller.amendPersonalRep("aUTR").apply(request)
+      val result = controller.addOrAmendPersonalRep("aUTR").apply(request)
 
       status(result) mustBe OK
       verify(personalRepTransformationService).addAmendPersonalRepTransformer("aUTR", "id", newPersonalRepInfo)
@@ -75,13 +75,13 @@ class AmendPersonalRepTransformationControllerSpec extends FreeSpec with Mockito
 
     "must return an error for malformed json" in {
       val personalRepTransformationService = mock[PersonalRepTransformationService]
-      val controller = new AmendPersonalRepTransformationController(identifierAction, cc, personalRepTransformationService)
+      val controller = new PersonalRepTransformationController(identifierAction, cc, personalRepTransformationService)
 
       val request = FakeRequest("POST", "path")
         .withBody(Json.toJson("{}"))
         .withHeaders(CONTENT_TYPE -> "application/json")
 
-      val result = controller.amendPersonalRep("aUTR").apply(request)
+      val result = controller.addOrAmendPersonalRep("aUTR").apply(request)
       status(result) mustBe BAD_REQUEST
     }
   }

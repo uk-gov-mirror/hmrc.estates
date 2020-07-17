@@ -23,7 +23,7 @@ import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class AmendIndividualPersonalRepTransformSpec extends FreeSpec with MustMatchers {
+class AddAmendIndividualPersonalRepTransformSpec extends FreeSpec with MustMatchers {
   "the modify individual personal rep transformer should" - {
     "successfully set a new ind individual personal rep details" in {
       val beforeJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-personal-rep-transform-before.json")
@@ -39,7 +39,7 @@ class AmendIndividualPersonalRepTransformSpec extends FreeSpec with MustMatchers
         entityStart = LocalDate.now,
         entityEnd = None
       )
-      val transformer = AmendIndividualPersonalRepTransform(newTrusteeInfo)
+      val transformer = AddAmendIndividualPersonalRepTransform(newTrusteeInfo)
 
       val result = transformer.applyTransform(beforeJson).get
       result mustBe afterJson

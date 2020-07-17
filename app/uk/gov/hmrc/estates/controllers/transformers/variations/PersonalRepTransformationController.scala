@@ -29,7 +29,7 @@ import uk.gov.hmrc.estates.utils.ValidationUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AmendPersonalRepTransformationController @Inject()(
+class PersonalRepTransformationController @Inject()(
                                                           identify: IdentifierAction,
                                                           cc: ControllerComponents,
                                                           personalRepTransformationService: PersonalRepTransformationService
@@ -38,7 +38,7 @@ class AmendPersonalRepTransformationController @Inject()(
 
   private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
 
-  def amendPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
+  def addOrAmendPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[PersonalRepresentativeType] match {
         case JsSuccess(model, _) =>

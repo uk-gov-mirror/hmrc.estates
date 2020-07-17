@@ -23,7 +23,7 @@ import uk.gov.hmrc.estates.models.IdentificationOrgType
 import uk.gov.hmrc.estates.models.variation.EstatePerRepOrgType
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class AmendBusinessPersonalRepTransformSpec extends FreeSpec with MustMatchers {
+class AddAmendBusinessPersonalRepTransformSpec extends FreeSpec with MustMatchers {
 
   "the modify business personal rep transformer should" - {
     "successfully set a new business personal rep details" in {
@@ -39,7 +39,7 @@ class AmendBusinessPersonalRepTransformSpec extends FreeSpec with MustMatchers {
         LocalDate.now,
         None
       )
-      val transformer = AmendBusinessPersonalRepTransform(newPersonalRep)
+      val transformer = AddAmendBusinessPersonalRepTransform(newPersonalRep)
 
       val result = transformer.applyTransform(beforeJson).get
       result mustBe afterJson

@@ -21,7 +21,7 @@ import uk.gov.hmrc.estates.models.Success
 import uk.gov.hmrc.estates.models.variation.PersonalRepresentativeType
 import uk.gov.hmrc.estates.services.VariationsTransformationService
 import uk.gov.hmrc.estates.transformers.JsonOperations
-import uk.gov.hmrc.estates.transformers.amend.{AmendBusinessPersonalRepTransform, AmendIndividualPersonalRepTransform}
+import uk.gov.hmrc.estates.transformers.amend.{AddAmendBusinessPersonalRepTransform, AddAmendIndividualPersonalRepTransform}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,8 +30,8 @@ class PersonalRepTransformationService @Inject()(transformationService: Variatio
 
   def addAmendPersonalRepTransformer(utr: String, internalId: String, newPersonalRep: PersonalRepresentativeType): Future[Success.type] = {
     transformationService.addNewTransform(utr, internalId, newPersonalRep match {
-      case PersonalRepresentativeType(Some(personalRepInd), None) => AmendIndividualPersonalRepTransform(personalRepInd)
-      case PersonalRepresentativeType(None, Some(personalRepOrg)) => AmendBusinessPersonalRepTransform(personalRepOrg)
+      case PersonalRepresentativeType(Some(personalRepInd), None) => AddAmendIndividualPersonalRepTransform(personalRepInd)
+      case PersonalRepresentativeType(None, Some(personalRepOrg)) => AddAmendBusinessPersonalRepTransform(personalRepOrg)
     }).map(_ => Success)
   }
 

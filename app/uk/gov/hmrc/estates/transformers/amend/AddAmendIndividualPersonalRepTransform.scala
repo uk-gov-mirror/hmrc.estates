@@ -17,20 +17,18 @@
 package uk.gov.hmrc.estates.transformers.amend
 
 import play.api.libs.json._
-import uk.gov.hmrc.estates.models.variation.EstatePerRepOrgType
+import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.transformers.DeltaTransform
 
-case class AmendBusinessPersonalRepTransform(personalRep: EstatePerRepOrgType) extends DeltaTransform with AmendPersonalRepTransform {
+case class AddAmendIndividualPersonalRepTransform(personalRep: EstatePerRepIndType) extends DeltaTransform with AmendPersonalRepTransform {
   override def applyTransform(input: JsValue): JsResult[JsValue] = {
     setPersonalRep(input, Json.toJson(personalRep))
   }
 }
 
-object AmendBusinessPersonalRepTransform {
+object AddAmendIndividualPersonalRepTransform {
 
-  val key = "AmendBusinessPersonalRepTransform"
+  val key = "AddAmendIndividualPersonalRepTransform"
 
-  implicit val format: Format[AmendBusinessPersonalRepTransform] = Json.format[AmendBusinessPersonalRepTransform]
+  implicit val format: Format[AddAmendIndividualPersonalRepTransform] = Json.format[AddAmendIndividualPersonalRepTransform]
 }
-
-

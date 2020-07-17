@@ -5,4 +5,4 @@ POST        /individual                    uk.gov.hmrc.estates.controllers.Perso
 GET         /organisation                  uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.getPersonalRepOrg()
 POST        /organisation                  uk.gov.hmrc.estates.controllers.PersonalRepTransformationController.amendPersonalRepOrg()
 
-POST        /add-or-amend/:utr             uk.gov.hmrc.estates.controllers.transformers.variations.AmendPersonalRepTransformationController.amendPersonalRep(utr: String)
+POST        /add-or-amend/:utr             uk.gov.hmrc.estates.controllers.transformers.variations.PersonalRepTransformationController.addOrAmendPersonalRep(utr: String)

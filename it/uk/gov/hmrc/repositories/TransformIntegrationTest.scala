@@ -23,6 +23,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{running, stubControllerComponents}
+import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.{DefaultDB, MongoConnection}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
@@ -43,10 +44,10 @@ trait TransformIntegrationTest extends ScalaFutures {
   }
 
   def getConnection(application: Application): Try[MongoConnection] = {
-    val mongoDriver = application.injector.instanceOf[EstatesMongoDriver]
+    val mongoDriver = application.injector.instanceOf[ReactiveMongoApi]
     for {
       uri <- MongoConnection.parseURI(connectionString)
-      connection <- mongoDriver.api.driver.connection(uri, strictUri = true)
+      connection <- mongoDriver.driver.connection(uri, strictUri = true)
     } yield connection
   }
 

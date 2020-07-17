@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.variations.AddAddAmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -51,7 +51,7 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
 
   val data = ComposedDeltaTransform(
     Seq(
-      AddAddAmendIndividualPersonalRepTransform(
+      AddAmendIndividualPersonalRepTransform(
         EstatePerRepIndType(
           Some(""),
           None,

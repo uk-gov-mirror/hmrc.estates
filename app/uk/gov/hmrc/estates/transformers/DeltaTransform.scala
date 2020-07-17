@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.transformers
 
 import play.api.libs.json.{JsValue, _}
-import uk.gov.hmrc.estates.transformers.variations.{AddAddAmendBusinessPersonalRepTransform, AddAddAmendIndividualPersonalRepTransform}
+import uk.gov.hmrc.estates.transformers.variations.{AddAmendBusinessPersonalRepTransform, AddAmendIndividualPersonalRepTransform}
 import uk.gov.hmrc.estates.transformers.register._
 
 trait DeltaTransform {
@@ -59,11 +59,11 @@ object DeltaTransform {
   }
 
   def amendIndividualPersonalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-    readsForTransform[AddAddAmendIndividualPersonalRepTransform](AddAddAmendIndividualPersonalRepTransform.key)
+    readsForTransform[AddAmendIndividualPersonalRepTransform](AddAmendIndividualPersonalRepTransform.key)
   }
 
   def amendBusinessPersonalRepReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
-    readsForTransform[AddAddAmendBusinessPersonalRepTransform](AddAddAmendBusinessPersonalRepTransform.key)
+    readsForTransform[AddAmendBusinessPersonalRepTransform](AddAmendBusinessPersonalRepTransform.key)
   }
 
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
@@ -114,13 +114,13 @@ object DeltaTransform {
   }
 
   def amendIndividualPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-    case transform: AddAddAmendIndividualPersonalRepTransform =>
-      Json.obj(AddAddAmendIndividualPersonalRepTransform.key -> Json.toJson(transform)(AddAddAmendIndividualPersonalRepTransform.format))
+    case transform: AddAmendIndividualPersonalRepTransform =>
+      Json.obj(AddAmendIndividualPersonalRepTransform.key -> Json.toJson(transform)(AddAmendIndividualPersonalRepTransform.format))
   }
 
   def amendBusinessPersonalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
-    case transform: AddAddAmendBusinessPersonalRepTransform =>
-      Json.obj(AddAddAmendBusinessPersonalRepTransform.key -> Json.toJson(transform)(AddAddAmendBusinessPersonalRepTransform.format))
+    case transform: AddAmendBusinessPersonalRepTransform =>
+      Json.obj(AddAmendBusinessPersonalRepTransform.key -> Json.toJson(transform)(AddAmendBusinessPersonalRepTransform.format))
   }
 
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {

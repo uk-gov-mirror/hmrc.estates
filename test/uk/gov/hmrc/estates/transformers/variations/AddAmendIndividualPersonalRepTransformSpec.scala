@@ -39,7 +39,7 @@ class AddAmendIndividualPersonalRepTransformSpec extends FreeSpec with MustMatch
         entityStart = LocalDate.now,
         entityEnd = None
       )
-      val transformer = AddAddAmendIndividualPersonalRepTransform(newTrusteeInfo)
+      val transformer = AddAmendIndividualPersonalRepTransform(newTrusteeInfo)
 
       val result = transformer.applyTransform(beforeJson).get
       result mustBe afterJson

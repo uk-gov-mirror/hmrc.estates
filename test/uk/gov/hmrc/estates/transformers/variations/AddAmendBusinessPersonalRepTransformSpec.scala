@@ -39,7 +39,7 @@ class AddAmendBusinessPersonalRepTransformSpec extends FreeSpec with MustMatcher
         LocalDate.now,
         None
       )
-      val transformer = AddAddAmendBusinessPersonalRepTransform(newPersonalRep)
+      val transformer = AddAmendBusinessPersonalRepTransform(newPersonalRep)
 
       val result = transformer.applyTransform(beforeJson).get
       result mustBe afterJson

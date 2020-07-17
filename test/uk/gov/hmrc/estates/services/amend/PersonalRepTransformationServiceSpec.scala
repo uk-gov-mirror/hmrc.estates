@@ -27,7 +27,7 @@ import org.scalatest.{FreeSpec, MustMatchers}
 import uk.gov.hmrc.estates.models.variation.{EstatePerRepIndType, EstatePerRepOrgType, PersonalRepresentativeType}
 import uk.gov.hmrc.estates.models.{IdentificationOrgType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.services.{LocalDateService, VariationsTransformationService}
-import uk.gov.hmrc.estates.transformers.variations.AddAddAmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
 import uk.gov.hmrc.estates.utils.JsonRequests
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -80,7 +80,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       whenReady(result) { _ =>
 
         verify(transformationService).addNewTransform("utr",
-          "internalId",AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
+          "internalId",AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
 
       }
     }
@@ -95,7 +95,7 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
       whenReady(result) { _ =>
 
         verify(transformationService).addNewTransform("utr",
-          "internalId", AddAddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
+          "internalId", AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))
 
       }
     }

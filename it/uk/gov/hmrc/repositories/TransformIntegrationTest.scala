@@ -51,7 +51,7 @@ trait TransformIntegrationTest extends ScalaFutures {
   }
 
   def dropTheDatabase(connection: MongoConnection) = {
-    getDatabase(connection).flatMap(_.drop()).map(_ => true)
+    getDatabase(connection).flatMap(_.drop())
   }
 
   private val cc = stubControllerComponents()

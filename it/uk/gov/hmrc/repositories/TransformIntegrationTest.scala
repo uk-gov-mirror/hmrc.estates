@@ -19,18 +19,18 @@ package uk.gov.hmrc.repositories
 import org.scalatest.Assertion
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
-import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.{running, stubControllerComponents}
-import play.modules.reactivemongo.ReactiveMongoApi
+import play.api.test.Helpers.stubControllerComponents
+import play.api.{Application, Play}
 import reactivemongo.api.{DefaultDB, MongoConnection}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.repositories.EstatesMongoDriver
+import uk.gov.hmrc.estates.repositories.MongoDriver
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 trait TransformIntegrationTest extends ScalaFutures {
@@ -44,10 +44,10 @@ trait TransformIntegrationTest extends ScalaFutures {
   }
 
   def getConnection(application: Application): Try[MongoConnection] = {
-    val mongoDriver = application.injector.instanceOf[ReactiveMongoApi]
+    val mongoDriver = application.injector.instanceOf[MongoDriver]
     for {
       uri <- MongoConnection.parseURI(connectionString)
-      connection <- mongoDriver.driver.connection(uri, strictUri = true)
+      connection: MongoConnection <- mongoDriver.api.driver.connection(uri, strictUri = true)
     } yield connection
   }
 
@@ -57,22 +57,24 @@ trait TransformIntegrationTest extends ScalaFutures {
 
   private val cc = stubControllerComponents()
 
-  def application : Application = new GuiceApplicationBuilder()
-    .configure(Seq(
-    "mongodb.uri" -> connectionString,
-    "metrics.enabled" -> false,
-    "auditing.enabled" -> false,
-    "mongo-async-driver.akka.log-dead-letters" -> 0
-  ): _*)
-    .overrides(
-    bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
-  ).build()
+  def createApplication : Application = {
+    new GuiceApplicationBuilder()
+      .configure(Seq(
+        "mongodb.uri" -> connectionString,
+        "metrics.enabled" -> false,
+        "auditing.enabled" -> false,
+        "mongo-async-driver.akka.log-dead-letters" -> 0
+      ): _*)
+      .overrides(
+        bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation))
+      ).build()
+  }
 
-  def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] =
-    running(application) {
-      for {
+  def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] = {
+    Play.start(application)
+    for {
         connection <- Future.fromTry(getConnection(application))
         _ <- dropTheDatabase(connection)
       } yield block(application)
-    }
+  }
 }

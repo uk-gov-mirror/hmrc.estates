@@ -42,16 +42,16 @@ class AgentDetailsSpec extends WordSpec with MustMatchers with MockitoSugar with
   )
 
   "an add agentDetails call" must {
-    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
+    "return added data in a subsequent 'GET' call" in assertMongoTest(createApplication) { app =>
 
           val amendRequest = FakeRequest(POST, "/estates/agent-details")
             .withBody(Json.toJson(agentDetails))
             .withHeaders(CONTENT_TYPE -> "application/json")
 
-          val amendResult = route(application, amendRequest).get
+          val amendResult = route(app, amendRequest).get
           status(amendResult) mustBe OK
 
-          val newResult = route(application, FakeRequest(GET, "/estates/agent-details")).get
+          val newResult = route(app, FakeRequest(GET, "/estates/agent-details")).get
           status(newResult) mustBe OK
           contentAsJson(newResult) mustBe Json.toJson(agentDetails)
     }

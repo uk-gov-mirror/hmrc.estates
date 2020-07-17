@@ -18,6 +18,7 @@ package transforms
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -29,21 +30,21 @@ class AddCorrespondenceNameSpec extends WordSpec with MustMatchers with MockitoS
   val newEstateName2 = JsString("New Estate Name 2")
 
   "an add correspondence name call" must {
-    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
-          roundTripTest(newEstateName)
-          roundTripTest(newEstateName2)
+    "return added data in a subsequent 'GET' call" in assertMongoTest(createApplication) { app =>
+          roundTripTest(app, newEstateName)
+          roundTripTest(app, newEstateName2)
     }
   }
 
-  private def roundTripTest(name: JsString) = {
+  private def roundTripTest(app: Application, name: JsString) = {
     val amendRequest = FakeRequest(POST, "/estates/correspondence/name")
       .withBody(Json.toJson(name))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
-    val amendResult = route(application, amendRequest).get
+    val amendResult = route(app, amendRequest).get
     status(amendResult) mustBe OK
 
-    val newResult = route(application, FakeRequest(GET, "/estates/correspondence/name")).get
+    val newResult = route(app, FakeRequest(GET, "/estates/correspondence/name")).get
     status(newResult) mustBe OK
     contentAsJson(newResult) mustBe Json.obj("name" -> name)
   }

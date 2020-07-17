@@ -18,6 +18,7 @@ package transforms
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -28,21 +29,21 @@ import uk.gov.hmrc.repositories.TransformIntegrationTest
 class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   "an add AmountOfTaxOwed call" must {
-    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
-          roundTripTest(AmountOfTaxOwed(AmountMoreThanTenThousand))
-          roundTripTest(AmountOfTaxOwed(AmountMoreThanFiveHundredThousand))
+    "return added data in a subsequent 'GET' call" in assertMongoTest(createApplication) { app =>
+          roundTripTest(app, AmountOfTaxOwed(AmountMoreThanTenThousand))
+          roundTripTest(app, AmountOfTaxOwed(AmountMoreThanFiveHundredThousand))
     }
   }
 
-  private def roundTripTest(amount: AmountOfTaxOwed) = {
+  private def roundTripTest(app: Application, amount: AmountOfTaxOwed) = {
     val amendRequest = FakeRequest(POST, "/estates/amount-tax-owed")
       .withBody(Json.toJson(amount))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
-    val amendResult = route(application, amendRequest).get
+    val amendResult = route(app, amendRequest).get
     status(amendResult) mustBe OK
 
-    val newResult = route(application, FakeRequest(GET, "/estates/amount-tax-owed")).get
+    val newResult = route(app, FakeRequest(GET, "/estates/amount-tax-owed")).get
     status(newResult) mustBe OK
     contentAsJson(newResult) mustBe Json.toJson(amount)
   }

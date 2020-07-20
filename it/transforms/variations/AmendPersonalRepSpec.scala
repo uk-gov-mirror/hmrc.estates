@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import org.scalatest.{FreeSpec, MustMatchers}
+import org.scalatest.{AsyncFreeSpec, MustMatchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -39,7 +39,7 @@ import uk.gov.hmrc.repositories.TransformIntegrationTest
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
+class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   val getEstateResponseFromDES: GetEstateResponse = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse]
   val expectedInitialGetJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-initial.json")

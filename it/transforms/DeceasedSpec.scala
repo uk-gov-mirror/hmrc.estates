@@ -18,7 +18,7 @@ package transforms
 
 import java.time.LocalDate
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.{AsyncWordSpec, MustMatchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.libs.json.Json
@@ -27,7 +27,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.estates.models.{EstateWillType, IdentificationType, NameType}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-class DeceasedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
+class DeceasedSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   private val originalDeceased = EstateWillType(
     NameType("First", None, "Last"),

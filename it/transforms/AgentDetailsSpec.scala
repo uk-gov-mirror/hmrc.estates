@@ -16,7 +16,7 @@
 
 package transforms
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.{AsyncWordSpec, MustMatchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -24,7 +24,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.estates.models.{AddressType, AgentDetails}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-class AgentDetailsSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
+class AgentDetailsSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   private val agentDetails = AgentDetails(
     arn = "SARN1234567",

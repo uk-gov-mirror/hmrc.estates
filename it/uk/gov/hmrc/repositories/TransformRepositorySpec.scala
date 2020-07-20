@@ -43,10 +43,9 @@ class TransformRepositorySpec  extends AsyncFreeSpec with MustMatchers
       println("--- D ---")
 
       val retrieved = repository.get(internalId)
-        .map(_.getOrElse(fail("The record was not found in the database")))
       println("--- E ---")
 
-      retrieved.futureValue mustBe data
+      retrieved.futureValue mustBe Some(data)
       println("--- F ---")
 
       "A" mustBe "A"

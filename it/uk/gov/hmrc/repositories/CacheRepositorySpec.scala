@@ -43,10 +43,9 @@ class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
 
       println("--- 4 ---")
       val retrieved = repository.get("UTRUTRUTR", internalId)
-        .map(_.getOrElse(fail("The record was not found in the database")))
       println("--- 5 ---")
 
-      retrieved.futureValue mustBe data
+      retrieved.futureValue mustBe Some(data)
       println("--- 6 ---")
 
       "A" mustBe "A"

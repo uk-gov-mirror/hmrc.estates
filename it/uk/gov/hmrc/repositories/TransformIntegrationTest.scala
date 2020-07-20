@@ -29,7 +29,7 @@ import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, Identifier
 import uk.gov.hmrc.estates.repositories.MongoDriver
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
@@ -40,7 +40,7 @@ trait TransformIntegrationTest extends ScalaFutures {
   val connectionString = "mongodb://localhost:27017/estates-integration"
 
   def getDatabase(connection: MongoConnection): DefaultDB = {
-      Await.result(connection.database("estates-integration"), Duration.Inf)
+    Await.result(connection.database("estates-integration"), Duration.Inf)
   }
 
   def getConnection(application: Application): Try[MongoConnection] = {
@@ -73,6 +73,17 @@ trait TransformIntegrationTest extends ScalaFutures {
       ).build()
   }
 
+  def dummyFuture: Future[Boolean] = {
+    Future.successful {
+      println("==============================")
+      println("Waiting a bit...")
+      println("==============================")
+
+      Thread.sleep(2000)
+      true
+    }
+  }
+
   def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] = {
     println("==============================")
     println("Start app...")
@@ -82,6 +93,9 @@ trait TransformIntegrationTest extends ScalaFutures {
     println("==============================")
     println("Started app...")
     println("==============================")
+
+    Await.result(dummyFuture, Duration.Inf)
+
     try {
 
     val f: Future[Assertion] = for {
@@ -100,6 +114,8 @@ trait TransformIntegrationTest extends ScalaFutures {
     Future.successful(assertion)
     }
     finally {
+      Await.result(dummyFuture, Duration.Inf)
+
       println("==============================")
       println("Stopping application")
       println("==============================")

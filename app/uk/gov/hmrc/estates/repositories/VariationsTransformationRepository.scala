@@ -39,6 +39,8 @@ class VariationsTransformationRepositoryImpl @Inject()(
                             config: AppConfig
                           )(implicit ec: ExecutionContext, m: Materializer) extends VariationsTransformationRepository {
 
+  println("+++++ create variations transformation repository +++++")
+
   private val logger = LoggerFactory.getLogger("application." + getClass.getCanonicalName)
   private val collectionName: String = "variationTransforms"
   private val cacheTtl = config.ttlInSeconds

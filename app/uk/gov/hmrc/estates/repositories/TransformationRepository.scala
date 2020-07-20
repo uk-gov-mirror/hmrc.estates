@@ -48,6 +48,7 @@ class TransformationRepositoryImpl @Inject()(
                             config: AppConfig
                           )(implicit ec: ExecutionContext, m: Materializer) extends TransformationRepository {
 
+  println("+++++ create transformation repository +++++")
   private val logger = LoggerFactory.getLogger("application." + getClass.getCanonicalName)
   private val collectionName: String = "transforms"
   private val cacheTtl = config.ttlInSeconds

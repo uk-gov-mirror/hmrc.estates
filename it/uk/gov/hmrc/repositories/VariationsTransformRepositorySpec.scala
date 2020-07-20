@@ -48,10 +48,9 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
       println("--- d ---")
 
       val retrieved = repository.get("UTRUTRUTR", internalId)
-        .map(_.getOrElse(fail("The record was not found in the database")))
       println("--- e ---")
 
-      retrieved.futureValue mustBe data
+      retrieved.futureValue mustBe Some(data)
       println("--- f ---")
       "A" mustBe "A"
 

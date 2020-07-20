@@ -21,9 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.modules.reactivemongo.ReactiveMongoApi
 
 @Singleton
-class EstatesMongoDriver @Inject()(val api : ReactiveMongoApi) extends MongoDriver {
-  println("CREATE EstatesMongoDriver")
-}
+class EstatesMongoDriver @Inject()(val api : ReactiveMongoApi) extends MongoDriver 
 
 @ImplementedBy(classOf[EstatesMongoDriver])
 sealed trait MongoDriver {

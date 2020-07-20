@@ -16,7 +16,7 @@
 
 package transforms
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.{AsyncWordSpec, MustMatchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.libs.json.Json
@@ -26,7 +26,7 @@ import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
 import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-class AmountTaxOwedSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
+class AmountTaxOwedSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   "an add AmountOfTaxOwed call" must {
     "return added data in a subsequent 'GET' call" in assertMongoTest(createApplication) { app =>

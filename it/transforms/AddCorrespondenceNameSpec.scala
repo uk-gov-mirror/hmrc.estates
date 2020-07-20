@@ -16,7 +16,7 @@
 
 package transforms
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.{AsyncWordSpec, MustMatchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.libs.json.{JsString, Json}
@@ -24,7 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-class AddCorrespondenceNameSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
+class AddCorrespondenceNameSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   val newEstateName = JsString("New Estate Name")
   val newEstateName2 = JsString("New Estate Name 2")

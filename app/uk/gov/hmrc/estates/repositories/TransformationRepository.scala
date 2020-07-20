@@ -56,7 +56,12 @@ class TransformationRepositoryImpl @Inject()(
     for {
       _ <- ensureIndexes
       res <- mongo.api.database.map(_.collection[JSONCollection](collectionName))
-    } yield res
+    } yield {
+      println("==============================")
+      println(s"Repo got collection: $res")
+      println("==============================")
+      res
+    }
 
 
   private val lastUpdatedIndex = Index(

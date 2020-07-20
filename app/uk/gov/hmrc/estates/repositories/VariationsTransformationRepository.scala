@@ -39,8 +39,6 @@ class VariationsTransformationRepositoryImpl @Inject()(
                             config: AppConfig
                           )(implicit ec: ExecutionContext, m: Materializer) extends VariationsTransformationRepository {
 
-  println("+++++ create variations transformation repository +++++")
-
   private val logger = LoggerFactory.getLogger("application." + getClass.getCanonicalName)
   private val collectionName: String = "variationTransforms"
   private val cacheTtl = config.ttlInSeconds
@@ -49,13 +47,7 @@ class VariationsTransformationRepositoryImpl @Inject()(
     for {
       _ <- ensureIndexes
       res <- mongo.api.database.map(_.collection[JSONCollection](collectionName))
-    } yield {
-      println("==============================")
-      println(s"Var repo got collection: $res")
-      println("==============================")
-      res
-    }
-
+    } yield res
 
   private val lastUpdatedIndex = Index(
     key = Seq("updatedAt" -> IndexType.Ascending),

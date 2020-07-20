@@ -18,15 +18,13 @@ package uk.gov.hmrc.repositories
 
 import java.time.LocalDate
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
@@ -37,23 +35,14 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
 
     "must be able to store and retrieve a payload" in assertMongoTest(createApplication) { app =>
 
-      println("--- a ---")
-
       val repository = app.injector.instanceOf[VariationsTransformationRepository]
-      println("--- b ---")
 
       val storedOk = repository.set("UTRUTRUTR", internalId, data)
-      println("--- c ---")
       storedOk.futureValue mustBe true
-      println("--- d ---")
 
       val retrieved = repository.get("UTRUTRUTR", internalId)
-      println("--- e ---")
 
       retrieved.futureValue mustBe Some(data)
-      println("--- f ---")
-      "A" mustBe "A"
-
     }
   }
 

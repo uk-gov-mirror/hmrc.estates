@@ -46,12 +46,7 @@ class CacheRepositoryImpl @Inject()(
     for {
       _ <- ensureIndexes
       res <- mongo.api.database.map(_.collection[JSONCollection](collectionName))
-    } yield {
-      println("==============================")
-      println(s"cache repo got collection $res")
-      println("==============================")
-      res
-    }
+    } yield res
 
 
   private val lastUpdatedIndex = Index(

@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.repositories
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class TransformRepositorySpec  extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
@@ -32,24 +30,15 @@ class TransformRepositorySpec  extends AsyncFreeSpec with MustMatchers
 
     "must be able to store and retrieve a payload" in assertMongoTest(createApplication) { app =>
 
-      println("--- A ---")
       val repository = app.injector.instanceOf[TransformationRepository]
 
-      println("--- B ---")
       val storedOk = repository.set(internalId, data)
-      println("--- C ---")
 
       storedOk.futureValue mustBe true
-      println("--- D ---")
 
       val retrieved = repository.get(internalId)
-      println("--- E ---")
 
       retrieved.futureValue mustBe Some(data)
-      println("--- F ---")
-
-      "A" mustBe "A"
-
     }
   }
 

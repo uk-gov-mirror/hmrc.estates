@@ -29,7 +29,7 @@ import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, Identifier
 import uk.gov.hmrc.estates.repositories.MongoDriver
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
+import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
@@ -53,9 +53,6 @@ trait TransformIntegrationTest extends ScalaFutures {
 
   def dropTheDatabase(connection: MongoConnection): Unit = {
     Await.result(getDatabase(connection).drop(), Duration.Inf)
-    println("==============================")
-    println("dropped database...")
-    println("==============================")
   }
 
   private val cc = stubControllerComponents()
@@ -73,52 +70,25 @@ trait TransformIntegrationTest extends ScalaFutures {
       ).build()
   }
 
-  def dummyFuture: Future[Boolean] = {
-    Future.successful {
-      println("==============================")
-      println("Waiting a bit...")
-      println("==============================")
-
-      Thread.sleep(2000)
-      true
-    }
-  }
-
   def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] = {
-    println("==============================")
-    println("Start app...")
-    println("==============================")
 
     Play.start(application)
-    println("==============================")
-    println("Started app...")
-    println("==============================")
-
-//    Await.result(dummyFuture, Duration.Inf)
 
     try {
 
-    val f: Future[Assertion] = for {
-        connection <- Future.fromTry(getConnection(application))
-        _ = dropTheDatabase(connection)
-      } yield {
-        block(application)
-      }
+      val f: Future[Assertion] = for {
+          connection <- Future.fromTry(getConnection(application))
+          _ = dropTheDatabase(connection)
+        } yield {
+          block(application)
+        }
 
-    // We need to force the assertion to resolve here.
-    // Otherwise, the test block may never be run at all.
-    val assertion = Await.result(f, Duration.Inf)
-    println("==============================")
-    println("Done with test. Returning")
-    println("==============================")
-    Future.successful(assertion)
+      // We need to force the assertion to resolve here.
+      // Otherwise, the test block may never be run at all.
+      val assertion = Await.result(f, Duration.Inf)
+      Future.successful(assertion)
     }
     finally {
-//      Await.result(dummyFuture, Duration.Inf)
-
-      println("==============================")
-      println("Stopping application")
-      println("==============================")
       Play.stop(application)
     }
   }

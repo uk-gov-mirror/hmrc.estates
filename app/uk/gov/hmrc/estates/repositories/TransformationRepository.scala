@@ -48,7 +48,6 @@ class TransformationRepositoryImpl @Inject()(
                             config: AppConfig
                           )(implicit ec: ExecutionContext, m: Materializer) extends TransformationRepository {
 
-  println("+++++ create transformation repository +++++")
   private val logger = LoggerFactory.getLogger("application." + getClass.getCanonicalName)
   private val collectionName: String = "transforms"
   private val cacheTtl = config.ttlInSeconds
@@ -57,12 +56,7 @@ class TransformationRepositoryImpl @Inject()(
     for {
       _ <- ensureIndexes
       res <- mongo.api.database.map(_.collection[JSONCollection](collectionName))
-    } yield {
-      println("==============================")
-      println(s"Repo got collection: $res")
-      println("==============================")
-      res
-    }
+    } yield res
 
 
   private val lastUpdatedIndex = Index(

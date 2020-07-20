@@ -49,7 +49,6 @@ class VariationsTransformationRepositoryImpl @Inject()(
       res <- mongo.api.database.map(_.collection[JSONCollection](collectionName))
     } yield res
 
-
   private val lastUpdatedIndex = Index(
     key = Seq("updatedAt" -> IndexType.Ascending),
     name = Some("transformation-data-updated-at-index"),

@@ -63,6 +63,7 @@ class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar 
         bind[DesConnector].toInstance(stubbedDesConnector)
       )
       .build()
+
     "must return amended data in a subsequent 'get' call" in assertMongoTest(application) { app =>
 
       val newPersonalRepIndInfo = EstatePerRepIndType(
@@ -91,20 +92,20 @@ class AmendPersonalRepSpec extends FreeSpec with MustMatchers with MockitoSugar 
 
       val expectedGetAfterAmendLeadTrusteeJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-after-amend-personal-rep.json")
 
-          val result = route(application, FakeRequest(GET, "/estates/5174384721/transformed")).get
-          status(result) mustBe OK
-          contentAsJson(result) mustBe expectedInitialGetJson
+      val result = route(application, FakeRequest(GET, "/estates/5174384721/transformed")).get
+      status(result) mustBe OK
+      contentAsJson(result) mustBe expectedInitialGetJson
 
-          val amendRequest = FakeRequest(POST, "/estates/personal-rep/amend/5174384721")
-            .withBody(Json.toJson(newPersonalRep))
-            .withHeaders(CONTENT_TYPE -> "application/json")
+      val amendRequest = FakeRequest(POST, "/estates/personal-rep/add-or-amend/5174384721")
+        .withBody(Json.toJson(newPersonalRep))
+        .withHeaders(CONTENT_TYPE -> "application/json")
 
-          val amendResult = route(application, amendRequest).get
-          status(amendResult) mustBe OK
+      val amendResult = route(application, amendRequest).get
+      status(amendResult) mustBe OK
 
-          val newResult = route(application, FakeRequest(GET, "/estates/5174384721/transformed")).get
-          status(newResult) mustBe OK
-          contentAsJson(newResult) mustBe expectedGetAfterAmendLeadTrusteeJson
-    }
+      val newResult = route(application, FakeRequest(GET, "/estates/5174384721/transformed")).get
+      status(newResult) mustBe OK
+      contentAsJson(newResult) mustBe expectedGetAfterAmendLeadTrusteeJson
+}
   }
 }

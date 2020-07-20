@@ -18,15 +18,13 @@ package uk.gov.hmrc.repositories
 
 import java.time.LocalDate
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
@@ -35,7 +33,7 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
 
     val internalId = "Int-074d0597107e-557e-4559-96ba-328969d0"
 
-    "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
+    "must be able to store and retrieve a payload" in assertMongoTest(createApplication) { app =>
 
       val repository = app.injector.instanceOf[VariationsTransformationRepository]
 
@@ -43,9 +41,8 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
       storedOk.futureValue mustBe true
 
       val retrieved = repository.get("UTRUTRUTR", internalId)
-        .map(_.getOrElse(fail("The record was not found in the database")))
 
-      retrieved.futureValue mustBe data
+      retrieved.futureValue mustBe Some(data)
     }
   }
 

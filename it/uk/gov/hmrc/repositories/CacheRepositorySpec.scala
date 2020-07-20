@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.repositories
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.Json
 import uk.gov.hmrc.estates.repositories.CacheRepository
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {
@@ -30,7 +28,7 @@ class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
 
     val internalId = "Int-328969d0-96ba-4559-557e-074d0597107e"
 
-    "must be able to store and retrieve a payload" in assertMongoTest(application) { app =>
+    "must be able to store and retrieve a payload" in assertMongoTest(createApplication) { app =>
 
       val repository = app.injector.instanceOf[CacheRepository]
 
@@ -38,9 +36,8 @@ class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
       storedOk.futureValue mustBe true
 
       val retrieved = repository.get("UTRUTRUTR", internalId)
-        .map(_.getOrElse(fail("The record was not found in the database")))
 
-      retrieved.futureValue mustBe data
+      retrieved.futureValue mustBe Some(data)
     }
   }
 

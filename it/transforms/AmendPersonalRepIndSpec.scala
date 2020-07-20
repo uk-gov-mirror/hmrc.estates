@@ -29,7 +29,7 @@ import uk.gov.hmrc.repositories.TransformIntegrationTest
 class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   "an amend personal rep call" must {
-    "return amended data in a subsequent 'get' call" in assertMongoTest(application) { app =>
+    "return amended data in a subsequent 'get' call" in assertMongoTest(createApplication) { app =>
 
       val newPersonalRep = EstatePerRepIndType(
         name = NameType("newFirstName", Some("newMiddleName"), "newLastName"),
@@ -53,10 +53,10 @@ class AmendPersonalRepIndSpec extends WordSpec with MustMatchers with MockitoSug
             .withBody(Json.toJson(newPersonalRep))
             .withHeaders(CONTENT_TYPE -> "application/json")
 
-          val amendResult = route(application, amendRequest).get
+          val amendResult = route(app, amendRequest).get
           status(amendResult) mustBe OK
 
-          val newResult = route(application, FakeRequest(GET, "/estates/personal-rep/individual")).get
+          val newResult = route(app, FakeRequest(GET, "/estates/personal-rep/individual")).get
           status(newResult) mustBe OK
           contentAsJson(newResult) mustBe Json.toJson(newPersonalRep)
     }

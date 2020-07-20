@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -51,20 +52,20 @@ class DeceasedSpec extends WordSpec with MustMatchers with MockitoSugar with Tra
   )
 
   "an add Deceased call" must {
-    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
-          roundTripTest(originalDeceased)
-          roundTripTest(newDeceased)
+    "return added data in a subsequent 'GET' call" in assertMongoTest(createApplication) { app =>
+          roundTripTest(app, originalDeceased)
+          roundTripTest(app, newDeceased)
     }
   }
 
-  private def roundTripTest(deceased: EstateWillType) = {
+  private def roundTripTest(app: Application, deceased: EstateWillType) = {
     val amendRequest = FakeRequest(POST, "/estates/deceased")
       .withBody(Json.toJson(deceased))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
-    status(route(application, amendRequest).get) mustBe OK
+    status(route(app, amendRequest).get) mustBe OK
 
-    val newResult = route(application, FakeRequest(GET, "/estates/deceased")).get
+    val newResult = route(app, FakeRequest(GET, "/estates/deceased")).get
     status(newResult) mustBe OK
     contentAsJson(newResult) mustBe Json.toJson(deceased)
   }

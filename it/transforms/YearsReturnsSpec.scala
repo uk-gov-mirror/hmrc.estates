@@ -18,6 +18,7 @@ package transforms
 
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -30,21 +31,21 @@ class YearsReturnsSpec extends WordSpec with MustMatchers with MockitoSugar with
   private val cyMinusTwoReturn =  YearReturnType(taxReturnYear = "19", taxConsequence = false)
 
   "an add YearsReturns call" must {
-    "return added data in a subsequent 'GET' call" in assertMongoTest(application) { app =>
-          roundTripTest(YearsReturns(List(cyMinusOneReturn, cyMinusTwoReturn)))
-          roundTripTest(YearsReturns(List(cyMinusOneReturn)))
+    "return added data in a subsequent 'GET' call" in assertMongoTest(createApplication) { app =>
+          roundTripTest(app, YearsReturns(List(cyMinusOneReturn, cyMinusTwoReturn)))
+          roundTripTest(app, YearsReturns(List(cyMinusOneReturn)))
     }
   }
 
-  private def roundTripTest(yearsReturns: YearsReturns) = {
+  private def roundTripTest(app: Application, yearsReturns: YearsReturns) = {
     val amendRequest = FakeRequest(POST, "/estates/tax-liability")
       .withBody(Json.toJson(yearsReturns))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
-    val amendResult = route(application, amendRequest).get
+    val amendResult = route(app, amendRequest).get
     status(amendResult) mustBe OK
 
-    val newResult = route(application, FakeRequest(GET, "/estates/tax-liability")).get
+    val newResult = route(app, FakeRequest(GET, "/estates/tax-liability")).get
     status(newResult) mustBe OK
     contentAsJson(newResult) mustBe Json.toJson(yearsReturns)
   }

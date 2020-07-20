@@ -82,6 +82,8 @@ trait TransformIntegrationTest extends ScalaFutures {
     println("==============================")
     println("Started app...")
     println("==============================")
+    try {
+
     val f: Future[Assertion] = for {
         connection <- Future.fromTry(getConnection(application))
         _ = dropTheDatabase(connection)
@@ -93,13 +95,15 @@ trait TransformIntegrationTest extends ScalaFutures {
     // Otherwise, the test block may never be run at all.
     val assertion = Await.result(f, Duration.Inf)
     println("==============================")
-    println("Stopping application")
-    println("==============================")
-    Play.stop(application)
-    println("==============================")
     println("Done with test. Returning")
     println("==============================")
     Future.successful(assertion)
-
+    }
+    finally {
+      println("==============================")
+      println("Stopping application")
+      println("==============================")
+      Play.stop(application)
+    }
   }
 }

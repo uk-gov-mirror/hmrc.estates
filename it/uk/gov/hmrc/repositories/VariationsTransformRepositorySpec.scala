@@ -37,15 +37,24 @@ class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
 
     "must be able to store and retrieve a payload" in assertMongoTest(createApplication) { app =>
 
+      println("--- a ---")
+
       val repository = app.injector.instanceOf[VariationsTransformationRepository]
+      println("--- b ---")
 
       val storedOk = repository.set("UTRUTRUTR", internalId, data)
+      println("--- c ---")
       storedOk.futureValue mustBe true
+      println("--- d ---")
 
       val retrieved = repository.get("UTRUTRUTR", internalId)
         .map(_.getOrElse(fail("The record was not found in the database")))
+      println("--- e ---")
 
       retrieved.futureValue mustBe data
+      println("--- f ---")
+      "A" mustBe "A"
+
     }
   }
 

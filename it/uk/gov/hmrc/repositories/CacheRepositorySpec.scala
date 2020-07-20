@@ -32,15 +32,25 @@ class CacheRepositorySpec extends AsyncFreeSpec with MustMatchers
 
     "must be able to store and retrieve a payload" in assertMongoTest(createApplication) { app =>
 
+      println("--- 1 ---")
+
       val repository = app.injector.instanceOf[CacheRepository]
+      println("--- 2 ---")
 
       val storedOk = repository.set("UTRUTRUTR", internalId, data)
+      println("--- 3 ---")
       storedOk.futureValue mustBe true
 
+      println("--- 4 ---")
       val retrieved = repository.get("UTRUTRUTR", internalId)
         .map(_.getOrElse(fail("The record was not found in the database")))
+      println("--- 5 ---")
 
       retrieved.futureValue mustBe data
+      println("--- 6 ---")
+
+      "A" mustBe "A"
+
     }
   }
 

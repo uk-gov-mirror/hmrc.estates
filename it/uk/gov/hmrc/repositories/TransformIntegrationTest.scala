@@ -94,7 +94,7 @@ trait TransformIntegrationTest extends ScalaFutures {
     println("Started app...")
     println("==============================")
 
-    Await.result(dummyFuture, Duration.Inf)
+//    Await.result(dummyFuture, Duration.Inf)
 
     try {
 
@@ -114,7 +114,7 @@ trait TransformIntegrationTest extends ScalaFutures {
     Future.successful(assertion)
     }
     finally {
-      Await.result(dummyFuture, Duration.Inf)
+//      Await.result(dummyFuture, Duration.Inf)
 
       println("==============================")
       println("Stopping application")

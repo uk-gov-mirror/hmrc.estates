@@ -43,7 +43,13 @@
             },
             "dateOfBirth":"1980-06-01",
             "identification":{
-              "nino":"JS123456A"
+              "nino":"JS123456A",
+              "address": {
+                "line1": "Address line 1",
+                "line2": "Town or city",
+                "postCode": "Z99 2YY",
+                "country": "GB"
+              }
             },
             "phoneNumber":"078888888",
             "lineNo":"1",

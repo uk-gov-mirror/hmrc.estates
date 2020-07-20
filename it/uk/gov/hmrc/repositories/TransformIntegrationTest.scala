@@ -39,8 +39,8 @@ trait TransformIntegrationTest extends ScalaFutures {
 
   val connectionString = "mongodb://localhost:27017/estates-integration"
 
-  def getDatabase(connection: MongoConnection): Future[DefaultDB] = {
-    connection.database("estates-integration")
+  def getDatabase(connection: MongoConnection): DefaultDB = {
+      Await.result(connection.database("estates-integration"), Duration.Inf)
   }
 
   def getConnection(application: Application): Try[MongoConnection] = {
@@ -51,8 +51,8 @@ trait TransformIntegrationTest extends ScalaFutures {
     } yield connection
   }
 
-  def dropTheDatabase(connection: MongoConnection) = {
-    getDatabase(connection).flatMap(_.drop())
+  def dropTheDatabase(connection: MongoConnection): Unit = {
+    Await.result(getDatabase(connection).drop(), Duration.Inf)
   }
 
   private val cc = stubControllerComponents()
@@ -72,9 +72,17 @@ trait TransformIntegrationTest extends ScalaFutures {
 
   def assertMongoTest(application: Application)(block: Application => Assertion): Future[Assertion] = {
     Play.start(application)
-    for {
+    val f: Future[Assertion] = for {
         connection <- Future.fromTry(getConnection(application))
-        _ <- dropTheDatabase(connection)
-      } yield block(application)
+        _ = dropTheDatabase(connection)
+      } yield {
+        block(application)
+      }
+
+    // We need to force the assertion to resolve here.
+    // Otherwise, the test block may never be run at all.
+    val assertion = Await.result(f, Duration.Inf)
+    Play.stop(application)
+    Future.successful(assertion)
   }
 }

@@ -85,7 +85,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                   Auditing.REGISTRATION_SUBMISSION_FAILED,
                   json,
                   request.identifier,
-                  "Unable to build model EstateRegistration from transforms"
+                  "Unable to parse transformed json as EstateRegistration"
                 )
                 Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration"))
             }
@@ -99,7 +99,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
           Auditing.REGISTRATION_SUBMISSION_FAILED,
           Json.toJson(declaration),
           request.identifier,
-          "Unable to build model EstateRegistration from transforms"
+          "Unable to submit registration due to there being no transforms"
         )
         Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
     }

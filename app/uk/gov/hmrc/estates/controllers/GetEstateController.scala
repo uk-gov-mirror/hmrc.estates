@@ -147,7 +147,7 @@ class GetEstateController @Inject()(identify: IdentifierAction,
           case NotEnoughDataResponse(json, errors) =>
             notEnoughInformationResponse(utr, json, errors)
           case ResourceNotFoundResponse =>
-            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "Not Found received from DES.")
+            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, ResourceNotFoundResponse.toString)
             NotFound
           case errorResponse: GetEstateErrorResponse =>
             auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, errorResponse.toString)

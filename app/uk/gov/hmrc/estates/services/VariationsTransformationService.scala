@@ -62,9 +62,8 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
         populatePersonalRepAddress(response.getEstate) match {
           case JsSuccess(fixed, _) =>
             applyTransformations(utr, internalId, fixed).map {
-          case JsSuccess(transformed, _) =>
-            GetEstateProcessedResponse(transformed, response.responseHeader)
-          case JsError(errors) => TransformationErrorResponse(errors.toString)
+              case JsSuccess(transformed, _) => GetEstateProcessedResponse(transformed, response.responseHeader)
+              case JsError(errors) => TransformationErrorResponse(errors.toString)
           }
           case JsError(errors) => Future.successful(TransformationErrorResponse(errors.toString))
         }

@@ -538,7 +538,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
         whenReady(futureResult.failed) {
-          result => result mustBe an[InternalServerErrorException]
+          result => result mustBe DuplicateSubmissionException
         }
       }
     }
@@ -550,8 +550,9 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse400CorrelationId))
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
-       whenReady(futureResult.failed) {
-          result => result mustBe an[InternalServerErrorException]
+        whenReady(futureResult.failed) {
+          result => result mustBe InvalidCorrelationIdException
+
         }
       }
     }

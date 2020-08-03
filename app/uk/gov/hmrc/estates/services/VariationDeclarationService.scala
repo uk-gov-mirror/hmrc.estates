@@ -42,18 +42,18 @@ class VariationDeclarationService @Inject()(
   def submitDeclaration(utr: String, internalId: String, declaration: DeclarationForApi)
                        (implicit hc: HeaderCarrier): Future[VariationResponse] = {
 
-    getCachedEstateData(utr, internalId).flatMap { originalResponse: GetEstateProcessedResponse =>
-      transformationService.populatePersonalRepAddress(originalResponse.getEstate) match {
-        case JsSuccess(originalJson, _) =>
-          transformationService.applyDeclarationTransformations(utr, internalId, originalJson).flatMap {
-            case JsSuccess(transformedJson, _) =>
-              val response = GetEstateProcessedResponse(transformedJson, originalResponse.responseHeader)
-              declarationTransformer.transform(response, originalJson, declaration, localDateService.now) match {
+    getCachedEstateData(utr, internalId).flatMap { cached: GetEstateProcessedResponse =>
+      transformationService.populatePersonalRepAddress(cached.getEstate) match {
+        case JsSuccess(docWithPersonalRepAddress, _) =>
+          transformationService.applyDeclarationTransformations(utr, internalId, docWithPersonalRepAddress).flatMap {
+            case JsSuccess(transformedDocument, _) =>
+              val response = GetEstateProcessedResponse(transformedDocument, cached.responseHeader)
+              declarationTransformer.transform(response, docWithPersonalRepAddress, declaration, localDateService.now) match {
                 case JsSuccess(value, _) =>
                   Logger.info(s"[VariationDeclarationService] successfully transformed json for declaration")
                   doSubmit(value, internalId)
-                case JsError(errors) =>
-                  Logger.error("Problem transforming data for ETMP submission " + errors.toString())
+                case e : JsError =>
+                  Logger.error(s"Problem transforming data for ETMP submission ${JsError.toJson(e)}")
                   Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
               }
             case JsError(errors) =>

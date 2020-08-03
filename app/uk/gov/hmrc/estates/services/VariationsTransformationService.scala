@@ -21,8 +21,7 @@ import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse, TransformationErrorResponse}
-import uk.gov.hmrc.estates.repositories.{TransformationRepository, VariationsTransformationRepository}
-import uk.gov.hmrc.estates.transformers.register.YearsReturnsTransform
+import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
 import uk.gov.hmrc.http.HeaderCarrier
 

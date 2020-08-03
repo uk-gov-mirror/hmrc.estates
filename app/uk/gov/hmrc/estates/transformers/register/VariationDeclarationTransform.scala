@@ -18,6 +18,7 @@ package uk.gov.hmrc.estates.transformers.register
 
 import java.time.LocalDate
 
+import play.api.Logger
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models._
@@ -25,13 +26,15 @@ import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 
 class VariationDeclarationTransform {
 
-  def transform(response: GetEstateProcessedResponse,
-                originalJson: JsValue,
-                declarationForApi: DeclarationForApi,
+  def transform(workingDocument: GetEstateProcessedResponse,
+                cachedDocument: JsValue,
+                declaration: DeclarationForApi,
                 date: LocalDate): JsResult[JsValue] = {
 
-    val responseJson = response.getEstate
-    val responseHeader = response.responseHeader
+    val responseJson = workingDocument.getEstate
+    val responseHeader = workingDocument.responseHeader
+
+    Logger.debug(s"[VariationDeclarationTransform] applying declaration transforms to document $workingDocument from cached $cachedDocument")
 
     responseJson.transform(
       (__ \ 'applicationType).json.prune andThen
@@ -39,11 +42,11 @@ class VariationDeclarationTransform {
         (__ \ 'yearsReturns).json.prune andThen
         updateCorrespondence(responseJson) andThen
         fixPersonalRepAddress(responseJson, pathToPersonalRep) andThen
-        addPreviousPersonalRep(responseJson, originalJson, date) andThen
+        addPreviousPersonalRep(responseJson, cachedDocument, date) andThen
         putNewValue(__ \ 'reqHeader \ 'formBundleNo, JsString(responseHeader.formBundleNo)) andThen
-        addDeclaration(declarationForApi, responseJson) andThen
-        addAgentIfDefined(declarationForApi.agentDetails) andThen
-        addEndDateIfDefined(declarationForApi.endDate)
+        addDeclaration(declaration, responseJson) andThen
+        addAgentIfDefined(declaration.agentDetails) andThen
+        addEndDateIfDefined(declaration.endDate)
     )
   }
 
@@ -68,10 +71,11 @@ class VariationDeclarationTransform {
 
   private def fixPersonalRepAddress(personalRepJson: JsValue, personalRepPath: JsPath) = {
     if (personalRepJson.transform((personalRepPath \ 'identification \ 'utr).json.pick).isSuccess ||
-      personalRepJson.transform((personalRepPath \ 'identification \ 'nino).json.pick).isSuccess)
+      personalRepJson.transform((personalRepPath \ 'identification \ 'nino).json.pick).isSuccess) {
       (personalRepPath \ 'identification \ 'address).json.prune
-    else
+    } else {
       __.json.pick
+    }
   }
 
   private def determinePersonalRepField(rootPath: JsPath, json: JsValue): String = {
@@ -116,13 +120,14 @@ class VariationDeclarationTransform {
     __.json.update(path.json.put(value))
 
   private def declarationAddress(agentDetails: Option[AgentDetails], responseJson: JsValue) =
-    if (agentDetails.isDefined)
+    if (agentDetails.isDefined) {
       agentDetails.get.agentAddress
-    else
+    } else {
       responseJson.transform((pathToPersonalRep \ 'identification \ 'address).json.pick) match {
         case JsSuccess(value, _) => value.as[AddressType]
         case JsError(_) => ???
       }
+    }
 
   private def addDeclaration(declarationForApi: DeclarationForApi, responseJson: JsValue) = {
     val declarationToSend = Declaration(

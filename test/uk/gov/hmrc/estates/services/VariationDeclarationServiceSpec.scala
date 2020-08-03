@@ -104,8 +104,6 @@ class VariationDeclarationServiceSpec extends WordSpec with JsonRequests with Mo
     val transformationService = mock[VariationsTransformationService]
     val auditService = mock[AuditService]
     val transformer = mock[VariationDeclarationTransform]
-    val mockCacheRepository = mock[CacheRepository]
-    val mockTransformationRepository = mock[VariationsTransformationRepository]
 
     when(desService.getEstateInfoFormBundleNo(utr)).thenReturn(Future.successful("31415900000"))
 

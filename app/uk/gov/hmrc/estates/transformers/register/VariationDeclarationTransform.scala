@@ -31,20 +31,20 @@ class VariationDeclarationTransform {
                 declaration: DeclarationForApi,
                 date: LocalDate): JsResult[JsValue] = {
 
-    val responseJson = workingDocument.getEstate
+    val amendJson = workingDocument.getEstate
     val responseHeader = workingDocument.responseHeader
 
     Logger.debug(s"[VariationDeclarationTransform] applying declaration transforms to document $workingDocument from cached $cachedDocument")
 
-    responseJson.transform(
+    amendJson.transform(
       (__ \ 'applicationType).json.prune andThen
         (__ \ 'declaration).json.prune andThen
         (__ \ 'yearsReturns).json.prune andThen
-        updateCorrespondence(responseJson) andThen
-        fixPersonalRepAddress(responseJson, pathToPersonalRep) andThen
-        addPreviousPersonalRep(responseJson, cachedDocument, date) andThen
+        updateCorrespondence(amendJson) andThen
+        fixPersonalRepAddress(amendJson, pathToPersonalRep) andThen
+        addPreviousPersonalRep(amendJson, cachedDocument, date) andThen
         putNewValue(__ \ 'reqHeader \ 'formBundleNo, JsString(responseHeader.formBundleNo)) andThen
-        addDeclaration(declaration, responseJson) andThen
+        addDeclaration(declaration, amendJson) andThen
         addAgentIfDefined(declaration.agentDetails) andThen
         addEndDateIfDefined(declaration.endDate)
     )

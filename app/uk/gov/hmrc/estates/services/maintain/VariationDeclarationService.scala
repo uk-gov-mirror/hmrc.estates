@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers.register
+package uk.gov.hmrc.estates.services.maintain
 
 import java.time.LocalDate
 
@@ -24,7 +24,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 
-class VariationDeclarationTransform {
+class VariationDeclarationService {
 
   private val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
   private val pathToPersonalRep: JsPath =  pathToEntities \ 'personalRepresentative
@@ -43,7 +43,7 @@ class VariationDeclarationTransform {
     val amendJson = workingDocument.getEstate
     val responseHeader = workingDocument.responseHeader
 
-    Logger.debug(s"[VariationDeclarationTransform] applying declaration transforms to document $workingDocument from cached $cachedDocument")
+    Logger.debug(s"[VariationDeclarationService] applying declaration transforms to document $workingDocument from cached $cachedDocument")
 
     amendJson.transform(
       (__ \ 'applicationType).json.prune andThen
@@ -101,7 +101,7 @@ class VariationDeclarationTransform {
     )).fold(
       errors => Reads(_ => JsError(errors)),
       endedJson => {
-        Logger.info(s"[VariationDeclarationTransform] Ending old personal representative")
+        Logger.info(s"[VariationDeclarationService] Ending old personal representative")
         pathToPersonalRep.json.update(of[JsArray].map { a => a :+ Json.obj(personalRepField -> endedJson) })
       })
   }
@@ -112,11 +112,11 @@ class VariationDeclarationTransform {
 
     (newPersonalRep, originalPersonalRep) match {
       case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if (newPersonalRepJson != originalPersonalRepJson) =>
-        Logger.info(s"[VariationDeclarationTransform] Personal representative has changed")
+        Logger.info(s"[VariationDeclarationService] Personal representative has changed")
         val fixPersonalRepReads = fixPersonalRepAddress(originalPersonalRepJson, __)
         originalPersonalRepJson.transform(fixPersonalRepReads) match {
           case JsSuccess(value, _) =>
-            Logger.info(s"[VariationDeclarationTransform] Restored personal representative to original state, removed address")
+            Logger.info(s"[VariationDeclarationService] Restored personal representative to original state, removed address")
             addPreviousPersonalRepAsExpiredStep(value, date)
           case e: JsError => Reads(_ => e)
         }

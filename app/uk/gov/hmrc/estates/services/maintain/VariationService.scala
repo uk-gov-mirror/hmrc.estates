@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.services
+package uk.gov.hmrc.estates.services.maintain
 
 import javax.inject.Inject
 import play.api.Logger
@@ -24,18 +24,18 @@ import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.variation.VariationResponse
-import uk.gov.hmrc.estates.transformers.register.VariationDeclarationTransform
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.JsonOps._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class VariationDeclarationService @Inject()(
+class VariationService @Inject()(
                                   desService: DesService,
                                   transformationService: VariationsTransformationService,
-                                  declarationTransformer: VariationDeclarationTransform,
+                                  declarationService: VariationDeclarationService,
                                   auditService: AuditService,
                                   localDateService: LocalDateService) {
 
@@ -50,7 +50,7 @@ class VariationDeclarationService @Inject()(
           transformationService.applyDeclarationTransformations(utr, internalId, docWithPersonalRepAddress).flatMap {
             case JsSuccess(transformedDocument, _) =>
               val response = GetEstateProcessedResponse(transformedDocument, cached.responseHeader)
-              declarationTransformer.transform(response, docWithPersonalRepAddress, declaration, localDateService.now) match {
+              declarationService.transform(response, docWithPersonalRepAddress, declaration, localDateService.now) match {
                 case JsSuccess(value, _) =>
                   Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
                   Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")

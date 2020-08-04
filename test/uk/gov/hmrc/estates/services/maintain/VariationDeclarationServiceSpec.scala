@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.transformers
+package uk.gov.hmrc.estates.services.maintain
 
 import java.time.LocalDate
 
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
-import uk.gov.hmrc.estates.transformers.register.VariationDeclarationTransform
 import uk.gov.hmrc.estates.utils.JsonUtils
 
-class VariationDeclarationTransformSpec extends FreeSpec with MustMatchers with OptionValues {
+class VariationDeclarationServiceSpec extends FreeSpec with MustMatchers with OptionValues {
 
   private val entityEnd: LocalDate = LocalDate.of(2020, 1, 30)
 
@@ -37,7 +36,7 @@ class VariationDeclarationTransformSpec extends FreeSpec with MustMatchers with 
       val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json")
       val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent.json")
-      val transformer = new VariationDeclarationTransform
+      val transformer = new VariationDeclarationService
 
       val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
       result.asOpt.value mustBe afterJson
@@ -47,7 +46,7 @@ class VariationDeclarationTransformSpec extends FreeSpec with MustMatchers with 
       val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response-org-personal-rep.json")
       val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-org-personal-rep.json")
-      val transformer = new VariationDeclarationTransform
+      val transformer = new VariationDeclarationService
 
       val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
       result.asOpt.value mustBe afterJson
@@ -66,7 +65,7 @@ class VariationDeclarationTransformSpec extends FreeSpec with MustMatchers with 
       val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json")
       val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-with-agent-details.json")
-      val transformer = new VariationDeclarationTransform
+      val transformer = new VariationDeclarationService
 
       val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
       result.asOpt.value mustBe afterJson
@@ -78,7 +77,7 @@ class VariationDeclarationTransformSpec extends FreeSpec with MustMatchers with 
       val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json")
       val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-with-end-date.json")
-      val transformer = new VariationDeclarationTransform
+      val transformer = new VariationDeclarationService
 
       val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
       result.asOpt.value mustBe afterJson

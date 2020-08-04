@@ -26,7 +26,7 @@ import uk.gov.hmrc.estates.utils.JsonUtils
 
 class VariationDeclarationTransformSpec extends FreeSpec with MustMatchers with OptionValues {
 
-  val entityEnd = LocalDate.of(2020, 1, 30)
+  private val entityEnd: LocalDate = LocalDate.of(2020, 1, 30)
 
   "the declaration transformer should" - {
 

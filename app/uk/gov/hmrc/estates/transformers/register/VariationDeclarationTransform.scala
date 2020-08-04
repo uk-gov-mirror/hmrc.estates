@@ -26,6 +26,15 @@ import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 
 class VariationDeclarationTransform {
 
+  private val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
+  private val pathToPersonalRep: JsPath =  pathToEntities \ 'personalRepresentative
+  private val pathToPersonalRepAddress = pathToPersonalRep \ 'identification \ 'address
+  private val pathToPersonalRepPhoneNumber = pathToPersonalRep \ 'phoneNumber
+  private val pathToPersonalRepCountry = pathToPersonalRepAddress \ 'country
+  private val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
+  private val pathToCorrespondencePhoneNumber = __ \ 'correspondence \ 'phoneNumber
+  private val pickPersonalRep = pathToPersonalRep.json.pick
+
   def transform(workingDocument: GetEstateProcessedResponse,
                 cachedDocument: JsValue,
                 declaration: DeclarationForApi,
@@ -50,15 +59,6 @@ class VariationDeclarationTransform {
     )
   }
 
-  private val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
-  private val pathToPersonalRep: JsPath =  pathToEntities \ 'personalRepresentative
-  private val pathToPersonalRepAddress = pathToPersonalRep \ 'identification \ 'address
-  private val pathToPersonalRepPhoneNumber = pathToPersonalRep \ 'phoneNumber
-  private val pathToPersonalRepCountry = pathToPersonalRepAddress \ 'country
-  private val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
-  private val pathToCorrespondencePhoneNumber = __ \ 'correspondence \ 'phoneNumber
-  private val pickPersonalRep = pathToPersonalRep.json.pick
-
   private def updateCorrespondence(responseJson: JsValue): Reads[JsObject] = {
     val personalRepCountry = responseJson.transform(pathToPersonalRepCountry.json.pick)
     val inUk = personalRepCountry.isError || personalRepCountry.get == JsString("GB")
@@ -70,8 +70,14 @@ class VariationDeclarationTransform {
   }
 
   private def fixPersonalRepAddress(personalRepJson: JsValue, personalRepPath: JsPath) = {
-    if (personalRepJson.transform((personalRepPath \ 'identification \ 'utr).json.pick).isSuccess ||
-      personalRepJson.transform((personalRepPath \ 'identification \ 'nino).json.pick).isSuccess) {
+
+    val hasField = (field: String) =>
+      personalRepJson.transform((personalRepPath \ "identification" \ field).json.pick).isSuccess
+
+    val hasUtr = hasField("utr")
+    val hasNino = hasField("nino")
+
+    if (hasUtr || hasNino) {
       (personalRepPath \ 'identification \ 'address).json.prune
     } else {
       __.json.pick
@@ -89,6 +95,7 @@ class VariationDeclarationTransform {
 
   private def addPreviousPersonalRepAsExpiredStep(previousPersonalRepJson: JsValue, date: LocalDate): Reads[JsObject] = {
     val personalRepField = determinePersonalRepField(__, previousPersonalRepJson)
+
     previousPersonalRepJson.transform(__.json.update(
       (__ \ 'entityEnd).json.put(Json.toJson(date))
     )).fold(
@@ -104,14 +111,13 @@ class VariationDeclarationTransform {
     val originalPersonalRep = originalJson.transform(pickPersonalRep)
 
     (newPersonalRep, originalPersonalRep) match {
-      case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _))
-        if (newPersonalRepJson != originalPersonalRepJson) =>
+      case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if (newPersonalRepJson != originalPersonalRepJson) =>
+        Logger.info(s"[VariationDeclarationTransform] ")
         val reads = fixPersonalRepAddress(originalPersonalRepJson, __)
         originalPersonalRepJson.transform(reads) match {
           case JsSuccess(value, _) => addPreviousPersonalRepAsExpiredStep(value, date)
           case e: JsError => Reads(_ => e)
         }
-
       case _ => __.json.pick[JsObject]
     }
   }

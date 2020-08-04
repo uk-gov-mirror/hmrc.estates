@@ -52,6 +52,7 @@ class VariationDeclarationService @Inject()(
               val response = GetEstateProcessedResponse(transformedDocument, cached.responseHeader)
               declarationTransformer.transform(response, docWithPersonalRepAddress, declaration, localDateService.now) match {
                 case JsSuccess(value, _) =>
+                  Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
                   Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")
                   doSubmit(value, internalId)
                 case e : JsError =>

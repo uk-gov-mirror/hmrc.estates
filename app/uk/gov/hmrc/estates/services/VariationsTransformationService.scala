@@ -44,7 +44,7 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
       repository.set(utr, internalId, newTransforms)
     } recoverWith {
       case e =>
-        Logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
+        Logger.error(s"[TransformationService] utr $utr exception adding new transform: ${e.getMessage}")
         Future.failed(e)
     }
   }
@@ -83,7 +83,7 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
   def applyDeclarationTransformations(utr: String, internalId: String, json: JsValue)(implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
     repository.get(utr, internalId).map {
       case None =>
-        Logger.info(s"[VariationsTransformationService] no transformations to apply")
+        Logger.info(s"[VariationsTransformationService] utr $utr no transformations to apply")
         JsSuccess(json)
       case Some(transformations) =>
 
@@ -99,11 +99,11 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
 
         for {
           initial <- {
-            Logger.info(s"[VariationsTransformationService] applying transformations")
+            Logger.info(s"[VariationsTransformationService] utr $utr applying transformations")
             transformations.applyTransform(json)
           }
           transformed <- {
-            Logger.info(s"[VariationsTransformationService] applying declaration transformations")
+            Logger.info(s"[VariationsTransformationService] utr $utr applying declaration transformations")
             transformations.applyDeclarationTransform(initial)
           }
         } yield transformed

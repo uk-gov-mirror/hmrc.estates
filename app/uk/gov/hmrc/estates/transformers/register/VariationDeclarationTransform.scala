@@ -124,8 +124,7 @@ class VariationDeclarationTransform {
     }
   }
 
-  private def putNewValue(path: JsPath, value: JsValue ): Reads[JsObject] =
-    __.json.update(path.json.put(value))
+  private def putNewValue(path: JsPath, value: JsValue ): Reads[JsObject] = __.json.update(path.json.put(value))
 
   private def declarationAddress(agentDetails: Option[AgentDetails], responseJson: JsValue) =
     if (agentDetails.isDefined) {

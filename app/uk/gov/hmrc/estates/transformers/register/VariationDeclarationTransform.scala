@@ -101,8 +101,8 @@ class VariationDeclarationTransform {
     )).fold(
       errors => Reads(_ => JsError(errors)),
       endedJson => {
-        pathToPersonalRep.json.update(of[JsArray]
-          .map { a => a :+ Json.obj(personalRepField -> endedJson) })
+        Logger.info(s"[VariationDeclarationTransform] Ending old personal representative")
+        pathToPersonalRep.json.update(of[JsArray].map { a => a :+ Json.obj(personalRepField -> endedJson) })
       })
   }
 
@@ -112,10 +112,12 @@ class VariationDeclarationTransform {
 
     (newPersonalRep, originalPersonalRep) match {
       case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if (newPersonalRepJson != originalPersonalRepJson) =>
-        Logger.info(s"[VariationDeclarationTransform] ")
-        val reads = fixPersonalRepAddress(originalPersonalRepJson, __)
-        originalPersonalRepJson.transform(reads) match {
-          case JsSuccess(value, _) => addPreviousPersonalRepAsExpiredStep(value, date)
+        Logger.info(s"[VariationDeclarationTransform] Personal representative has changed")
+        val fixPersonalRepReads = fixPersonalRepAddress(originalPersonalRepJson, __)
+        originalPersonalRepJson.transform(fixPersonalRepReads) match {
+          case JsSuccess(value, _) =>
+            Logger.info(s"[VariationDeclarationTransform] Restored personal representative to original state, removed address")
+            addPreviousPersonalRepAsExpiredStep(value, date)
           case e: JsError => Reads(_ => e)
         }
       case _ => __.json.pick[JsObject]

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.services.amend
+package uk.gov.hmrc.estates.services.maintain
 
 import javax.inject.Inject
 import uk.gov.hmrc.estates.models.Success
@@ -30,8 +30,10 @@ class PersonalRepTransformationService @Inject()(transformationService: Variatio
 
   def addAmendPersonalRepTransformer(utr: String, internalId: String, newPersonalRep: PersonalRepresentativeType): Future[Success.type] = {
     transformationService.addNewTransform(utr, internalId, newPersonalRep match {
-      case PersonalRepresentativeType(Some(personalRepInd), None) => AddAmendIndividualPersonalRepTransform(personalRepInd)
-      case PersonalRepresentativeType(None, Some(personalRepOrg)) => AddAmendBusinessPersonalRepTransform(personalRepOrg)
+      case PersonalRepresentativeType(Some(personalRepInd), None) =>
+        AddAmendIndividualPersonalRepTransform(personalRepInd)
+      case PersonalRepresentativeType(None, Some(personalRepOrg)) =>
+        AddAmendBusinessPersonalRepTransform(personalRepOrg)
     }).map(_ => Success)
   }
 

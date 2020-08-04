@@ -23,14 +23,15 @@ import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, VariationsResponseHandler}
 import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.auditing.Auditing
-import uk.gov.hmrc.estates.services.{AuditService, VariationDeclarationService}
+import uk.gov.hmrc.estates.services.AuditService
+import uk.gov.hmrc.estates.services.maintain.VariationService
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class EstateVariationsController @Inject()(
                                             identify: IdentifierAction,
                                             auditService: AuditService,
-                                            variationService: VariationDeclarationService,
+                                            variationService: VariationService,
                                             responseHandler: VariationsResponseHandler
                                           )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.services
+package uk.gov.hmrc.estates.services.maintain
 
 import java.time.LocalDate
 
@@ -30,14 +30,13 @@ import uk.gov.hmrc.estates.exceptions.EtmpCacheDataStaleException
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, ResponseHeader}
 import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
-import uk.gov.hmrc.estates.repositories.{CacheRepository, VariationsTransformationRepository}
-import uk.gov.hmrc.estates.transformers.register.VariationDeclarationTransform
+import uk.gov.hmrc.estates.services._
 import uk.gov.hmrc.estates.utils.JsonRequests
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class VariationDeclarationServiceSpec extends WordSpec with JsonRequests with MockitoSugar with ScalaFutures with MustMatchers with GuiceOneAppPerSuite {
+class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar with ScalaFutures with MustMatchers with GuiceOneAppPerSuite {
 
   private implicit  val hc: HeaderCarrier = new HeaderCarrier
   private val formBundleNo = "001234567890"
@@ -48,15 +47,13 @@ class VariationDeclarationServiceSpec extends WordSpec with JsonRequests with Mo
   private val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
   private val transformedJson = Json.obj("field" -> "value")
 
-  private val declaration = DeclarationName(
-    NameType("Handy", None, "Andy")
-  )
+  private val declarationName = DeclarationName(NameType("Handy", None, "Andy"))
+
+  private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None, None)
 
   object LocalDateServiceStub extends LocalDateService {
     override def now: LocalDate = LocalDate.of(1999, 3, 14)
   }
-
-  val declarationForApi = DeclarationForApi(declaration, None, None)
 
   "Declare no change" should {
 
@@ -66,34 +63,46 @@ class VariationDeclarationServiceSpec extends WordSpec with JsonRequests with Mo
 
       val variationsTransformationService = mock[VariationsTransformationService]
       val auditService = app.injector.instanceOf[FakeAuditService]
-      val transformer = mock[VariationDeclarationTransform]
+      val transformer = mock[VariationDeclarationService]
 
-      when(variationsTransformationService.populatePersonalRepAddress(any[JsValue])).thenReturn(JsSuccess(estateInfoJson))
-      when(variationsTransformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier])).thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
-      when(desService.getEstateInfoFormBundleNo(utr)).thenReturn(Future.successful(formBundleNo))
+      when(variationsTransformationService.populatePersonalRepAddress(any[JsValue]))
+        .thenReturn(JsSuccess(estateInfoJson))
+
+      when(variationsTransformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier]))
+        .thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
+
+      when(desService.getEstateInfoFormBundleNo(utr))
+        .thenReturn(Future.successful(formBundleNo))
 
       val response = GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))
 
-      when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]())).thenReturn(Future.successful(
-        response
-      ))
+      when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(response))
 
-      when(desService.estateVariation(any())(any[HeaderCarrier])).thenReturn(Future.successful(
-        VariationResponse("TVN34567890")
-      ))
+      when(transformer.transform(any(),any(),any(),any()))
+        .thenReturn(JsSuccess(transformedJson))
 
-      when(transformer.transform(any(),any(),any(),any())).thenReturn(JsSuccess(transformedJson))
+      when(desService.estateVariation(any())(any[HeaderCarrier]))
+        .thenReturn(Future.successful(VariationResponse("TVN34567890")))
 
-      val OUT = new VariationDeclarationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
+      val OUT = new VariationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
 
       val transformedResponse = GetEstateProcessedResponse(transformedEtmpResponseJson, ResponseHeader("Processed", formBundleNo))
 
-      whenReady(OUT.submitDeclaration(utr, internalId, declarationForApi)) { variationResponse => {
+      whenReady(OUT.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
+
         variationResponse mustBe VariationResponse("TVN34567890")
-        verify(variationsTransformationService, times( 1)).applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
-        verify(transformer, times(1)).transform(equalTo(transformedResponse), equalTo(response.getEstate), equalTo(declarationForApi), any())
+
+        verify(variationsTransformationService, times( 1))
+          .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
+
+        verify(transformer, times(1))
+          .transform(equalTo(transformedResponse), equalTo(response.getEstate), equalTo(declaration), any())
+
         val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
+
         verify(desService, times(1)).estateVariation(arg.capture())(any[HeaderCarrier])
+
         arg.getValue mustBe transformedJson
       }}
     }
@@ -103,29 +112,29 @@ class VariationDeclarationServiceSpec extends WordSpec with JsonRequests with Mo
     val desService = mock[DesService]
     val transformationService = mock[VariationsTransformationService]
     val auditService = mock[AuditService]
-    val transformer = mock[VariationDeclarationTransform]
-    val mockCacheRepository = mock[CacheRepository]
-    val mockTransformationRepository = mock[VariationsTransformationRepository]
+    val transformer = mock[VariationDeclarationService]
 
-    when(desService.getEstateInfoFormBundleNo(utr)).thenReturn(Future.successful("31415900000"))
+    when(desService.getEstateInfoFormBundleNo(utr))
+      .thenReturn(Future.successful("31415900000"))
 
-    when(transformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier])).thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
+    when(transformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier]))
+      .thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
 
-    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]())).thenReturn(Future.successful(
-      GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))
-    ))
+    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+      .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))))
 
-    when(desService.estateVariation(any())(any[HeaderCarrier])).thenReturn(Future.successful(
-      VariationResponse("TVN34567890")
-    ))
+    when(desService.estateVariation(any())(any[HeaderCarrier]))
+      .thenReturn(Future.successful(VariationResponse("TVN34567890")))
 
-    when(transformer.transform(any(),any(),any(),any())).thenReturn(JsSuccess(transformedJson))
+    when(transformer.transform(any(),any(),any(),any()))
+      .thenReturn(JsSuccess(transformedJson))
 
-    val OUT = new VariationDeclarationService(desService, transformationService, transformer, auditService, LocalDateServiceStub)
+    val OUT = new VariationService(desService, transformationService, transformer, auditService, LocalDateServiceStub)
 
-    whenReady(OUT.submitDeclaration(utr, internalId, declarationForApi).failed) { exception => {
+    whenReady(OUT.submitDeclaration(utr, internalId, declaration).failed) { exception =>
+
       exception mustBe an[EtmpCacheDataStaleException.type]
       verify(desService, times(0)).estateVariation(any())(any[HeaderCarrier])
-    }}
+    }
   }
 }

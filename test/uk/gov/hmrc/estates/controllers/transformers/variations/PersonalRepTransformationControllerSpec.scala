@@ -30,7 +30,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.controllers.actions.FakeIdentifierAction
 import uk.gov.hmrc.estates.models.variation.{EstatePerRepIndType, PersonalRepresentativeType}
 import uk.gov.hmrc.estates.models.{IdentificationType, NameType, Success}
-import uk.gov.hmrc.estates.services.amend.PersonalRepTransformationService
+import uk.gov.hmrc.estates.services.maintain.PersonalRepTransformationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

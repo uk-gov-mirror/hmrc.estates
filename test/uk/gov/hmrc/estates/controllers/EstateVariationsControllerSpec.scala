@@ -33,7 +33,8 @@ import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, Variations
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
-import uk.gov.hmrc.estates.services.{AuditService, DesService, ValidationService, VariationDeclarationService}
+import uk.gov.hmrc.estates.services.maintain.VariationService
+import uk.gov.hmrc.estates.services.{AuditService, DesService, ValidationService}
 import uk.gov.hmrc.estates.utils.Headers
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -52,7 +53,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
   val auditService = new AuditService(mockAuditConnector, mockConfig)
   val validationService = new ValidationService()
 
-  val mockVariationService = mock[VariationDeclarationService]
+  val mockVariationService = mock[VariationService]
 
   val responseHandler = new VariationsResponseHandler(mockAuditService)
 

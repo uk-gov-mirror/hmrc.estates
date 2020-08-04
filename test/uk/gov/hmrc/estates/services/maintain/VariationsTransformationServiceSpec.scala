@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.services
+package uk.gov.hmrc.estates.services.maintain
 
 import java.time.LocalDate
 
@@ -24,11 +24,12 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{FreeSpec, MustMatchers}
-import play.api.libs.json.{JsResult, JsValue, Json}
+import play.api.libs.json.{JsResult, JsValue}
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
-import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
+import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepositoryImpl
+import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
 import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}

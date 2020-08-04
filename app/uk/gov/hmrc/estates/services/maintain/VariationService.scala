@@ -45,12 +45,16 @@ class VariationService @Inject()(
                        (implicit hc: HeaderCarrier): Future[VariationResponse] = {
 
     getCachedEstateData(utr, internalId).flatMap { cached: GetEstateProcessedResponse =>
-      transformationService.populatePersonalRepAddress(cached.getEstate) match {
-        case JsSuccess(docWithPersonalRepAddress, _) =>
-          transformationService.applyDeclarationTransformations(utr, internalId, docWithPersonalRepAddress).flatMap {
+
+      val cachedEstate = cached.getEstate
+      val responseHeader = cached.responseHeader
+
+      transformationService.populatePersonalRepAddress(cachedEstate) match {
+        case JsSuccess(cachedWithAmendedPerRepAddress, _) =>
+          transformationService.applyDeclarationTransformations(utr, internalId, cachedWithAmendedPerRepAddress).flatMap {
             case JsSuccess(transformedDocument, _) =>
-              val response = GetEstateProcessedResponse(transformedDocument, cached.responseHeader)
-              declarationService.transform(response, docWithPersonalRepAddress, declaration, localDateService.now) match {
+              val transformedWithHeader = GetEstateProcessedResponse(transformedDocument, responseHeader)
+              declarationService.transform(transformedWithHeader, cachedWithAmendedPerRepAddress, declaration, localDateService.now) match {
                 case JsSuccess(value, _) =>
                   Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
                   Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")

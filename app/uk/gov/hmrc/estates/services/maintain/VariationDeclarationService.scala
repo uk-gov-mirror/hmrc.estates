@@ -26,14 +26,16 @@ import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 
 class VariationDeclarationService {
 
-  private val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
-  private val pathToPersonalRep: JsPath =  pathToEntities \ 'personalRepresentative
-  private val pathToPersonalRepAddress = pathToPersonalRep \ 'identification \ 'address
-  private val pathToPersonalRepPhoneNumber = pathToPersonalRep \ 'phoneNumber
-  private val pathToPersonalRepCountry = pathToPersonalRepAddress \ 'country
-  private val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
-  private val pathToCorrespondencePhoneNumber = __ \ 'correspondence \ 'phoneNumber
-  private val pickPersonalRep = pathToPersonalRep.json.pick
+  private lazy val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
+  private lazy val pathToPersonalRep: JsPath = pathToEntities \ 'personalRepresentative
+  private lazy val pathToPersonalRepAddress = pathToPersonalRep \ 'identification \ 'address
+  private lazy val pathToPersonalRepPhoneNumber = pathToPersonalRep \ 'phoneNumber
+  private lazy val pathToPersonalRepCountry = pathToPersonalRepAddress \ 'country
+  private lazy val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
+  private lazy val pathToCorrespondencePhoneNumber = __ \ 'correspondence \ 'phoneNumber
+  private lazy val pickPersonalRep = pathToPersonalRep.json.pick
+  private lazy val declarationPath = __ \ 'declaration
+  private lazy val agentPath = __ \ 'agentDetails
 
   def transform(workingDocument: GetEstateProcessedResponse,
                 cachedDocument: JsValue,
@@ -50,8 +52,9 @@ class VariationDeclarationService {
         (__ \ 'declaration).json.prune andThen
         (__ \ 'yearsReturns).json.prune andThen
         updateCorrespondence(amendJson) andThen
-        fixPersonalRepAddress(amendJson, pathToPersonalRep) andThen
-        addPreviousPersonalRep(amendJson, cachedDocument, date) andThen
+        removePersonalRepAddressIfHasNinoOrUtr(amendJson, pathToPersonalRep) andThen
+        convertPersonalRepresentativeToArray(amendJson) andThen
+        endPreviousPersonalRepIfChanged(amendJson, cachedDocument, date) andThen
         putNewValue(__ \ 'reqHeader \ 'formBundleNo, JsString(responseHeader.formBundleNo)) andThen
         addDeclaration(declaration, amendJson) andThen
         addAgentIfDefined(declaration.agentDetails) andThen
@@ -69,7 +72,12 @@ class VariationDeclarationService {
       __.json.update(pathToCorrespondencePhoneNumber.json.copyFrom(pathToPersonalRepPhoneNumber.json.pick))
   }
 
-  private def fixPersonalRepAddress(personalRepJson: JsValue, personalRepPath: JsPath) = {
+  private def convertPersonalRepresentativeToArray(json: JsValue): Reads[JsObject] = {
+    pathToPersonalRep.json.update(of[JsObject]
+      .map{ a => Json.arr(Json.obj(determinePersonalRepField(pathToPersonalRep, json) -> a )) })
+  }
+
+  private def removePersonalRepAddressIfHasNinoOrUtr(personalRepJson: JsValue, personalRepPath: JsPath) = {
 
     val hasField = (field: String) =>
       personalRepJson.transform((personalRepPath \ "identification" \ field).json.pick).isSuccess
@@ -96,31 +104,40 @@ class VariationDeclarationService {
   private def addPreviousPersonalRepAsExpiredStep(previousPersonalRepJson: JsValue, date: LocalDate): Reads[JsObject] = {
     val personalRepField = determinePersonalRepField(__, previousPersonalRepJson)
 
-    previousPersonalRepJson.transform(__.json.update(
+    previousPersonalRepJson.transform(__.json.update {
+      Logger.info(s"[VariationDeclarationService] setting end date on original personal representative")
       (__ \ 'entityEnd).json.put(Json.toJson(date))
-    )).fold(
-      errors => Reads(_ => JsError(errors)),
+    }).fold(
+      errors => {
+        Logger.error(s"[VariationDeclarationService] unable to set end date on original personal representative")
+        Reads(_ => JsError(errors))
+      },
       endedJson => {
-        Logger.info(s"[VariationDeclarationService] Ending old personal representative")
-        pathToPersonalRep.json.update(of[JsArray].map { a => a :+ Json.obj(personalRepField -> endedJson) })
+        Logger.info(s"[VariationDeclarationService] ended old personal representative, adding them to personal representative array")
+        pathToPersonalRep.json.update(of[JsArray]
+          .map { a => a :+ Json.obj(personalRepField -> endedJson) })
       })
   }
 
-  private def addPreviousPersonalRep(newJson: JsValue, originalJson: JsValue, date: LocalDate): Reads[JsObject] = {
+  private def endPreviousPersonalRepIfChanged(newJson: JsValue, originalJson: JsValue, date: LocalDate): Reads[JsObject] = {
     val newPersonalRep = newJson.transform(pickPersonalRep)
     val originalPersonalRep = originalJson.transform(pickPersonalRep)
 
     (newPersonalRep, originalPersonalRep) match {
       case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if (newPersonalRepJson != originalPersonalRepJson) =>
         Logger.info(s"[VariationDeclarationService] Personal representative has changed")
-        val fixPersonalRepReads = fixPersonalRepAddress(originalPersonalRepJson, __)
+        val fixPersonalRepReads = removePersonalRepAddressIfHasNinoOrUtr(originalPersonalRepJson, __)
         originalPersonalRepJson.transform(fixPersonalRepReads) match {
           case JsSuccess(value, _) =>
             Logger.info(s"[VariationDeclarationService] Restored personal representative to original state, removed address")
             addPreviousPersonalRepAsExpiredStep(value, date)
-          case e: JsError => Reads(_ => e)
+          case e: JsError =>
+            Logger.error(s"[VariationDeclarationService] Unable to restore personal representative to original state")
+            Reads(_ => e)
         }
-      case _ => __.json.pick[JsObject]
+      case _ =>
+        Logger.info(s"[VariationDeclarationService] Personal representative has not changed")
+        __.json.pick[JsObject]
     }
   }
 
@@ -141,12 +158,12 @@ class VariationDeclarationService {
       declarationForApi.declaration.name,
       declarationAddress(declarationForApi.agentDetails, responseJson)
     )
-    putNewValue(__ \ 'declaration, Json.toJson(declarationToSend))
+    putNewValue(declarationPath, Json.toJson(declarationToSend))
   }
 
   private def addAgentIfDefined(agentDetails: Option[AgentDetails]) = if (agentDetails.isDefined) {
     __.json.update(
-      (__ \ 'agentDetails).json.put(Json.toJson(agentDetails.get))
+      (agentPath).json.put(Json.toJson(agentDetails.get))
     )
   } else {
     __.json.pick[JsObject]

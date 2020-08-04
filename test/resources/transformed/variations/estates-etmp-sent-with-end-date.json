@@ -1,67 +1,71 @@
 {
-  "reqHeader":{
-    "formBundleNo":"1"
+  "reqHeader": {
+    "formBundleNo": "1"
   },
   "trustEndDate": "2019-02-03",
-  "correspondence":{
-    "address":{
-      "line1":"Address line 1",
-      "line2":"Town or city",
-      "postCode":"Z99 2YY",
-      "country":"GB"
+  "correspondence": {
+    "address": {
+      "line1": "Address line 1",
+      "line2": "Town or city",
+      "postCode": "Z99 2YY",
+      "country": "GB"
     },
-    "phoneNumber":"078888888",
-    "name":"Estates 02",
-    "abroadIndicator":false
+    "phoneNumber": "078888888",
+    "name": "Estates 02",
+    "abroadIndicator": false
   },
-  "details":{
-    "estate":{
-      "administrationEndDate":"2017-06-01",
-      "entities":{
-        "deceased":{
-          "lineNo":"1",
-          "bpMatchStatus":"01",
-          "entityStart":"2017-02-28",
-          "name":{
-            "firstName":"Wilbert",
-            "lastName":"Jefferies"
+  "details": {
+    "estate": {
+      "administrationEndDate": "2017-06-01",
+      "entities": {
+        "deceased": {
+          "lineNo": "1",
+          "bpMatchStatus": "01",
+          "entityStart": "2017-02-28",
+          "name": {
+            "firstName": "Wilbert",
+            "lastName": "Jefferies"
           },
-          "dateOfDeath":"2016-04-06",
-          "identification":{
-            "nino":"JS123456A"
+          "dateOfDeath": "2016-04-06",
+          "identification": {
+            "nino": "JS123456A"
           }
         },
-        "personalRepresentative":{
-          "lineNo":"1",
-          "phoneNumber":"078888888",
-          "identification":{
-            "nino":"JS123456A"
-          },
-          "entityStart":"2017-02-28",
-          "bpMatchStatus":"01",
-          "name":{
-            "firstName":"Alister",
-            "lastName":"Mc'Govern"
-          },
-          "dateOfBirth":"1980-06-01"
-        }
+        "personalRepresentative": [
+          {
+            "estatePerRepInd": {
+              "lineNo": "1",
+              "phoneNumber": "078888888",
+              "identification": {
+                "nino": "JS123456A"
+              },
+              "entityStart": "2017-02-28",
+              "bpMatchStatus": "01",
+              "name": {
+                "firstName": "Alister",
+                "lastName": "Mc'Govern"
+              },
+              "dateOfBirth": "1980-06-01"
+            }
+          }
+        ]
       },
-      "periodTaxDues":"01"
+      "periodTaxDues": "01"
     }
   },
-  "declaration":{
-    "name":{
-      "firstName":"First",
-      "lastName":"Last"
+  "declaration": {
+    "name": {
+      "firstName": "First",
+      "lastName": "Last"
     },
-    "address":{
-      "line1":"Address line 1",
-      "line2":"Town or city",
-      "postCode":"Z99 2YY",
-      "country":"GB"
+    "address": {
+      "line1": "Address line 1",
+      "line2": "Town or city",
+      "postCode": "Z99 2YY",
+      "country": "GB"
     }
   },
-  "matchData":{
-    "utr":"2000000000"
+  "matchData": {
+    "utr": "2000000000"
   }
 }

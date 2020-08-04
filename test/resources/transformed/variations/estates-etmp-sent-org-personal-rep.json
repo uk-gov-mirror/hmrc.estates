@@ -30,16 +30,20 @@
             "nino":"JS123456A"
           }
         },
-        "personalRepresentative":{
-          "lineNo":"1",
-          "bpMatchStatus":"01",
-          "entityStart": "2017-02-28",
-          "orgName": "Business Name",
-          "identification": {
-            "utr": "1234567890"
-          },
-          "phoneNumber": "078888888"
-        }
+        "personalRepresentative": [
+          {
+            "estatePerRepOrg": {
+              "lineNo":"1",
+              "bpMatchStatus":"01",
+              "entityStart": "2017-02-28",
+              "orgName": "Business Name",
+              "identification": {
+                "utr": "1234567890"
+              },
+              "phoneNumber": "078888888"
+            }
+          }
+        ]
       },
       "periodTaxDues":"01"
     }

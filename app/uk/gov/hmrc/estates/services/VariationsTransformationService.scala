@@ -28,12 +28,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class VariationsTransformationService @Inject()(repository: VariationsTransformationRepository,
+class VariationsTransformationService @Inject()(transformRepository: VariationsTransformationRepository,
                                                 desService: DesService,
                                                 auditService: AuditService){
 
   def addNewTransform(utr: String, internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
-    repository.get(utr, internalId) map {
+    transformRepository.get(utr, internalId) map {
       case None =>
         ComposedDeltaTransform(Seq(newTransform))
 
@@ -41,7 +41,7 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
         composedTransform :+ newTransform
 
     } flatMap { newTransforms =>
-      repository.set(utr, internalId, newTransforms)
+      transformRepository.set(utr, internalId, newTransforms)
     } recoverWith {
       case e =>
         Logger.error(s"[TransformationService] utr $utr exception adding new transform: ${e.getMessage}")
@@ -50,10 +50,10 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
   }
 
   def getTransformations(utr: String, internalId: String): Future[Option[ComposedDeltaTransform]] =
-    repository.get(utr, internalId)
+    transformRepository.get(utr, internalId)
 
   def removeAllTransformations(utr: String, internalId: String): Future[Option[JsObject]] =
-    repository.resetCache(utr, internalId)
+    transformRepository.resetCache(utr, internalId)
 
   def getTransformedData(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     desService.getEstateInfo(utr, internalId).flatMap {
@@ -72,7 +72,7 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
   }
 
   private def applyTransformations(utr: String, internalId: String, json: JsValue)(implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
-    repository.get(utr, internalId).map {
+    transformRepository.get(utr, internalId).map {
       case None =>
         JsSuccess(json)
       case Some(transformations) =>
@@ -80,8 +80,10 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
     }
   }
 
-  def applyDeclarationTransformations(utr: String, internalId: String, json: JsValue)(implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
-    repository.get(utr, internalId).map {
+  def applyDeclarationTransformations(utr: String, internalId: String, json: JsValue)
+                                     (implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
+
+    transformRepository.get(utr, internalId).map {
       case None =>
         Logger.info(s"[VariationsTransformationService] utr $utr no transformations to apply")
         JsSuccess(json)
@@ -96,6 +98,8 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
             "data" -> json
           )
         )
+
+        Logger.debug(s"[VariationsTransformationService] utr $utr applying the following transforms $transformations")
 
         for {
           initial <- {
@@ -114,8 +118,10 @@ class VariationsTransformationService @Inject()(repository: VariationsTransforma
     val pathToPersonalRepAddress = __ \ 'details \ 'estate \ 'entities \ 'personalRepresentative \ 'identification \ 'address
 
     if (beforeJson.transform(pathToPersonalRepAddress.json.pick).isSuccess) {
+      Logger.info(s"[VariationTransformationService] record already has an address for the personal representative, not modifying")
       JsSuccess(beforeJson)
     } else {
+      Logger.info(s"[VariationTransformationService] record does not have an address for personal rep, adding one from correspondence")
       val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
       val copyAddress = __.json.update(pathToPersonalRepAddress.json.copyFrom(pathToCorrespondenceAddress.json.pick))
       beforeJson.transform(copyAddress)

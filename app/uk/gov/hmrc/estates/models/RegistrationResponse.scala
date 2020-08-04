@@ -31,11 +31,14 @@ object RegistrationTrnResponse {
   implicit val formats: OFormat[RegistrationTrnResponse] = Json.format[RegistrationTrnResponse]
 }
 
-case class RegistrationFailureResponse(status: Int, code: String, message: String) extends RegistrationResponse
+case class RegistrationFailureResponse(status: Int, code: String="", message: String="") extends RegistrationResponse
 
 object RegistrationFailureResponse {
   implicit val formats: OFormat[RegistrationFailureResponse] = Json.format[RegistrationFailureResponse]
 }
+
+object AlreadyRegisteredResponse extends RegistrationFailureResponse(FORBIDDEN, ALREADY_REGISTERED_CODE, ALREADY_REGISTERED_ESTATE_MESSAGE)
+object NoMatchResponse extends RegistrationFailureResponse(FORBIDDEN, NO_MATCH_CODE, NO_MATCH_MESSAGE)
 
 object RegistrationResponse {
 
@@ -61,21 +64,17 @@ object RegistrationResponse {
             response.json.asOpt[DesErrorResponse] match {
               case Some(desReponse) if desReponse.code == ALREADY_REGISTERED_CODE =>
                 Logger.info(s"[RegistrationTrustResponse] already registered response from des.")
-                throw AlreadyRegisteredException
+                AlreadyRegisteredResponse
               case Some(desReponse) if desReponse.code == NO_MATCH_CODE =>
                 Logger.info(s"[RegistrationTrustResponse] No match response from des.")
-                throw NoMatchException
+                NoMatchResponse
+              case Some(desResponse) =>
+                RegistrationFailureResponse(response.status, desResponse.code, desResponse.reason)
               case _ =>
                 Logger.error("[RegistrationTrustResponse] Forbidden response from des.")
-                throw InternalServerErrorException("Forbidden response from des.")
+                RegistrationFailureResponse(response.status)
             }
-          case BAD_REQUEST =>
-            throw BadRequestException
-          case SERVICE_UNAVAILABLE =>
-            Logger.error("[RegistrationTrustResponse] Service unavailable response from des.")
-            throw ServiceNotAvailableException("Des dependent service is down.")
-          case status =>
-            throw InternalServerErrorException(s"Error response from des $status body: ${response.body}")
+          case _ => RegistrationFailureResponse(response.status)
         }
       }
     }

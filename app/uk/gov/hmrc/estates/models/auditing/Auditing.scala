@@ -18,6 +18,11 @@ package uk.gov.hmrc.estates.models.auditing
 
 object Auditing {
 
+  val GET_REGISTRATION = "GetRegistration"
+  val REGISTRATION_TRANSFORMS = "RegistrationTransformations"
+  val REGISTRATION_SUBMITTED = "RegistrationSubmitted"
+  val REGISTRATION_SUBMISSION_FAILED = "RegistrationSubmissionFailed"
+
   val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
 
   val GET_ESTATE = "GetEstate"

@@ -22,7 +22,7 @@ import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
-import uk.gov.hmrc.estates.models.{EstateRegistration, ExistingCheckRequest, RegistrationTrnResponse, SubscriptionIdResponse}
+import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, EstateRegistration, ExistingCheckRequest, NoMatchResponse, RegistrationFailureResponse, RegistrationTrnResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.estates.utils.JsonRequests
 
 class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
@@ -158,8 +158,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         val futureResult = connector.registerEstate(estateRegRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe BadRequestException
+        whenReady(futureResult) {
+          result => result mustBe RegistrationFailureResponse(BAD_REQUEST)
         }
       }
     }
@@ -171,8 +171,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponseAlreadyRegistered))
         val futureResult = connector.registerEstate(estateRegRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe AlreadyRegisteredException
+        whenReady(futureResult) {
+          result => result mustBe AlreadyRegisteredResponse
         }
       }
     }
@@ -184,8 +184,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponse403NoMatch))
         val futureResult = connector.registerEstate(estateRegRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe NoMatchException
+        whenReady(futureResult) {
+          result => result mustBe NoMatchResponse
         }
       }
     }
@@ -196,8 +196,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, "/estates/registration", requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
         val futureResult = connector.registerEstate(estateRegRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe an[ServiceNotAvailableException]
+        whenReady(futureResult) {
+          result => result mustBe RegistrationFailureResponse(SERVICE_UNAVAILABLE)
         }
       }
     }
@@ -210,8 +210,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         val futureResult = connector.registerEstate(estateRegRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe an[InternalServerErrorException]
+        whenReady(futureResult) {
+          result => result mustBe RegistrationFailureResponse(INTERNAL_SERVER_ERROR)
         }
       }
     }
@@ -223,8 +223,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, "{}")
         val futureResult = connector.registerEstate(estateRegRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe an[InternalServerErrorException]
+        whenReady(futureResult) {
+          result => result mustBe RegistrationFailureResponse(FORBIDDEN)
         }
       }
     }

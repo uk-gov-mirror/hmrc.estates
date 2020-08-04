@@ -20,6 +20,7 @@ import javax.inject.Inject
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.models.auditing.{EstateRegistrationSubmissionAuditEvent, GetTrustOrEstateAuditEvent}
+import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.models.{EstateRegistration, RegistrationResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -83,5 +84,31 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       internalId = internalId,
       response = response
     )
+  }
+
+  def auditTransformationError(
+                                            eventName: String,
+                                            data: JsValue = Json.obj(),
+                                            transforms: JsValue = Json.obj(),
+                                            errorReason: String = "",
+                                            jsErrors: String = ""
+                                          )(implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+    val requestData = Json.obj(
+      "data" -> data,
+      "transformations" -> transforms
+    )
+
+    val responseData = Json.obj(
+      "errorReason" -> errorReason,
+      "jsErrors" -> jsErrors
+    )
+
+    audit(
+      event = eventName,
+      request = requestData,
+      internalId = request.identifier,
+      response = responseData
+    )
+
   }
 }

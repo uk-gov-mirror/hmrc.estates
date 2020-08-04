@@ -72,8 +72,6 @@ class RegistrationService @Inject()(repository: TransformationRepository,
     repository.get(request.identifier) flatMap {
       case Some(transforms) =>
 
-        auditService.audit(Auditing.REGISTRATION_TRANSFORMS, Json.obj("transformations" -> transforms.deltaTransforms), request.identifier)
-
         buildSubmissionFromTransforms(declaration.name, transforms) match {
           case JsSuccess(json, _) =>
 
@@ -81,26 +79,28 @@ class RegistrationService @Inject()(repository: TransformationRepository,
               case Some(payload) =>
                 submitAndAuditResponse(payload)
               case None =>
-                auditService.auditErrorResponse(
-                  Auditing.REGISTRATION_SUBMISSION_FAILED,
-                  json,
-                  request.identifier,
-                  "Unable to parse transformed json as EstateRegistration"
+                auditService.auditTransformationError(
+                  Auditing.REGISTRATION_PREPARATION_FAILED,
+                  data = json,
+                  transforms = Json.toJson(transforms),
+                  errorReason = "Unable to parse transformed json as EstateRegistration"
                 )
                 Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration"))
             }
           case JsError(errors) =>
-            auditService.audit(Auditing.REGISTRATION_SUBMISSION_FAILED, Json.toJson(transforms), request.identifier, JsError.toJson(errors))
+            auditService.auditTransformationError(
+              Auditing.REGISTRATION_PREPARATION_FAILED,
+              transforms = Json.toJson(transforms),
+              errorReason = "Unable to build json from transforms",
+              jsErrors = errors.toString())
 
             Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
         }
       case None =>
-        auditService.auditErrorResponse(
-          Auditing.REGISTRATION_SUBMISSION_FAILED,
-          Json.toJson(declaration),
-          request.identifier,
-          "Unable to submit registration due to there being no transforms"
-        )
+        auditService.auditTransformationError(
+          Auditing.REGISTRATION_PREPARATION_FAILED,
+          errorReason = "Unable to submit registration due to there being no transforms")
+
         Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
     }
   }
@@ -109,7 +109,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                     (implicit request: IdentifierRequest[_], hc: HeaderCarrier) : Future[RegistrationResponse] = {
     desService.registerEstate(payload) map {
       case r@RegistrationTrnResponse(trn) =>
-        auditService.audit(Auditing.REGISTRATION_SUBMITTED,
+        auditService.audit(Auditing.REGISTRATION_SUBMITTED_BY_AGENT,
           Json.toJson(payload),
           request.identifier,
           Json.obj("trn" -> trn)

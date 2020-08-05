@@ -56,7 +56,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
             }
           case JsError(errors) =>
             val reason = "Unable to build json from transforms"
-            auditService.auditRegistrationGetFailed(transforms, reason)
+            auditService.auditRegistrationGetFailed(transforms, reason, errors.toString)
             Future.failed(new RuntimeException(s"$reason: $errors"))
         }
       case None =>

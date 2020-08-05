@@ -74,7 +74,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
   }
 
   def auditRegistrationGetSuccess(result: EstateRegistrationNoDeclaration)
-                                 (implicit hc: HeaderCarrier, request: IdentifierRequest[_])= {
+                                 (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
     audit(
       Auditing.GET_REGISTRATION,
       Json.obj(),
@@ -87,7 +87,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
                                    transforms: ComposedDeltaTransform,
                                    errorReason: String,
                                    jsErrors: String = "")
-                                (implicit hc: HeaderCarrier, request: IdentifierRequest[_])= {
+                                (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
     auditTransformationError(
       Auditing.GET_REGISTRATION_FAILED,
       Json.obj(),

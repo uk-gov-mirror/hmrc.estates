@@ -18,12 +18,12 @@ package uk.gov.hmrc.estates.services.register
 
 import java.time.LocalDate
 
-import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.Matchers.{any, eq => mockEq}
+import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.JsString
+import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.estates.BaseSpec
@@ -113,17 +113,21 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
     "successfully return a registration" in {
 
+      reset(mockAuditService)
       when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(allTransforms)))
 
       val result = service.getRegistration()
 
       result.futureValue mustBe registration
+
+      verify(mockAuditService).auditRegistrationGetSuccess(any())(any(), any())
     }
 
     "return run time exception" when {
 
       "no transforms" in {
 
+        reset(mockAuditService)
         when(mockTransformationRepository.get(any())).thenReturn(Future.successful(None))
 
         val result = service.getRegistration()
@@ -131,10 +135,16 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         assertThrows[RuntimeException] {
           result.futureValue
         }
+        verify(mockAuditService).auditRegistrationGetFailed(
+          mockEq(ComposedDeltaTransform(Seq.empty)),
+          mockEq("Unable to get registration due to there being no transforms"),
+          any()
+        )(any(), any())
       }
 
       "transformed json cannot be parsed as EstateRegistration" in {
 
+        reset(mockAuditService)
         val transforms: ComposedDeltaTransform = ComposedDeltaTransform(Seq(deceasedTransform))
 
         when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(transforms)))
@@ -144,6 +154,11 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         assertThrows[RuntimeException] {
           result.futureValue
         }
+        verify(mockAuditService).auditRegistrationGetFailed(
+          mockEq(transforms),
+          mockEq("Unable to parse transformed json as EstateRegistrationNoDeclaration"),
+          any()
+        )(any(), any())
       }
     }
   }
@@ -158,6 +173,27 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
 
       result.futureValue mustBe RegistrationTrnResponse("trn")
+
+      verify(mockAuditService).auditRegistrationSubmitted(
+        any(),
+        mockEq("trn")
+      )(any(), any())
+    }
+
+    "failed to submit the payload for some reason" in {
+
+      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(allTransforms)))
+      when(mockDesService.registerEstate(any())).thenReturn(Future.successful(AlreadyRegisteredResponse))
+
+      val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
+
+      result.futureValue mustBe AlreadyRegisteredResponse
+
+      verify(mockAuditService).auditRegistrationFailed(
+        any(),
+        mockEq(AlreadyRegisteredResponse.message),
+        any()
+      )(any(), any())
     }
 
     "return run time exception" when {
@@ -171,9 +207,16 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         assertThrows[RuntimeException] {
           result.futureValue
         }
+
+        verify(mockAuditService).auditRegistrationTransformationError(
+          any(),
+          any(),
+          mockEq("Unable to submit registration due to there being no transforms"),
+          any()
+        )(any(), any())
       }
 
-      "transformed json cannot be parsed as EstateRegistration" in {
+      "transformed json cannot be built from transforms" in {
 
         val transforms: ComposedDeltaTransform = ComposedDeltaTransform(Seq(deceasedTransform))
 
@@ -184,6 +227,13 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         assertThrows[RuntimeException] {
           result.futureValue
         }
+
+        verify(mockAuditService).auditRegistrationTransformationError(
+          any(),
+          mockEq(Json.toJson(transforms)),
+          mockEq("Unable to build json from transforms"),
+          any()
+        )(any(), any())
       }
     }
   }

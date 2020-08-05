@@ -36,7 +36,7 @@ class AddAmendBusinessPersonalRepTransformSpec extends FreeSpec with MustMatcher
         phoneNumber = "newPhone",
         email = Some("newEmail"),
         identification = IdentificationOrgType(Some("newUtr"), None),
-        LocalDate.now,
+        LocalDate.of(2011, 11, 21),
         None
       )
       val transformer = AddAmendBusinessPersonalRepTransform(newPersonalRep)

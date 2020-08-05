@@ -99,6 +99,12 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
         verify(transformer, times(1))
           .transform(equalTo(transformedResponse), equalTo(response.getEstate), equalTo(declaration), any())
 
+        verify(auditService).auditVariationSubmitted(
+          equalTo(false),
+          equalTo(internalId),
+          any(),
+          equalTo(variationResponse))(any())
+
         val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
         verify(desService, times(1)).estateVariation(arg.capture())(any[HeaderCarrier])

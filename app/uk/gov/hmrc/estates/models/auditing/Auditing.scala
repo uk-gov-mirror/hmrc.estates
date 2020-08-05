@@ -29,12 +29,11 @@ object Auditing {
   val REGISTRATION_SUBMITTED_BY_ORGANISATION = "RegistrationSubmittedByOrganisation"
   val REGISTRATION_SUBMITTED_BY_AGENT = "RegistrationSubmittedByAGent"
 
-  val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
+  val VARIATION_SUBMITTED_BY_ORGANISATION = "VariationSubmittedByOrganisation"
+  val VARIATION_SUBMITTED_BY_AGENT = "VariationSubmittedByAGent"
 
-  val GET_ESTATE = "GetEstate"
+
 
   val ESTATE_VARIATION = "EstateVariation"
   val ESTATE_VARIATION_ATTEMPT = "EstateVariationAttempt"
-
-  val ESTATE_TRANSFORMATIONS = "EstateTransformations"
 }

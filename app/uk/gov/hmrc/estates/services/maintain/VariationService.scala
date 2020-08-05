@@ -58,7 +58,7 @@ class VariationService @Inject()(
                 case JsSuccess(value, _) =>
                   Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
                   Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")
-                  doSubmit(value, internalId)
+                  doSubmit(value, internalId, declaration.agentDetails.isDefined)
                 case e : JsError =>
                   Logger.error(s"[VariationDeclarationService] utr $utr: Problem transforming data for ETMP submission ${JsError.toJson(e)}")
                   Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
@@ -91,27 +91,16 @@ class VariationService @Inject()(
     }
   }
 
-  private def doSubmit(value: JsValue, internalId: String)(implicit hc: HeaderCarrier): Future[VariationResponse] = {
+  private def doSubmit(value: JsValue, internalId: String, isAgent: Boolean)
+                      (implicit hc: HeaderCarrier): Future[VariationResponse] = {
 
     val payload = value.applyRules
-
-    auditService.audit(
-      Auditing.ESTATE_VARIATION_ATTEMPT,
-      payload,
-      internalId,
-      Json.toJson(Json.obj())
-    )
 
     desService.estateVariation(payload) map { response =>
 
       Logger.info(s"[VariationService][doSubmit] variation submitted")
 
-      auditService.audit(
-        Auditing.ESTATE_VARIATION,
-        payload,
-        internalId,
-        Json.toJson(response)
-      )
+      auditService.auditVariationSubmitted(isAgent, internalId, payload, response)
 
       response
     }

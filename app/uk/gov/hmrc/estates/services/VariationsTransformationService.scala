@@ -88,16 +88,6 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
         JsSuccess(json)
       case Some(transformations) =>
 
-        auditService.audit(
-          event = Auditing.ESTATE_TRANSFORMATIONS,
-          request = Json.toJson(Json.obj()),
-          internalId = internalId,
-          response = Json.obj(
-            "transformations" -> transformations,
-            "data" -> json
-          )
-        )
-
         Logger.debug(s"[VariationsTransformationService] utr $utr applying the following transforms $transformations")
 
         for {

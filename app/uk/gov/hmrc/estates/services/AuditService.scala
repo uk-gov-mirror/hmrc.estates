@@ -24,6 +24,7 @@ import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDecla
 import uk.gov.hmrc.estates.models.auditing.{Auditing, GetTrustOrEstateAuditEvent}
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
+import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -31,20 +32,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import scala.concurrent.ExecutionContext
 
 class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)(implicit ec: ExecutionContext) {
-
-  def audit(event: String, body: JsValue, internalId: String)(implicit hc: HeaderCarrier): Unit = {
-
-    val auditPayload = GetTrustOrEstateAuditEvent(
-      request = body,
-      internalAuthId = internalId,
-      response = None
-    )
-
-    auditConnector.sendExplicitAudit(
-      event,
-      auditPayload
-    )
-  }
 
   def audit(event: String, request: JsValue, internalId: String, response: JsValue)
            (implicit hc: HeaderCarrier): Unit = {
@@ -128,8 +115,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
 
    val event = if (request.affinityGroup == Agent) {
       Auditing.REGISTRATION_SUBMITTED_BY_AGENT
-    }
-    else {
+    } else {
       Auditing.REGISTRATION_SUBMITTED_BY_ORGANISATION
     }
 
@@ -189,6 +175,25 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       request = requestData,
       internalId = request.identifier,
       response = responseData
+    )
+  }
+
+  def auditVariationSubmitted(isAgent: Boolean,
+                              internalId: String,
+                              payload: JsValue,
+                              response: VariationResponse
+                             )(implicit hc: HeaderCarrier): Unit = {
+    val event = if (isAgent) {
+      Auditing.VARIATION_SUBMITTED_BY_AGENT
+    } else {
+      Auditing.VARIATION_SUBMITTED_BY_ORGANISATION
+    }
+
+    audit(
+      event = event,
+      request = payload,
+      internalId = internalId,
+      response = Json.toJson(response)
     )
   }
 }

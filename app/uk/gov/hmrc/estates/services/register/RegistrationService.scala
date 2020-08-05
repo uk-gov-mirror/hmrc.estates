@@ -46,22 +46,22 @@ class RegistrationService @Inject()(repository: TransformationRepository,
             json.asOpt[EstateRegistrationNoDeclaration] match {
               case Some(payload: EstateRegistrationNoDeclaration) =>
 
-                auditService.auditRegistrationGetSuccess(payload)
+                auditService.auditGetRegistrationSuccess(payload)
 
                 Future.successful(payload)
               case None =>
                 val reason = "Unable to parse transformed json as EstateRegistrationNoDeclaration"
-                auditService.auditRegistrationGetFailed(transforms, reason)
+                auditService.auditGetRegistrationFailed(transforms, reason)
                 Future.failed(new RuntimeException(reason))
             }
           case JsError(errors) =>
             val reason = "Unable to build json from transforms"
-            auditService.auditRegistrationGetFailed(transforms, reason, errors.toString)
+            auditService.auditGetRegistrationFailed(transforms, reason, errors.toString)
             Future.failed(new RuntimeException(s"$reason: $errors"))
         }
       case None =>
         val reason = "Unable to get registration due to there being no transforms"
-        auditService.auditRegistrationGetFailed(ComposedDeltaTransform(Seq.empty), reason)
+        auditService.auditGetRegistrationFailed(ComposedDeltaTransform(Seq.empty), reason)
         Future.failed(new RuntimeException(reason))
     }
   }

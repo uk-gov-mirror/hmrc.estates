@@ -241,7 +241,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
           Meq(estateVariationsAuditEvent),
           any(),
           Meq("id"),
-          any()
+          any[String]
         )(any())
 
         val output = contentAsJson(result)

@@ -21,6 +21,9 @@ object Auditing {
   val GET_REGISTRATION = "GetRegistration"
   val GET_REGISTRATION_FAILED = "GetRegistrationFailed"
 
+  val GET_VARIATION = "GetVariation"
+  val GET_VARIATION_FAILED = "GetVariationFailed"
+
   val REGISTRATION_PREPARATION_FAILED = "RegistrationPreparationFailed"
   val REGISTRATION_SUBMISSION_FAILED = "RegistrationSubmissionFailed"
   val REGISTRATION_SUBMITTED_BY_ORGANISATION = "RegistrationSubmittedByOrganisation"

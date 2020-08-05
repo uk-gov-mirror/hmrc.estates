@@ -36,8 +36,8 @@ import scala.concurrent.Future
 
 class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequests with BeforeAndAfterEach {
 
-  lazy val mockDesService: DesService = mock[DesService]
-  lazy val mockedAuditService: AuditService = mock[AuditService]
+  val mockDesService: DesService = mock[DesService]
+  val mockAuditService: AuditService = mock[AuditService]
 
   val mockAuditConnector = mock[AuditConnector]
   val mockConfig = mock[AppConfig]
@@ -45,7 +45,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
   val auditService = new AuditService(mockAuditConnector, mockConfig)
 
   override def afterEach() =  {
-    reset(mockedAuditService, mockAuditConnector, mockConfig)
+    reset(mockAuditService, mockAuditConnector, mockConfig)
   }
 
   val invalidUTR = "1234567"
@@ -58,7 +58,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "estate is processed" in {
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         val expectedJson = getJsonValueFromFile("mdtp/playback/valid-estate-playback-01.json")
@@ -75,7 +75,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         whenReady(result) { _ =>
           contentAsJson(result) mustBe expectedJson
-          verify(mockedAuditService).audit(mockEq("GetEstate"), any[JsValue], any[String], any[JsValue])(any())
+          verify(mockAuditService).auditGetVariationSuccess(mockEq(utr), any())(any(), any())
           status(result) mustBe OK
           contentType(result) mustBe Some(JSON)
         }
@@ -85,7 +85,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
@@ -97,7 +97,9 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         application.stop()
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).audit(mockEq("GetEstate"), any[JsValue], any[String], any[JsValue])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe OK
           contentType(result) mustBe Some(JSON)
         }
@@ -109,7 +111,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         val controller = application.injector.instanceOf[GetEstateController]
@@ -127,7 +129,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InvalidUTRResponse))
@@ -138,16 +140,18 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$invalidUTR"))
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe INTERNAL_SERVER_ERROR
         }
       }
 
-      "the get endpoint returns a InvalidRegimeResponse" in {
+      "the get endpoint returns an InvalidRegimeResponse" in {
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InvalidRegimeResponse))
@@ -158,7 +162,9 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe INTERNAL_SERVER_ERROR
         }
       }
@@ -167,7 +173,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(BadRequestResponse))
@@ -178,7 +184,9 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe INTERNAL_SERVER_ERROR
         }
       }
@@ -187,7 +195,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
@@ -198,16 +206,18 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe NOT_FOUND
         }
       }
 
-      "the get endpoint returns a InternalServerErrorResponse" in {
+      "the get endpoint returns an InternalServerErrorResponse" in {
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InternalServerErrorResponse))
@@ -218,7 +228,9 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe INTERNAL_SERVER_ERROR
         }
       }
@@ -227,7 +239,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val application = applicationBuilder().overrides(
           bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockedAuditService)
+          bind[AuditService].toInstance(mockAuditService)
         ).build()
 
         when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ServiceUnavailableResponse))
@@ -238,7 +250,9 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
         val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
 
         whenReady(result) { _ =>
-          verify(mockedAuditService).auditErrorResponse(mockEq("GetEstate"), any[JsValue], any[String], any[String])(any())
+          verify(mockAuditService).auditGetVariationFailed(
+            mockEq(utr),
+            any[JsValue])(any(), any())
           status(result) mustBe INTERNAL_SERVER_ERROR
         }
       }
@@ -252,7 +266,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       val application = applicationBuilder().overrides(
         bind[VariationsTransformationService].toInstance(variationsTransformationService),
-        bind[AuditService].toInstance(mockedAuditService)
+        bind[AuditService].toInstance(mockAuditService)
       ).build()
 
       when(variationsTransformationService.getTransformedData(any(), any())(any()))
@@ -270,7 +284,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       val application = applicationBuilder().overrides(
         bind[VariationsTransformationService].toInstance(variationsTransformationService),
-        bind[AuditService].toInstance(mockedAuditService)
+        bind[AuditService].toInstance(mockAuditService)
       ).build()
 
       val processedResponse = GetEstateProcessedResponse(getTransformedEstateResponse, ResponseHeader("Processed", "1"))
@@ -282,7 +296,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       val result = controller.getPersonalRepresentative(utr).apply(FakeRequest(GET, s"/estates/$utr/transformed/personal-representative"))
 
       whenReady(result) { _ =>
-        verify(mockedAuditService).audit(mockEq("GetEstate"), any[JsValue], any[String], any[JsValue])(any())
+        verify(mockAuditService).auditGetVariationSuccess(mockEq(utr), any())(any(), any())
         verify(variationsTransformationService).getTransformedData(mockEq(utr), mockEq("id"))(any[HeaderCarrier])
         status(result) mustBe OK
         contentType(result) mustBe Some(JSON)
@@ -299,7 +313,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       val application = applicationBuilder().overrides(
         bind[DesService].toInstance(mockDesService),
-        bind[AuditService].toInstance(mockedAuditService)
+        bind[AuditService].toInstance(mockAuditService)
       ).build()
 
       val expectedJson = Json.toJson("2016-04-06")
@@ -316,7 +330,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       whenReady(result) { _ =>
         contentAsJson(result) mustBe expectedJson
-        verify(mockedAuditService).audit(mockEq("GetEstate"), any[JsValue], any[String], any[JsValue])(any())
+        verify(mockAuditService).auditGetVariationSuccess(mockEq(utr), any())(any(), any())
         status(result) mustBe OK
         contentType(result) mustBe Some(JSON)
       }
@@ -326,7 +340,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       val application = applicationBuilder().overrides(
         bind[DesService].toInstance(mockDesService),
-        bind[AuditService].toInstance(mockedAuditService)
+        bind[AuditService].toInstance(mockAuditService)
       ).build()
 
       when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))

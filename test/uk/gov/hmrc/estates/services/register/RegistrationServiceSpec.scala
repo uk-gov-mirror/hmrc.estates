@@ -120,7 +120,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
       result.futureValue mustBe registration
 
-      verify(mockAuditService).auditRegistrationGetSuccess(any())(any(), any())
+      verify(mockAuditService).auditGetRegistrationSuccess(any())(any(), any())
     }
 
     "return run time exception" when {
@@ -135,7 +135,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         assertThrows[RuntimeException] {
           result.futureValue
         }
-        verify(mockAuditService).auditRegistrationGetFailed(
+        verify(mockAuditService).auditGetRegistrationFailed(
           mockEq(ComposedDeltaTransform(Seq.empty)),
           mockEq("Unable to get registration due to there being no transforms"),
           any()
@@ -154,7 +154,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         assertThrows[RuntimeException] {
           result.futureValue
         }
-        verify(mockAuditService).auditRegistrationGetFailed(
+        verify(mockAuditService).auditGetRegistrationFailed(
           mockEq(transforms),
           mockEq("Unable to parse transformed json as EstateRegistrationNoDeclaration"),
           any()

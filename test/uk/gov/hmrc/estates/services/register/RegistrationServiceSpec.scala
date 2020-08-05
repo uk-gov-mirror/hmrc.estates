@@ -31,7 +31,7 @@ import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.register.{RegistrationDeclaration, TaxAmount}
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.services.{DesService, FakeAuditService}
+import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register._
 import uk.gov.hmrc.estates.utils.JsonUtils
@@ -45,7 +45,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
   val mockDesService: DesService = mock[DesService]
   val declarationTransformer = new DeclarationTransform
 
-  val mockAuditService = injector.instanceOf[FakeAuditService]
+  val mockAuditService: AuditService = mock[AuditService]
 
   val service = new RegistrationService(mockTransformationRepository, mockDesService, declarationTransformer, mockAuditService)
 

@@ -62,7 +62,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
       val desService = mock[DesService]
 
       val variationsTransformationService = mock[VariationsTransformationService]
-      val auditService = app.injector.instanceOf[FakeAuditService]
+      val auditService = mock[AuditService]
       val transformer = mock[VariationDeclarationService]
 
       when(variationsTransformationService.populatePersonalRepAddress(any[JsValue]))

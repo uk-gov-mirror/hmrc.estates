@@ -18,10 +18,12 @@ package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.config.AppConfig
-import uk.gov.hmrc.estates.models.auditing.{EstateRegistrationSubmissionAuditEvent, GetTrustOrEstateAuditEvent}
+import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration}
+import uk.gov.hmrc.estates.models.auditing.{Auditing, GetTrustOrEstateAuditEvent}
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.models.{EstateRegistration, RegistrationResponse}
+import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
@@ -29,22 +31,7 @@ import scala.concurrent.ExecutionContext
 
 class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)(implicit ec: ExecutionContext) {
 
-  def audit(event: String, registration: EstateRegistration, internalId: String, response: RegistrationResponse)
-           (implicit hc: HeaderCarrier): Unit = {
-
-    val auditPayload = EstateRegistrationSubmissionAuditEvent(
-      registration = registration,
-      internalAuthId = internalId,
-      response = response
-    )
-
-    auditConnector.sendExplicitAudit(
-      event,
-      auditPayload
-    )
-  }
-
-  def audit(event: String, body: JsValue, internalId: String)(implicit hc: HeaderCarrier) = {
+  def audit(event: String, body: JsValue, internalId: String)(implicit hc: HeaderCarrier): Unit = {
 
     val auditPayload = GetTrustOrEstateAuditEvent(
       request = body,
@@ -86,13 +73,80 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
     )
   }
 
-  def auditTransformationError(
-                                            eventName: String,
+  def auditRegistrationGetSuccess(result: EstateRegistrationNoDeclaration)
+                                 (implicit hc: HeaderCarrier, request: IdentifierRequest[_])= {
+    audit(
+      Auditing.GET_REGISTRATION,
+      Json.obj(),
+      request.identifier,
+      Json.toJson(result)
+    )
+  }
+
+  def auditRegistrationGetFailed(
+                                   transforms: ComposedDeltaTransform,
+                                   errorReason: String,
+                                   jsErrors: String = "")
+                                (implicit hc: HeaderCarrier, request: IdentifierRequest[_])= {
+    auditTransformationError(
+      Auditing.GET_REGISTRATION_FAILED,
+      Json.obj(),
+      Json.toJson(transforms),
+      errorReason,
+      jsErrors)
+  }
+
+  def auditRegistrationSubmitted(payload: EstateRegistration, trn: String)
+                                (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+
+   val event = if (request.affinityGroup == Agent) {
+      Auditing.REGISTRATION_SUBMITTED_BY_AGENT
+    }
+    else {
+      Auditing.REGISTRATION_SUBMITTED_BY_ORGANISATION
+    }
+
+    audit(
+      event = event,
+      request = Json.toJson(payload),
+      internalId = request.identifier,
+      response = Json.obj("trn" -> trn)
+    )
+  }
+
+  def auditRegistrationFailed(
+                               payload: EstateRegistration,
+                               errorReason: String,
+                               jsErrors: String = "")
+                             (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+
+    audit(
+      event = Auditing.REGISTRATION_SUBMISSION_FAILED,
+      request = Json.toJson(payload),
+      internalId = request.identifier,
+      response = Json.obj("errorReason" -> errorReason)
+    )
+  }
+
+  def auditRegistrationTransformationError(
                                             data: JsValue = Json.obj(),
                                             transforms: JsValue = Json.obj(),
                                             errorReason: String = "",
                                             jsErrors: String = ""
-                                          )(implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+                                          )(implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
+    auditTransformationError(
+      Auditing.REGISTRATION_PREPARATION_FAILED,
+      data,
+      transforms,
+      errorReason,
+      jsErrors)
+
+  def auditTransformationError(eventName: String,
+                               data: JsValue,
+                               transforms: JsValue,
+                               errorReason: String,
+                               jsErrors: String
+                               )(implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
     val requestData = Json.obj(
       "data" -> data,
       "transformations" -> transforms
@@ -109,6 +163,5 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       internalId = request.identifier,
       response = responseData
     )
-
   }
 }

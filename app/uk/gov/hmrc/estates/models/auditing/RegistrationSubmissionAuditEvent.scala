@@ -19,17 +19,17 @@ package uk.gov.hmrc.estates.models.auditing
 import play.api.libs.json.{Format, JsValue, Json}
 import uk.gov.hmrc.estates.models.{EstateRegistration, RegistrationResponse}
 
-case class EstateRegistrationSubmissionAuditEvent(
-                                                  registration: EstateRegistration,
-                                                  internalAuthId : String,
-                                                  response: RegistrationResponse
-                                                )
-
-object EstateRegistrationSubmissionAuditEvent {
-
-  implicit val formats: Format[EstateRegistrationSubmissionAuditEvent] = Json.format[EstateRegistrationSubmissionAuditEvent]
-
-}
+//case class EstateRegistrationSubmissionAuditEvent(
+//                                                  registration: EstateRegistration,
+//                                                  internalAuthId : String,
+//                                                  response: RegistrationResponse
+//                                                )
+//
+//object EstateRegistrationSubmissionAuditEvent {
+//
+//  implicit val formats: Format[EstateRegistrationSubmissionAuditEvent] = Json.format[EstateRegistrationSubmissionAuditEvent]
+//
+//}
 
 case class GetTrustOrEstateAuditEvent(request: JsValue,
                                 internalAuthId : String,

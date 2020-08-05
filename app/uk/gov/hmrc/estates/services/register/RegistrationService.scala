@@ -21,7 +21,6 @@ import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.estates.models._
-import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.repositories.TransformationRepository
@@ -41,28 +40,29 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   def getRegistration()(implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[EstateRegistrationNoDeclaration] = {
 
     repository.get(request.identifier) flatMap {
-      case Some(transforms) =>
+      case Some(transforms: ComposedDeltaTransform) =>
         buildPrintFromTransforms(transforms) match {
           case JsSuccess(json, _) =>
             json.asOpt[EstateRegistrationNoDeclaration] match {
               case Some(payload: EstateRegistrationNoDeclaration) =>
 
-                auditService.audit(
-                  Auditing.GET_REGISTRATION,
-                  Json.toJson(payload),
-                  request.identifier,
-                  Json.toJson(payload)
-                )
+                auditService.auditRegistrationGetSuccess(payload)
 
                 Future.successful(payload)
               case None =>
-                Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistrationNoDeclaration"))
+                val reason = "Unable to parse transformed json as EstateRegistrationNoDeclaration"
+                auditService.auditRegistrationGetFailed(transforms, reason)
+                Future.failed(new RuntimeException(reason))
             }
           case JsError(errors) =>
-            Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
+            val reason = "Unable to build json from transforms"
+            auditService.auditRegistrationGetFailed(transforms, reason)
+            Future.failed(new RuntimeException(s"$reason: $errors"))
         }
       case None =>
-        Future.failed(new RuntimeException("Unable to get registration due to there being no transforms"))
+        val reason = "Unable to get registration due to there being no transforms"
+        auditService.auditRegistrationGetFailed(ComposedDeltaTransform(Seq.empty), reason)
+        Future.failed(new RuntimeException(reason))
     }
   }
 
@@ -79,29 +79,31 @@ class RegistrationService @Inject()(repository: TransformationRepository,
               case Some(payload) =>
                 submitAndAuditResponse(payload)
               case None =>
-                auditService.auditTransformationError(
-                  Auditing.REGISTRATION_PREPARATION_FAILED,
+                val reason = "Unable to parse transformed json as EstateRegistration"
+
+                auditService.auditRegistrationTransformationError(
                   data = json,
                   transforms = Json.toJson(transforms),
-                  errorReason = "Unable to parse transformed json as EstateRegistration"
+                  errorReason = reason
                 )
-                Future.failed(new RuntimeException("Unable to parse transformed json as EstateRegistration"))
+                Future.failed(new RuntimeException(reason))
             }
           case JsError(errors) =>
-            auditService.auditTransformationError(
-              Auditing.REGISTRATION_PREPARATION_FAILED,
-              transforms = Json.toJson(transforms),
-              errorReason = "Unable to build json from transforms",
-              jsErrors = errors.toString())
+            val reason = "Unable to build json from transforms"
 
-            Future.failed(new RuntimeException(s"Unable to build json from transforms $errors"))
+            auditService.auditRegistrationTransformationError(
+              transforms = Json.toJson(transforms),
+              errorReason = reason,
+              jsErrors = errors.toString()
+            )
+            Future.failed(new RuntimeException(s"$reason: $errors"))
         }
       case None =>
-        auditService.auditTransformationError(
-          Auditing.REGISTRATION_PREPARATION_FAILED,
-          errorReason = "Unable to submit registration due to there being no transforms")
+        val reason = "Unable to submit registration due to there being no transforms"
 
-        Future.failed(new RuntimeException("Unable to submit registration due to there being no transforms"))
+        auditService.auditRegistrationTransformationError(errorReason = reason)
+
+        Future.failed(new RuntimeException(reason))
     }
   }
 
@@ -109,19 +111,10 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                     (implicit request: IdentifierRequest[_], hc: HeaderCarrier) : Future[RegistrationResponse] = {
     desService.registerEstate(payload) map {
       case r@RegistrationTrnResponse(trn) =>
-        auditService.audit(Auditing.REGISTRATION_SUBMITTED_BY_AGENT,
-          Json.toJson(payload),
-          request.identifier,
-          Json.obj("trn" -> trn)
-        )
+        auditService.auditRegistrationSubmitted(payload, trn)
         r
       case r @RegistrationFailureResponse(_, _, message) =>
-        auditService.auditErrorResponse(
-          Auditing.REGISTRATION_SUBMISSION_FAILED,
-          Json.toJson(payload),
-          request.identifier,
-          s"Unable to submit registration due to $message"
-        )
+        auditService.auditRegistrationFailed(payload, message)
         r
     }
   }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.estates.transformers
 
+import play.api.Logger
 import play.api.libs.json.{JsValue, _}
 import uk.gov.hmrc.estates.transformers.variations.{AddAmendBusinessPersonalRepTransform, AddAmendIndividualPersonalRepTransform}
 import uk.gov.hmrc.estates.transformers.register._

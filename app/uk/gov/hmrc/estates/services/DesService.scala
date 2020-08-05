@@ -34,9 +34,10 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
 
   def getEstateInfoFormBundleNo(utr: String)(implicit hc: HeaderCarrier): Future[String] =
     desConnector.getEstateInfo(utr).map {
-      case response: GetEstateProcessedResponse => response.responseHeader.formBundleNo
+      case response: GetEstateProcessedResponse =>
+        response.responseHeader.formBundleNo
       case response =>
-        val msg = s"Failed to retrieve latest form bundle no from ETMP : $response"
+        val msg = s"[DesService] utr $utr: Failed to retrieve latest form bundle no from ETMP due to $response"
         Logger.warn(msg)
         throw InternalServerErrorException(s"Submission could not proceed, $msg")
     }
@@ -54,29 +55,34 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
   }
 
   def refreshCacheAndGetEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
-    Logger.debug("Retrieving Estate Info from DES")
-    Logger.info(s"[DesService][refreshCacheAndGetEstateInfo] refreshing cache")
+
+    Logger.info(s"[DesService][refreshCacheAndGetEstateInfo] refreshing cache for $utr")
 
     repository.resetCache(utr, internalId).flatMap { _ =>
       desConnector.getEstateInfo(utr).flatMap {
         case response: GetEstateProcessedResponse =>
+          Logger.info(s"[DesService] setting cached record for $utr")
           repository.set(utr, internalId, Json.toJson(response)(GetEstateProcessedResponse.mongoWrites)).map{ _ =>
             response
           }
-        case otherResponse => Future.successful(otherResponse)
+        case otherResponse =>
+          Logger.info(s"[DesService] document returned for $utr was not in processed state")
+          Future.successful(otherResponse)
       }
     }
   }
 
   def getEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
-    Logger.debug("Getting estate Info")
+    Logger.info(s"getting cached record for utr $utr")
     repository.get(utr, internalId).flatMap {
-      case Some(x) => x.validate[GetEstateResponse].fold(
-        errs => {
-          Logger.error(s"[DesService] unable to parse json from cache as GetEstateResponse $errs")
-          Future.failed[GetEstateResponse](new Exception(errs.toString))
+      case Some(x) =>
+        x.validate[GetEstateResponse].fold(
+          errs => {
+            Logger.error(s"[DesService] unable to parse json from cache for $utr as GetEstateResponse $errs")
+            Future.failed[GetEstateResponse](new Exception(errs.toString))
         },
         response => {
+          Logger.info(s"[DesService] found cached record for $utr")
           Future.successful(response)
         }
       )

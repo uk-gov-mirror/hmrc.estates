@@ -36,7 +36,7 @@ class AddAmendIndividualPersonalRepTransformSpec extends FreeSpec with MustMatch
         phoneNumber = "newPhone",
         email = Some("newEmail"),
         identification = IdentificationType(Some("newNino"), None, None),
-        entityStart = LocalDate.now,
+        entityStart = LocalDate.parse("2012-03-14"),
         entityEnd = None
       )
       val transformer = AddAmendIndividualPersonalRepTransform(newTrusteeInfo)

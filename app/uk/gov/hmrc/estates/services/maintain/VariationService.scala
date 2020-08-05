@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.estates.services
+package uk.gov.hmrc.estates.services.maintain
 
 import javax.inject.Inject
 import play.api.Logger
@@ -24,44 +24,51 @@ import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.variation.VariationResponse
-import uk.gov.hmrc.estates.transformers.register.VariationDeclarationTransform
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.JsonOps._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class VariationDeclarationService @Inject()(
+class VariationService @Inject()(
                                   desService: DesService,
                                   transformationService: VariationsTransformationService,
-                                  declarationTransformer: VariationDeclarationTransform,
+                                  declarationService: VariationDeclarationService,
                                   auditService: AuditService,
                                   localDateService: LocalDateService) {
 
-  def submitDeclaration(utr: String, internalId: String, declaration: DeclarationForApi)
+  def submitDeclaration(utr: String,
+                        internalId: String,
+                        declaration: DeclarationForApi)
                        (implicit hc: HeaderCarrier): Future[VariationResponse] = {
 
-    getCachedEstateData(utr, internalId).flatMap { originalResponse: GetEstateProcessedResponse =>
-      transformationService.populatePersonalRepAddress(originalResponse.getEstate) match {
-        case JsSuccess(originalJson, _) =>
-          transformationService.applyDeclarationTransformations(utr, internalId, originalJson).flatMap {
-            case JsSuccess(transformedJson, _) =>
-              val response = GetEstateProcessedResponse(transformedJson, originalResponse.responseHeader)
-              declarationTransformer.transform(response, originalJson, declaration, localDateService.now) match {
+    getCachedEstateData(utr, internalId).flatMap { cached: GetEstateProcessedResponse =>
+
+      val cachedEstate = cached.getEstate
+      val responseHeader = cached.responseHeader
+
+      transformationService.populatePersonalRepAddress(cachedEstate) match {
+        case JsSuccess(cachedWithAmendedPerRepAddress, _) =>
+          transformationService.applyDeclarationTransformations(utr, internalId, cachedWithAmendedPerRepAddress).flatMap {
+            case JsSuccess(transformedDocument, _) =>
+              val transformedWithHeader = GetEstateProcessedResponse(transformedDocument, responseHeader)
+              declarationService.transform(transformedWithHeader, cachedWithAmendedPerRepAddress, declaration, localDateService.now) match {
                 case JsSuccess(value, _) =>
-                  Logger.info(s"[VariationDeclarationService] successfully transformed json for declaration")
+                  Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
+                  Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")
                   doSubmit(value, internalId)
-                case JsError(errors) =>
-                  Logger.error("Problem transforming data for ETMP submission " + errors.toString())
+                case e : JsError =>
+                  Logger.error(s"[VariationDeclarationService] utr $utr: Problem transforming data for ETMP submission ${JsError.toJson(e)}")
                   Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
               }
-            case JsError(errors) =>
-              Logger.error(s"Failed to transform estate info $errors")
+            case e : JsError =>
+              Logger.error(s"[VariationDeclarationService] utr $utr: Failed to transform estate info ${JsError.toJson(e)}")
               Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
           }
-        case JsError(errors) =>
-          Logger.error(s"Failed to populate personal rep address $errors")
+        case e : JsError =>
+          Logger.error(s"[VariationDeclarationService] utr $utr: Failed to populate personal rep address ${JsError.toJson(e)}")
           Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
       }
    }
@@ -73,13 +80,13 @@ class VariationDeclarationService @Inject()(
       fbn <- desService.getEstateInfoFormBundleNo(utr)
     } yield response match {
       case tpr: GetEstateProcessedResponse if tpr.responseHeader.formBundleNo == fbn =>
-        Logger.info(s"[VariationDeclarationService][submitDeclaration] returning GetEstateProcessedResponse")
+        Logger.info(s"[VariationDeclarationService][submitDeclaration] utr $utr: returning GetEstateProcessedResponse")
         response.asInstanceOf[GetEstateProcessedResponse]
       case _: GetEstateProcessedResponse =>
-        Logger.info(s"[VariationDeclarationService][submitDeclaration] ETMP cached data in mongo has become stale, rejecting submission")
+        Logger.info(s"[VariationDeclarationService][submitDeclaration] utr $utr: ETMP cached data in mongo has become stale, rejecting submission")
         throw EtmpCacheDataStaleException
       case _ =>
-        Logger.warn(s"[VariationDeclarationService][submitDeclaration] Estate was not in a processed state")
+        Logger.warn(s"[VariationDeclarationService][submitDeclaration] utr $utr: Estate was not in a processed state")
         throw InternalServerErrorException("Submission could not proceed, Estate data was not in a processed state")
     }
   }

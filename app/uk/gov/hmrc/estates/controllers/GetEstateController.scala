@@ -20,7 +20,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsPath, JsString, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
-import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}

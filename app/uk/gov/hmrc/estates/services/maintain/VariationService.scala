@@ -21,7 +21,6 @@ import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.estates.exceptions.{EtmpCacheDataStaleException, InternalServerErrorException}
 import uk.gov.hmrc.estates.models.DeclarationForApi
-import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}

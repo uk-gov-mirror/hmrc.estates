@@ -19,7 +19,6 @@ package uk.gov.hmrc.estates.services
 import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json._
-import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse, TransformationErrorResponse}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
 import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}

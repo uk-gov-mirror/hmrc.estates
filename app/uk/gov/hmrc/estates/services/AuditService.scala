@@ -21,7 +21,7 @@ import play.api.libs.json.{JsString, JsValue, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration}
-import uk.gov.hmrc.estates.models.auditing.GetTrustOrEstateAuditEvent
+import uk.gov.hmrc.estates.models.auditing.EstatesAuditData
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.models.variation.VariationResponse
@@ -53,7 +53,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
   def audit(event: String, request: JsValue, internalId: String, response: JsValue)
            (implicit hc: HeaderCarrier): Unit = {
 
-    val auditPayload = GetTrustOrEstateAuditEvent(
+    val auditPayload = EstatesAuditData(
       request = request,
       internalAuthId = internalId,
       response = Some(response)

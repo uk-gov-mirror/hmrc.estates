@@ -40,11 +40,11 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   def getRegistration()(implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[EstateRegistrationNoDeclaration] = {
 
     repository.get(request.identifier) flatMap {
-      case Some(transforms: ComposedDeltaTransform) =>
+      case Some(transforms) =>
         buildPrintFromTransforms(transforms) match {
           case JsSuccess(json, _) =>
             json.asOpt[EstateRegistrationNoDeclaration] match {
-              case Some(payload: EstateRegistrationNoDeclaration) =>
+              case Some(payload) =>
 
                 auditService.auditGetRegistrationSuccess(payload)
 

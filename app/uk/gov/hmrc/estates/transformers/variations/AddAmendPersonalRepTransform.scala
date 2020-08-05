@@ -21,19 +21,12 @@ import play.api.libs.json._
 trait AddAmendPersonalRepTransform {
   def setPersonalRep(input: JsValue, newPersonalRepDetails: JsValue): JsResult[JsValue] = {
     val personalRepPath = (__ \ 'details \ 'estate \ 'entities \ 'personalRepresentative)
-    val entityStartPath = personalRepPath \ 'entityStart
 
-    val entityStartPick = entityStartPath.json.pick
-    input.transform(entityStartPick) match {
-      case JsSuccess(entityStart, _) =>
-        input.transform(
-          personalRepPath.json.prune andThen
-            (__).json.update(personalRepPath.json.put(newPersonalRepDetails)) andThen
-            (__).json.update(entityStartPath.json.put(entityStart)) andThen
-            (personalRepPath \ 'lineNo).json.prune andThen
-            (personalRepPath \ 'bpMatchStatus).json.prune
-        )
-      case e: JsError => e
-    }
+    input.transform(
+      personalRepPath.json.prune andThen
+        (__).json.update(personalRepPath.json.put(newPersonalRepDetails)) andThen
+        (personalRepPath \ 'lineNo).json.prune andThen
+        (personalRepPath \ 'bpMatchStatus).json.prune
+    )
   }
 }

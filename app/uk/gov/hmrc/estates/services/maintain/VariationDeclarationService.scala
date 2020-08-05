@@ -63,8 +63,10 @@ class VariationDeclarationService {
   }
 
   private def updateCorrespondence(responseJson: JsValue): Reads[JsObject] = {
+
     val personalRepCountry = responseJson.transform(pathToPersonalRepCountry.json.pick)
-    val inUk = personalRepCountry.isError || personalRepCountry.get == JsString("GB")
+    val inUk = personalRepCountry.isError || personalRepCountry.asOpt.contains(JsString("GB"))
+
     pathToCorrespondenceAddress.json.prune andThen
       pathToCorrespondencePhoneNumber.json.prune andThen
       putNewValue(__ \ 'correspondence \ 'abroadIndicator, JsBoolean(!inUk)) andThen
@@ -77,7 +79,7 @@ class VariationDeclarationService {
       .map{ a => Json.arr(Json.obj(determinePersonalRepField(pathToPersonalRep, json) -> a )) })
   }
 
-  private def removePersonalRepAddressIfHasNinoOrUtr(personalRepJson: JsValue, personalRepPath: JsPath) = {
+  private def removePersonalRepAddressIfHasNinoOrUtr(personalRepJson: JsValue, personalRepPath: JsPath) : Reads[JsObject] = {
 
     val hasField = (field: String) =>
       personalRepJson.transform((personalRepPath \ "identification" \ field).json.pick).isSuccess
@@ -88,16 +90,17 @@ class VariationDeclarationService {
     if (hasUtr || hasNino) {
       (personalRepPath \ 'identification \ 'address).json.prune
     } else {
-      __.json.pick
+      __.json.pick[JsObject]
     }
   }
 
   private def determinePersonalRepField(rootPath: JsPath, json: JsValue): String = {
-    val namePath = (rootPath \ 'name).json.pick[JsObject]
+    val namePath = (rootPath \ 'name).json.pick
 
-    json.transform(namePath).flatMap(_.validate[NameType]) match {
-      case JsSuccess(_, _) => "estatePerRepInd"
-      case _ => "estatePerRepOrg"
+    if(json.transform(namePath).flatMap(_.validate[NameType]).isSuccess) {
+      "estatePerRepInd"
+    } else {
+      "estatePerRepOrg"
     }
   }
 
@@ -143,41 +146,37 @@ class VariationDeclarationService {
 
   private def putNewValue(path: JsPath, value: JsValue ): Reads[JsObject] = __.json.update(path.json.put(value))
 
-  private def declarationAddress(agentDetails: Option[AgentDetails], responseJson: JsValue) =
-    if (agentDetails.isDefined) {
-      agentDetails.get.agentAddress
-    } else {
-      responseJson.transform((pathToPersonalRep \ 'identification \ 'address).json.pick) match {
-        case JsSuccess(value, _) => value.as[AddressType]
-        case JsError(_) => ???
-      }
+  private def declarationAddress(agentDetails: Option[AgentDetails],
+                                 responseJson: JsValue) : JsResult[AddressType] = agentDetails match {
+      case Some(x) =>
+        JsSuccess(x.agentAddress)
+      case None =>
+        responseJson.transform((pathToPersonalRep \ 'identification \ 'address).json.pick).flatMap(_.validate[AddressType])
     }
 
-  private def addDeclaration(declarationForApi: DeclarationForApi, responseJson: JsValue) = {
-    val declarationToSend = Declaration(
-      declarationForApi.declaration.name,
-      declarationAddress(declarationForApi.agentDetails, responseJson)
-    )
-    putNewValue(declarationPath, Json.toJson(declarationToSend))
+  private def addDeclaration(declarationForApi: DeclarationForApi, responseJson: JsValue) : Reads[JsObject] = {
+    declarationAddress(declarationForApi.agentDetails, responseJson) match {
+      case JsSuccess(value, _) =>
+        val declarationToSend = Declaration(declarationForApi.declaration.name, value)
+        putNewValue(declarationPath, Json.toJson(declarationToSend))
+      case e : JsError =>
+        Logger.error(s"[VariationDeclarationService] unable to set declaration address, hadAgent: ${declarationForApi.agentDetails.isDefined}")
+        Reads(_ => e)
+    }
   }
 
-  private def addAgentIfDefined(agentDetails: Option[AgentDetails]) = if (agentDetails.isDefined) {
-    __.json.update(
-      (agentPath).json.put(Json.toJson(agentDetails.get))
-    )
-  } else {
-    __.json.pick[JsObject]
-  }
+  private def addAgentIfDefined(agentDetails: Option[AgentDetails]) : Reads[JsObject] = agentDetails match {
+      case Some(x) =>
+        __.json.update(agentPath.json.put(Json.toJson(x)))
+      case None =>
+        __.json.pick[JsObject]
+    }
 
-  private def addEndDateIfDefined(endDate: Option[LocalDate]) = {
-    endDate match {
+  private def addEndDateIfDefined(endDate: Option[LocalDate]): Reads[JsObject] = endDate match {
       case Some(date) =>
-        __.json.update(
-          (__ \ 'trustEndDate).json.put(Json.toJson(date))
-        )
+        __.json.update((__ \ 'trustEndDate).json.put(Json.toJson(date)))
       case _ =>
         __.json.pick[JsObject]
     }
-  }
 
 }

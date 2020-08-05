@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDecla
 import uk.gov.hmrc.estates.models.auditing.EstatesAuditData
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.models.variation.VariationResponse
+import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -198,7 +198,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
   def auditVariationSubmitted(isAgent: Boolean,
                               internalId: String,
                               payload: JsValue,
-                              response: VariationResponse
+                              response: VariationSuccessResponse
                              )(implicit hc: HeaderCarrier): Unit = {
     val event = if (isAgent) {
       AuditEvent.VARIATION_SUBMITTED_BY_AGENT

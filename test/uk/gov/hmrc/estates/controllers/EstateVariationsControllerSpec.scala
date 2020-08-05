@@ -30,7 +30,7 @@ import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, VariationsResponseHandler}
 import uk.gov.hmrc.estates.exceptions._
-import uk.gov.hmrc.estates.models.variation.VariationResponse
+import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
 import uk.gov.hmrc.estates.services.maintain.VariationService
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
@@ -74,7 +74,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
       "individual user called the register endpoint with a valid json payload " in {
 
         when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
-          .thenReturn(Future.successful(VariationResponse(tvnResponse)))
+          .thenReturn(Future.successful(VariationSuccessResponse(tvnResponse)))
 
         val requestPayLoad = Json.parse(validEstateVariationsRequestJson)
 

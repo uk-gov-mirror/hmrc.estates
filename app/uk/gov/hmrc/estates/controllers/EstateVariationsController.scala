@@ -22,6 +22,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, VariationsResponseHandler}
 import uk.gov.hmrc.estates.models.DeclarationForApi
+import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
 import uk.gov.hmrc.estates.services.maintain.VariationService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,7 +45,7 @@ class EstateVariationsController @Inject()(
           variationService
             .submitDeclaration(utr, request.identifier, declarationForApi)
             .map {
-              response => Ok(Json.toJson(response))
+              case response: VariationSuccessResponse => Ok(Json.toJson(response))
             }
         } recover responseHandler.recoverFromException("EstateVariationAuditingToBeFixed")
       )

@@ -21,9 +21,9 @@ import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.estates.connectors.DesConnector
 import uk.gov.hmrc.estates.exceptions.InternalServerErrorException
-import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
-import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models._
+import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
+import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.repositories.CacheRepository
 import uk.gov.hmrc.http.HeaderCarrier
 

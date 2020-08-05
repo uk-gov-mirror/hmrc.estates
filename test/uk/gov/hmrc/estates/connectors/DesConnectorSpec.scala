@@ -21,7 +21,7 @@ import play.api.libs.json.{JsError, Json, Reads}
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models.getEstate._
-import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
+import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, EstateRegistration, ExistingCheckRequest, NoMatchResponse, RegistrationFailureResponse, RegistrationTrnResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.estates.utils.JsonRequests
 
@@ -506,8 +506,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
         whenReady(futureResult) { result =>
-          result mustBe a[VariationResponse]
-          inside(result){ case VariationResponse(tvn)  => tvn must fullyMatch regex """^[a-zA-Z0-9]{15}$""".r }
+          result mustBe a[VariationSuccessResponse]
+          inside(result){ case VariationSuccessResponse(tvn)  => tvn must fullyMatch regex """^[a-zA-Z0-9]{15}$""".r }
         }
       }
     }

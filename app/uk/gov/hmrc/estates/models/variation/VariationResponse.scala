@@ -22,11 +22,15 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.estates.exceptions._
 
-final case class VariationResponse(tvn: String)
+trait VariationResponse
+
+final case class VariationSuccessResponse(tvn: String) extends VariationResponse
+
+object VariationSuccessResponse {
+  implicit val formats: Format[VariationSuccessResponse] = Json.format[VariationSuccessResponse]
+}
 
 object VariationResponse {
-
-  implicit val formats: Format[VariationResponse] = Json.format[VariationResponse]
 
   implicit lazy val httpReads: HttpReads[VariationResponse] =
     new HttpReads[VariationResponse] {
@@ -37,7 +41,7 @@ object VariationResponse {
         Logger.info(s"[VariationTvnResponse]  response status received from des: ${response.status}")
         response.status match {
           case OK =>
-            response.json.as[VariationResponse]
+            response.json.as[VariationSuccessResponse](VariationSuccessResponse.formats)
           case BAD_REQUEST if response.body contains "INVALID_CORRELATIONID" =>
             Logger.error(s"[VariationTvnResponse] Bad Request for invalid correlation id response from des ")
             throw InvalidCorrelationIdException

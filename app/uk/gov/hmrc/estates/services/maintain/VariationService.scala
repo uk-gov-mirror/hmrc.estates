@@ -22,7 +22,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.estates.exceptions.{EtmpCacheDataStaleException, InternalServerErrorException}
 import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
-import uk.gov.hmrc.estates.models.variation.VariationResponse
+import uk.gov.hmrc.estates.models.variation.{VariationResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.JsonOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -95,13 +95,16 @@ class VariationService @Inject()(
 
     val payload = value.applyRules
 
-    desService.estateVariation(payload) map { response =>
+    desService.estateVariation(payload) map {
+      case response: VariationSuccessResponse =>
 
-      Logger.info(s"[VariationService][doSubmit] variation submitted")
+        Logger.info(s"[VariationService][doSubmit] variation submitted")
 
-      auditService.auditVariationSubmitted(isAgent, internalId, payload, response)
+        auditService.auditVariationSubmitted(isAgent, internalId, payload, response)
 
-      response
+        response
+
+      case response => response
     }
   }
 }

@@ -84,7 +84,7 @@ class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoS
             Some("TF1 5DR"),
             "GB"
           ))),
-        entityStart = LocalDate.of(1965, 2, 10),
+        entityStart = LocalDate.of(2007, 4, 13),
         entityEnd = None
       )
 

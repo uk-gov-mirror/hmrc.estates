@@ -102,7 +102,8 @@ object Estate {
 case class GetEstate(matchData: MatchData,
                      correspondence: Correspondence,
                      declaration: Declaration,
-                     estate: Estate)
+                     estate: Estate,
+                     trustEndDate: Option[LocalDate])
 
 object GetEstate {
 
@@ -112,6 +113,7 @@ object GetEstate {
     (JsPath \ "matchData").read[MatchData] and
       (JsPath \ "correspondence").read[Correspondence] and
       (JsPath \ "declaration").read[Declaration] and
-      (JsPath \ "details" \ "estate").read[Estate]
+      (JsPath \ "details" \ "estate").read[Estate] and
+      (JsPath \ "trustEndDate").readNullable[LocalDate]
     )(GetEstate.apply _)
 }

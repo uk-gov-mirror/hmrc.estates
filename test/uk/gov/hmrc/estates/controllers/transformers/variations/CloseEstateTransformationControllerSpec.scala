@@ -37,14 +37,16 @@ import scala.concurrent.Future
 class CloseEstateTransformationControllerSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers {
 
   private val cc = stubControllerComponents()
-  val identifierAction = new FakeIdentifierAction(cc.parsers.default, Agent)
+  private val identifierAction = new FakeIdentifierAction(cc.parsers.default, Agent)
 
-  val fakeUtr: String = "utr"
+  private val fakeUtr: String = "utr"
+
+  private val closeEstateTransformationService: CloseEstateTransformationService =
+    mock[CloseEstateTransformationService]
+  private val controller: CloseEstateTransformationController =
+    new CloseEstateTransformationController(identifierAction, cc, closeEstateTransformationService)
 
   "close estate" - {
-
-    val closeEstateTransformationService = mock[CloseEstateTransformationService]
-    val controller = new CloseEstateTransformationController(identifierAction, cc, closeEstateTransformationService)
 
     "must add a new close estate transform" in {
 
@@ -71,6 +73,41 @@ class CloseEstateTransformationControllerSpec extends FreeSpec with MockitoSugar
 
       val result = controller.close(fakeUtr).apply(request)
       status(result) mustBe BAD_REQUEST
+    }
+  }
+
+  "get close date" - {
+
+    "must return date if the transform exists" in {
+
+      val expectedResult: LocalDate = LocalDate.parse("2000-01-01")
+
+      when(closeEstateTransformationService.getCloseDate(any(), any()))
+        .thenReturn(Future.successful(Some(expectedResult)))
+
+      val request = FakeRequest("GET", "path")
+        .withHeaders(CONTENT_TYPE -> "application/json")
+
+      val result = controller.getCloseDate(fakeUtr).apply(request)
+
+      status(result) mustBe OK
+      contentType(result) mustBe Some(JSON)
+      contentAsJson(result) mustBe Json.toJson(expectedResult)
+    }
+
+    "must return false if the transform doesn't exist" in {
+
+      when(closeEstateTransformationService.getCloseDate(any(), any()))
+        .thenReturn(Future.successful(None))
+
+      val request = FakeRequest("GET", "path")
+        .withHeaders(CONTENT_TYPE -> "application/json")
+
+      val result = controller.getCloseDate(fakeUtr).apply(request)
+
+      status(result) mustBe OK
+      contentType(result) mustBe Some(JSON)
+      contentAsJson(result) mustBe Json.obj()
     }
   }
 }

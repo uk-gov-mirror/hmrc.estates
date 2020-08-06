@@ -46,6 +46,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
     val REGISTRATION_SUBMITTED_BY_ORGANISATION = "RegistrationSubmittedByOrganisation"
     val REGISTRATION_SUBMITTED_BY_AGENT = "RegistrationSubmittedByAGent"
 
+    val VARIATION_PREPARATION_FAILED = "VariationPreparationFailed"
     val VARIATION_SUBMITTED_BY_ORGANISATION = "VariationSubmittedByOrganisation"
     val VARIATION_SUBMITTED_BY_AGENT = "VariationSubmittedByAGent"
     val VARIATION_SUBMISSION_FAILED = "VariationSubmissionFailed"
@@ -219,4 +220,28 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       internalId = internalId,
       errorReason = Json.toJson(response.response)
     )
+
+  def auditVariationTransformationError(internalId: String,
+                                        utr: String,
+                                        data: JsValue = Json.obj(),
+                                        errorReason: String = "",
+                                        jsErrors: JsValue = Json.obj()
+                                       )(implicit hc: HeaderCarrier): Unit = {
+    val request = Json.obj(
+      "utr" -> utr,
+      "data" -> data
+    )
+
+    val response = Json.obj(
+      "errorReason" -> errorReason,
+      "jsErrors" -> jsErrors
+    )
+
+    audit(
+      event = AuditEvent.VARIATION_PREPARATION_FAILED,
+      request = request,
+      internalId = internalId,
+      response = response
+    )
+  }
 }

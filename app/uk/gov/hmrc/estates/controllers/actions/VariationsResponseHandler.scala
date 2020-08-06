@@ -30,36 +30,6 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
 
   def recoverFromException(auditType: String)(implicit request: IdentifierRequest[JsValue],hc: HeaderCarrier): PartialFunction[Throwable, Result] = {
 
-    case InvalidCorrelationIdException =>
-      Logger.error(s"[ErrorHandler] InvalidCorrelationIdException returned")
-      auditService.auditErrorResponse(
-        auditType,
-        request.body,
-        request.identifier,
-        errorReason = "Submission has not passed validation. Invalid CorrelationId."
-      )
-      invalidCorrelationIdErrorResult
-
-    case DuplicateSubmissionException =>
-      Logger.error(s"[ErrorHandler] DuplicateSubmissionException returned")
-      auditService.auditErrorResponse(
-        auditType,
-        request.body,
-        request.identifier,
-        errorReason = "Duplicate Correlation Id was submitted."
-      )
-      duplicateSubmissionErrorResult
-
-    case ServiceNotAvailableException(_) =>
-      Logger.error(s"[ErrorHandler] ServiceNotAvailableException returned")
-      auditService.auditErrorResponse(
-        auditType,
-        request.body,
-        request.identifier,
-        errorReason = "Service unavailable."
-      )
-      serviceUnavailableErrorResult
-
     case EtmpCacheDataStaleException =>
       Logger.error(s"[ErrorHandler] EtmpCacheDataStaleException returned")
       auditService.auditErrorResponse(
@@ -81,6 +51,5 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
       )
       internalServerErrorErrorResult
   }
-
 
 }

@@ -37,4 +37,15 @@ object VariationErrorResults {
   val duplicateSubmissionErrorResult: Result = Conflict(toBody(DuplicateSubmissionErrorResponse))
   val internalServerErrorErrorResult: Result = InternalServerError(toBody(InternalServerErrorErrorResponse))
   val serviceUnavailableErrorResult: Result = ServiceUnavailable(toBody(ServiceUnavailableErrorResponse))
+
+  def fromErrorResponse(errorResponse: ErrorResponse): Result = {
+    errorResponse match {
+      case InvalidRequestErrorResponse => invalidRequestErrorResult
+      case InvalidCorrelationIdErrorResponse => invalidCorrelationIdErrorResult
+      case DuplicateSubmissionErrorResponse => duplicateSubmissionErrorResult
+      case InternalServerErrorErrorResponse => internalServerErrorErrorResult
+      case ServiceUnavailableErrorResponse => serviceUnavailableErrorResult
+      case response => InternalServerError(toBody(response))
+    }
+  }
 }

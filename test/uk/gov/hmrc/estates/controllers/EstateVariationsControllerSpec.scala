@@ -30,11 +30,12 @@ import uk.gov.hmrc.estates.BaseSpec
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, VariationsResponseHandler}
 import uk.gov.hmrc.estates.exceptions._
-import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
+import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
 import uk.gov.hmrc.estates.services.maintain.VariationService
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.estates.utils.Headers
+import uk.gov.hmrc.estates.utils.VariationErrorResponses._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -96,7 +97,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
       "invalid correlation id is provided in the headers" in {
 
         when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
-          .thenReturn(Future.failed(InvalidCorrelationIdException))
+          .thenReturn(Future.successful(VariationFailureResponse(InvalidCorrelationIdErrorResponse)))
 
         val SUT = estateVariationsController
 
@@ -105,13 +106,6 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
         val result = SUT.declare(utr)(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
-
-//        verify(mockAuditService).auditErrorResponse(
-//          Meq(estateVariationsAuditEvent),
-//          any(),
-//          Meq("id"),
-//          Meq("Submission has not passed validation. Invalid CorrelationId.")
-//        )(any())
 
         val output = contentAsJson(result)
 
@@ -126,7 +120,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
       "submission with same correlation id is submitted." in {
 
         when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
-          .thenReturn(Future.failed(DuplicateSubmissionException))
+          .thenReturn(Future.successful(VariationFailureResponse(DuplicateSubmissionErrorResponse)))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
 
@@ -138,13 +132,6 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
         )
 
         status(result) mustBe CONFLICT
-
-//        verify(mockAuditService).auditErrorResponse(
-//          Meq(estateVariationsAuditEvent),
-//          any(),
-//          Meq("id"),
-//          Meq("Duplicate Correlation Id was submitted.")
-//        )(any())
 
         val output = contentAsJson(result)
 
@@ -159,7 +146,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
       "the register endpoint called and something goes wrong." in {
 
         when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
-          .thenReturn(Future.failed(InternalServerErrorException("some error")))
+          .thenReturn(Future.successful(VariationFailureResponse(InternalServerErrorErrorResponse)))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
 
@@ -171,13 +158,6 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
         )
 
         status(result) mustBe INTERNAL_SERVER_ERROR
-
-//        verify(mockAuditService).auditErrorResponse(
-//          Meq(estateVariationsAuditEvent),
-//          any(),
-//          Meq("id"),
-//          any[String]
-//        )(any())
 
         val output = contentAsJson(result)
 
@@ -221,7 +201,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
       "the des returns Service Unavailable as dependent service is down. " in {
 
         when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
-          .thenReturn(Future.failed(ServiceNotAvailableException("dependent service is down")))
+          .thenReturn(Future.successful(VariationFailureResponse(ServiceUnavailableErrorResponse)))
 
         when(mockConfig.variationsApiSchema).thenReturn(appConfig.variationsApiSchema)
 
@@ -233,13 +213,6 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
         )
 
         status(result) mustBe SERVICE_UNAVAILABLE
-
-//        verify(mockAuditService).auditErrorResponse(
-//          Meq(estateVariationsAuditEvent),
-//          any(),
-//          Meq("id"),
-//          Meq("Service unavailable.")
-//        )(any())
 
         val output = contentAsJson(result)
 

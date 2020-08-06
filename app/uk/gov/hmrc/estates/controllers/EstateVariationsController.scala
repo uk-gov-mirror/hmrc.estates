@@ -49,7 +49,7 @@ class EstateVariationsController @Inject()(
               case response: VariationSuccessResponse => Ok(Json.toJson(response))
               case VariationFailureResponse(errorResponse) => ErrorResults.fromErrorResponse(errorResponse)
             }
-        } recover responseHandler.recoverFromException("EstateVariationAuditingToBeFixed")
+        } recover responseHandler.recoverFromException
       )
     }
   }

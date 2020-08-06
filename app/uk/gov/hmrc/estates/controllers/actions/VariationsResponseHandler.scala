@@ -27,16 +27,15 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 class VariationsResponseHandler @Inject()(auditService: AuditService) {
 
-  def recoverFromException(auditType: String)(implicit request: IdentifierRequest[JsValue],hc: HeaderCarrier): PartialFunction[Throwable, Result] = {
+  def recoverFromException(implicit request: IdentifierRequest[JsValue],hc: HeaderCarrier): PartialFunction[Throwable, Result] = {
 
     case e =>
       Logger.error(s"[ErrorHandler] Exception returned ${e.getMessage}")
 
-      auditService.auditErrorResponse(
-        auditType,
-        request.body,
+      auditService.auditVariationError(
         request.identifier,
-        errorReason = s"${e.getMessage}"
+        request.body,
+        e.getMessage
       )
       internalServerErrorErrorResult
   }

@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.estates.transformers
 
-import play.api.Logger
 import play.api.libs.json.{JsValue, _}
-import uk.gov.hmrc.estates.transformers.variations.{AddAmendBusinessPersonalRepTransform, AddAmendIndividualPersonalRepTransform}
 import uk.gov.hmrc.estates.transformers.register._
+import uk.gov.hmrc.estates.transformers.variations.{AddAmendBusinessPersonalRepTransform, AddAmendIndividualPersonalRepTransform, AddCloseEstateTransform}
 
 trait DeltaTransform {
 
@@ -67,19 +66,24 @@ object DeltaTransform {
     readsForTransform[AddAmendBusinessPersonalRepTransform](AddAmendBusinessPersonalRepTransform.key)
   }
 
+  private def closeEstateReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    readsForTransform[AddCloseEstateTransform](AddCloseEstateTransform.key)
+  }
+
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
       (
         personalRepReads orElse
-        agentDetailsReads orElse
-        deceasedReads orElse
-        amountTaxOwedReads orElse
-        correspondenceNameReads orElse
-        yearsReturnsReads orElse
-        amendIndividualPersonalRepReads orElse
-        amendBusinessPersonalRepReads orElse
-        readsForTransform[DeceasedTransform](DeceasedTransform.key)
-      )
+          agentDetailsReads orElse
+          deceasedReads orElse
+          amountTaxOwedReads orElse
+          correspondenceNameReads orElse
+          yearsReturnsReads orElse
+          amendIndividualPersonalRepReads orElse
+          amendBusinessPersonalRepReads orElse
+          readsForTransform[DeceasedTransform](DeceasedTransform.key) orElse
+          closeEstateReads
+        )
       (value.as[JsObject]) orElse
         (throw new Exception(s"Don't know how to deserialise transform"))
   )
@@ -124,6 +128,11 @@ object DeltaTransform {
       Json.obj(AddAmendBusinessPersonalRepTransform.key -> Json.toJson(transform)(AddAmendBusinessPersonalRepTransform.format))
   }
 
+  private def closeEstateWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {
+    case transform: AddCloseEstateTransform =>
+      Json.obj(AddCloseEstateTransform.key -> Json.toJson(transform)(AddCloseEstateTransform.format))
+  }
+
   def defaultWrites[T <: DeltaTransform]: PartialFunction[T, JsValue] = {
     case transform => throw new Exception(s"Don't know how to serialise transform - $transform")
   }
@@ -131,14 +140,15 @@ object DeltaTransform {
   implicit val writes: Writes[DeltaTransform] = Writes[DeltaTransform] { deltaTransform =>
     (
       personalRepWrites orElse
-      agentDetailsWrites orElse
-      amountOfTaxOwedWrites orElse
-      deceasedWrites orElse
-      correspondenceNameWrites orElse
-      yearsReturnsWrites orElse
-      amendIndividualPersonalRepWrites orElse
-      amendBusinessPersonalRepWrites orElse
-      defaultWrites
+        agentDetailsWrites orElse
+        amountOfTaxOwedWrites orElse
+        deceasedWrites orElse
+        correspondenceNameWrites orElse
+        yearsReturnsWrites orElse
+        amendIndividualPersonalRepWrites orElse
+        amendBusinessPersonalRepWrites orElse
+        closeEstateWrites orElse
+        defaultWrites
       ).apply(deltaTransform)
   }
 

@@ -18,9 +18,8 @@ package uk.gov.hmrc.estates.models.variation
 
 import play.api.Logger
 import play.api.http.Status._
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import uk.gov.hmrc.estates.exceptions._
 
 trait VariationResponse
 
@@ -30,8 +29,15 @@ object VariationSuccessResponse {
   implicit val formats: Format[VariationSuccessResponse] = Json.format[VariationSuccessResponse]
 }
 
+case class VariationFailureResponse(status: Int, body: String="", message: String="") extends VariationResponse
+
+object VariationFailureResponse {
+  implicit val formats: OFormat[VariationFailureResponse] = Json.format[VariationFailureResponse]
+}
+
 object VariationResponse {
 
+  private val logPrefix = "[VariationTvnResponse]"
   implicit lazy val httpReads: HttpReads[VariationResponse] =
     new HttpReads[VariationResponse] {
       override def read(method: String, url: String, response: HttpResponse): VariationResponse = {
@@ -43,25 +49,23 @@ object VariationResponse {
           case OK =>
             response.json.as[VariationSuccessResponse](VariationSuccessResponse.formats)
           case BAD_REQUEST if response.body contains "INVALID_CORRELATIONID" =>
-            Logger.error(s"[VariationTvnResponse] Bad Request for invalid correlation id response from des ")
-            throw InvalidCorrelationIdException
+            failure(response, "Invalid correlation id response from DES")
           case BAD_REQUEST =>
-            Logger.error(s"[VariationTvnResponse] Bad Request response from des ")
-            throw BadRequestException
+            failure(response, "Bad Request response from DES")
           case CONFLICT if response.body contains "DUPLICATE_SUBMISSION" =>
-            Logger.error(s"[VariationTvnResponse] Duplicate submission response from des")
-            throw DuplicateSubmissionException
+            failure(response, "Duplicate submission response from DES")
           case INTERNAL_SERVER_ERROR =>
-            Logger.error(s"[VariationTvnResponse] Internal server error response from des")
-            throw InternalServerErrorException("des is currently experiencing problems that require live service intervention")
+            failure(response, "Internal server error response from DES")
           case SERVICE_UNAVAILABLE =>
-            Logger.error("[VariationTvnResponse] Service unavailable response from des.")
-            throw ServiceNotAvailableException("des dependent service is down.")
+            failure(response, "Service unavailable response from DES")
           case status =>
-            Logger.error(s"[VariationTvnResponse]  Error response from des : $status")
-            throw InternalServerErrorException(s"Error response from des $status")
+            failure(response, s"Error response from DES: $status")
         }
       }
     }
 
+  private def failure(response: HttpResponse, message: String) = {
+    Logger.error(s"$logPrefix $message")
+    VariationFailureResponse(response.status, response.body, message)
+  }
 }

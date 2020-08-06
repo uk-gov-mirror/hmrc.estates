@@ -21,7 +21,7 @@ import play.api.libs.json.{JsError, Json, Reads}
 import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models.getEstate._
-import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationSuccessResponse}
+import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, EstateRegistration, ExistingCheckRequest, NoMatchResponse, RegistrationFailureResponse, RegistrationTrnResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.estates.utils.JsonRequests
 
@@ -523,8 +523,10 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
       val futureResult = connector.estateVariation(variation)
 
-      whenReady(futureResult.failed) {
-        result => result mustBe BadRequestException
+      whenReady(futureResult) {
+        result =>
+          result mustBe a[VariationFailureResponse]
+          result.asInstanceOf[VariationFailureResponse].status mustBe BAD_REQUEST
       }
 
     }
@@ -537,8 +539,10 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, url, requestBody, CONFLICT, Json.stringify(jsonResponse409DuplicateCorrelation))
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe DuplicateSubmissionException
+        whenReady(futureResult) {
+          result =>
+            result mustBe a[VariationFailureResponse]
+            result.asInstanceOf[VariationFailureResponse].status mustBe CONFLICT
         }
       }
     }
@@ -550,9 +554,10 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse400CorrelationId))
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe InvalidCorrelationIdException
-
+        whenReady(futureResult) {
+          result =>
+            result mustBe a[VariationFailureResponse]
+            result.asInstanceOf[VariationFailureResponse].status mustBe BAD_REQUEST
         }
       }
     }
@@ -565,8 +570,10 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe an[ServiceNotAvailableException]
+        whenReady(futureResult) {
+          result =>
+            result mustBe a[VariationFailureResponse]
+            result.asInstanceOf[VariationFailureResponse].status mustBe SERVICE_UNAVAILABLE
         }
       }
     }
@@ -579,8 +586,10 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         val futureResult = connector.estateVariation(estateVariationsRequest)
 
-        whenReady(futureResult.failed) {
-          result => result mustBe an[InternalServerErrorException]
+        whenReady(futureResult) {
+          result =>
+            result mustBe a[VariationFailureResponse]
+            result.asInstanceOf[VariationFailureResponse].status mustBe INTERNAL_SERVER_ERROR
         }
       }
     }

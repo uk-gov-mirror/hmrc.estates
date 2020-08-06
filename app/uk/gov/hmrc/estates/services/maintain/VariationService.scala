@@ -22,7 +22,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.estates.exceptions.{EtmpCacheDataStaleException, InternalServerErrorException}
 import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
-import uk.gov.hmrc.estates.models.variation.{VariationResponse, VariationSuccessResponse}
+import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.JsonOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -101,6 +101,13 @@ class VariationService @Inject()(
         Logger.info(s"[VariationService][doSubmit] variation submitted")
 
         auditService.auditVariationSubmitted(isAgent, internalId, payload, response)
+
+        response
+
+      case response: VariationFailureResponse =>
+        Logger.error(s"[VariationService][doSubmit] variation failed: ${response.response}")
+
+        auditService.auditVariationFailed(internalId, payload, response)
 
         response
 

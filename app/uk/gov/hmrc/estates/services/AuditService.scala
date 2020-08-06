@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDecla
 import uk.gov.hmrc.estates.models.auditing.EstatesAuditData
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
-import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
+import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -48,6 +48,8 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
 
     val VARIATION_SUBMITTED_BY_ORGANISATION = "VariationSubmittedByOrganisation"
     val VARIATION_SUBMITTED_BY_AGENT = "VariationSubmittedByAGent"
+    val VARIATION_SUBMISSION_FAILED = "VariationSubmissionFailed"
+
   }
 
   def audit(event: String, request: JsValue, internalId: String, response: JsValue)
@@ -67,9 +69,8 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
 
   // TODO: Get rid of this
   def auditErrorResponse(eventName: String, request: JsValue, internalId: String, errorReason: String)
-                        (implicit hc: HeaderCarrier): Unit = {
+                        (implicit hc: HeaderCarrier): Unit =
     auditErrorResponse(eventName, request, internalId, JsString(errorReason))
-  }
 
   // TODO: Make this private
   def auditErrorResponse(eventName: String, request: JsValue, internalId: String, errorReason: JsValue)
@@ -86,46 +87,42 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
   }
 
   def auditGetRegistrationSuccess(result: EstateRegistrationNoDeclaration)
-                                 (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+                                 (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
     audit(
       AuditEvent.GET_REGISTRATION,
       Json.obj(),
       request.identifier,
       Json.toJson(result)
     )
-  }
 
   def auditGetRegistrationFailed(
                                    transforms: ComposedDeltaTransform,
                                    errorReason: String,
                                    jsErrors: String = "")
-                                (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+                                (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
     auditTransformationError(
       AuditEvent.GET_REGISTRATION_FAILED,
       Json.obj(),
       Json.toJson(transforms),
       errorReason,
       jsErrors)
-  }
 
   def auditGetVariationSuccess(utr: String, result: GetEstateProcessedResponse)
-                              (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+                              (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
     audit(
       AuditEvent.GET_VARIATION,
       Json.obj("utr" -> utr),
       request.identifier,
       Json.toJson(result)
     )
-  }
 
   def auditGetVariationFailed(utr: String, errorReason: JsValue)
-                             (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
+                             (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
     auditErrorResponse(
       AuditEvent.GET_VARIATION_FAILED,
       Json.obj("utr" -> utr),
       request.identifier,
       errorReason)
-  }
 
   def auditRegistrationSubmitted(payload: EstateRegistration, trn: String)
                                 (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
@@ -148,15 +145,13 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
                                payload: EstateRegistration,
                                errorReason: String,
                                jsErrors: String = "")
-                             (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit = {
-
+                             (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
     audit(
       event = AuditEvent.REGISTRATION_SUBMISSION_FAILED,
       request = Json.toJson(payload),
       internalId = request.identifier,
       response = Json.obj("errorReason" -> errorReason)
     )
-  }
 
   def auditRegistrationTransformationError(
                                             data: JsValue = Json.obj(),
@@ -213,4 +208,15 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       response = Json.toJson(response)
     )
   }
+
+  def auditVariationFailed(internalId: String,
+                           payload: JsValue,
+                           response: VariationFailureResponse)
+                          (implicit hc: HeaderCarrier): Unit =
+    auditErrorResponse(
+      eventName = AuditEvent.VARIATION_SUBMISSION_FAILED,
+      request = Json.toJson(payload),
+      internalId = internalId,
+      errorReason = Json.toJson(response.response)
+    )
 }

@@ -28,10 +28,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsSuccess, JsValue, Json}
 import uk.gov.hmrc.estates.exceptions.EtmpCacheDataStaleException
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, ResponseHeader}
-import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
+import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
 import uk.gov.hmrc.estates.services._
 import uk.gov.hmrc.estates.utils.JsonRequests
+import uk.gov.hmrc.estates.utils.VariationErrorResponses.DuplicateSubmissionErrorResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -55,36 +56,19 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
     override def now: LocalDate = LocalDate.of(1999, 3, 14)
   }
 
-  "Declare no change" should {
+  "submitDeclaration" should {
 
     "submit data correctly when the version matches, and then reset the cache" in {
 
       val desService = mock[DesService]
-      val successfulResponse = VariationSuccessResponse("TVN34567890")
 
       val variationsTransformationService = mock[VariationsTransformationService]
       val auditService = mock[AuditService]
       val transformer = mock[VariationDeclarationService]
 
-      when(variationsTransformationService.populatePersonalRepAddress(any[JsValue]))
-        .thenReturn(JsSuccess(estateInfoJson))
+      val successfulResponse = VariationSuccessResponse("TVN34567890")
 
-      when(variationsTransformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier]))
-        .thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
-
-      when(desService.getEstateInfoFormBundleNo(utr))
-        .thenReturn(Future.successful(formBundleNo))
-
-      val response = GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))
-
-      when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(response))
-
-      when(transformer.transform(any(),any(),any(),any()))
-        .thenReturn(JsSuccess(transformedJson))
-
-      when(desService.estateVariation(any())(any[HeaderCarrier]))
-        .thenReturn(Future.successful(successfulResponse))
+      val response = setupForTest(desService, successfulResponse, variationsTransformationService, transformer)
 
       val service = new VariationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
 
@@ -113,6 +97,57 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
         arg.getValue mustBe transformedJson
       }}
     }
+    "audit error when submission fails" in {
+
+      val desService = mock[DesService]
+      val variationsTransformationService = mock[VariationsTransformationService]
+      val auditService = mock[AuditService]
+      val transformer = mock[VariationDeclarationService]
+
+      val failedResponse = VariationFailureResponse(DuplicateSubmissionErrorResponse)
+
+      setupForTest(desService, failedResponse, variationsTransformationService, transformer)
+
+      val service = new VariationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
+
+      whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
+
+        variationResponse mustBe failedResponse
+
+        verify(auditService).auditVariationFailed(
+          equalTo(internalId),
+          any(),
+          equalTo(failedResponse))(any())
+      }}
+    }
+  }
+
+  private def setupForTest(
+                            desService: DesService,
+                            variationResponse: VariationResponse,
+                            variationsTransformationService: VariationsTransformationService,
+                            transformer: VariationDeclarationService) = {
+    when(variationsTransformationService.populatePersonalRepAddress(any[JsValue]))
+      .thenReturn(JsSuccess(estateInfoJson))
+
+    when(variationsTransformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier]))
+      .thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
+
+    when(desService.getEstateInfoFormBundleNo(utr))
+      .thenReturn(Future.successful(formBundleNo))
+
+    val response: GetEstateProcessedResponse = GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))
+
+    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+      .thenReturn(Future.successful(response))
+
+    when(transformer.transform(any(), any(), any(), any()))
+      .thenReturn(JsSuccess(transformedJson))
+
+    when(desService.estateVariation(any())(any[HeaderCarrier]))
+      .thenReturn(Future.successful(variationResponse))
+
+    response
   }
 
   "Fail if the etmp data version doesn't match our submission data" in {

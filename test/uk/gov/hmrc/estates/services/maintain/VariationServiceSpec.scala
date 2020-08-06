@@ -49,7 +49,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
   private val declarationName = DeclarationName(NameType("Handy", None, "Andy"))
 
-  private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None, None)
+  private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None)
 
   object LocalDateServiceStub extends LocalDateService {
     override def now: LocalDate = LocalDate.of(1999, 3, 14)

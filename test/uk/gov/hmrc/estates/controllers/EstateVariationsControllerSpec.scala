@@ -174,7 +174,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
         NameType("firstname", None, "Surname")
       )
 
-      val declarationForApi = DeclarationForApi(declaration, None, None)
+      val declarationForApi = DeclarationForApi(declaration, None)
 
       when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
         .thenReturn(Future(VariationFailureResponse(EtmpDataStaleErrorResponse)))

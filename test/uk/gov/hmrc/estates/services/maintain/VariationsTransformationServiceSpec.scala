@@ -31,7 +31,7 @@ import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
 import uk.gov.hmrc.estates.repositories.VariationsTransformationRepositoryImpl
 import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
+import uk.gov.hmrc.estates.transformers.variations.{AddAmendIndividualPersonalRepTransform, AddCloseEstateTransform}
 import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -140,14 +140,15 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
     )
 
     val existingTransforms = Seq(
-      AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo)
+      AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo),
+      AddCloseEstateTransform(LocalDate.parse("2020-08-06"))
     )
 
     val repository = mock[VariationsTransformationRepositoryImpl]
 
     when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
 
-    val transformedJson = JsonUtils.getJsonValueFromFile("transformed/variations/valid-get-estate-response-transformed-with-amend-personal-rep.json")
+    val transformedJson = JsonUtils.getJsonValueFromFile("transformed/variations/valid-get-estate-response-transformed-with-amend-personal-rep-and-close.json")
     val expectedResponse = GetEstateProcessedResponse(transformedJson, processedResponse.responseHeader)
 
     val service = new VariationsTransformationService(repository, desService, auditService)

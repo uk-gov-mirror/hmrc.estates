@@ -26,13 +26,12 @@ import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsSuccess, JsValue, Json}
-import uk.gov.hmrc.estates.exceptions.EtmpCacheDataStaleException
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, ResponseHeader}
 import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
 import uk.gov.hmrc.estates.services._
 import uk.gov.hmrc.estates.utils.JsonRequests
-import uk.gov.hmrc.estates.utils.VariationErrorResponses.DuplicateSubmissionErrorResponse
+import uk.gov.hmrc.estates.utils.VariationErrorResponses.{DuplicateSubmissionErrorResponse, EtmpDataStaleErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -164,8 +163,8 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
     val service = new VariationService(desService, transformationService, transformer, auditService, LocalDateServiceStub)
 
-    whenReady(service.submitDeclaration(utr, internalId, declaration).failed) { exception =>
-      exception mustBe an[EtmpCacheDataStaleException.type]
+    whenReady(service.submitDeclaration(utr, internalId, declaration)) { response =>
+      response mustBe VariationFailureResponse(EtmpDataStaleErrorResponse)
       verify(desService, times(0)).estateVariation(any())(any[HeaderCarrier])
     }
   }

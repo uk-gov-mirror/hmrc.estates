@@ -20,25 +20,14 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc.Result
-import uk.gov.hmrc.estates.exceptions._
-import uk.gov.hmrc.estates.utils.VariationErrorResults._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.services.AuditService
+import uk.gov.hmrc.estates.utils.VariationErrorResults._
 import uk.gov.hmrc.http.HeaderCarrier
 
 class VariationsResponseHandler @Inject()(auditService: AuditService) {
 
   def recoverFromException(auditType: String)(implicit request: IdentifierRequest[JsValue],hc: HeaderCarrier): PartialFunction[Throwable, Result] = {
-
-    case EtmpCacheDataStaleException =>
-      Logger.error(s"[ErrorHandler] EtmpCacheDataStaleException returned")
-      auditService.auditErrorResponse(
-        auditType,
-        request.body,
-        request.identifier,
-        errorReason = "Cached ETMP data stale."
-      )
-      etmpDataStaleErrorResult
 
     case e =>
       Logger.error(s"[ErrorHandler] Exception returned ${e.getMessage}")

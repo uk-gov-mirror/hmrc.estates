@@ -30,13 +30,12 @@ object VariationErrorResults {
   val invalidUtrErrorResult: Result = BadRequest(toBody(InvalidUtrErrorResponse))
   val invalidPostcodeErrorResult: Result = BadRequest(toBody(InvalidPostcodeErrorResponse))
 
-  val etmpDataStaleErrorResult: Result = BadRequest(toBody(EtmpDataStaleErrorResponse))
-
   val invalidRequestErrorResult: Result = BadRequest(toBody(InvalidRequestErrorResponse))
   val invalidCorrelationIdErrorResult: Result = InternalServerError(toBody(InvalidCorrelationIdErrorResponse))
   val duplicateSubmissionErrorResult: Result = Conflict(toBody(DuplicateSubmissionErrorResponse))
   val internalServerErrorErrorResult: Result = InternalServerError(toBody(InternalServerErrorErrorResponse))
   val serviceUnavailableErrorResult: Result = ServiceUnavailable(toBody(ServiceUnavailableErrorResponse))
+  val etmpDataStaleErrorResult: Result = BadRequest(toBody(EtmpDataStaleErrorResponse))
 
   def fromErrorResponse(errorResponse: ErrorResponse): Result = {
     errorResponse match {
@@ -45,6 +44,7 @@ object VariationErrorResults {
       case DuplicateSubmissionErrorResponse => duplicateSubmissionErrorResult
       case InternalServerErrorErrorResponse => internalServerErrorErrorResult
       case ServiceUnavailableErrorResponse => serviceUnavailableErrorResult
+      case EtmpDataStaleErrorResponse => etmpDataStaleErrorResult
       case response => InternalServerError(toBody(response))
     }
   }

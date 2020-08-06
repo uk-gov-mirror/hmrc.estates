@@ -177,7 +177,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
       val declarationForApi = DeclarationForApi(declaration, None, None)
 
       when(mockVariationService.submitDeclaration(any(), any(), any())(any()))
-        .thenReturn(Future.failed(EtmpCacheDataStaleException))
+        .thenReturn(Future(VariationFailureResponse(EtmpDataStaleErrorResponse)))
 
       val result = SUT.declare("1234567890")(
         FakeRequest("POST", "/no-change/1234567890").withBody(Json.toJson(declarationForApi))
@@ -188,13 +188,6 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
         "code" -> "ETMP_DATA_STALE",
         "message" -> "ETMP returned a changed form bundle number for the estate."
       )
-
-//      verify(mockAuditService).auditErrorResponse(
-//        Meq(estateVariationsAuditEvent),
-//        any(),
-//        Meq("id"),
-//        Meq("Cached ETMP data stale.")
-//      )(any())
     }
 
     "return service unavailable" when {

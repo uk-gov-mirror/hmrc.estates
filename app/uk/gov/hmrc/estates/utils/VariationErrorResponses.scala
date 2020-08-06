@@ -23,11 +23,10 @@ object VariationErrorResponses {
   object InvalidUtrErrorResponse extends ErrorResponse("INVALID_UTR", "Provided utr is invalid.")
   object InvalidPostcodeErrorResponse extends ErrorResponse("INVALID_POSTCODE", "Provided postcode is invalid.")
 
-  object EtmpDataStaleErrorResponse extends ErrorResponse("ETMP_DATA_STALE", "ETMP returned a changed form bundle number for the estate.")
-
   object InvalidRequestErrorResponse extends ErrorResponse("BAD_REQUEST", "Provided request is invalid.")
   object InvalidCorrelationIdErrorResponse extends ErrorResponse("INVALID_CORRELATIONID", "Submission has not passed validation. Invalid CorrelationId.")
   object DuplicateSubmissionErrorResponse extends ErrorResponse("DUPLICATE_SUBMISSION", "Duplicate Correlation Id was submitted.")
   object InternalServerErrorErrorResponse extends ErrorResponse("INTERNAL_SERVER_ERROR", "Internal server error.")
   object ServiceUnavailableErrorResponse extends ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable.")
+  object EtmpDataStaleErrorResponse extends ErrorResponse("ETMP_DATA_STALE", "ETMP returned a changed form bundle number for the estate.")
 }

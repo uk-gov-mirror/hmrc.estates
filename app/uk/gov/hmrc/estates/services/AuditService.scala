@@ -201,12 +201,14 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
   def auditVariationTransformationError(internalId: String,
                                         utr: String,
                                         data: JsValue = Json.obj(),
+                                        transforms: JsValue,
                                         errorReason: String = "",
                                         jsErrors: JsValue = Json.obj()
                                        )(implicit hc: HeaderCarrier): Unit = {
     val request = Json.obj(
       "utr" -> utr,
-      "data" -> data
+      "data" -> data,
+      "transformations" -> transforms
     )
 
     val response = Json.obj(

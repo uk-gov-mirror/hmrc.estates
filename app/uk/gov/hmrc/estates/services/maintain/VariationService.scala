@@ -58,6 +58,7 @@ class VariationService @Inject()(
               utr,
               internalId,
               cached.getEstate,
+              JsString("Copy address transform"),
               "Failed to populate personal rep address",
               JsError.toJson(e)
             )
@@ -89,6 +90,7 @@ class VariationService @Inject()(
               utr,
               internalId,
               transformedDocument,
+              transforms = JsString("Declaration transforms"),
               "Problem transforming data for ETMP submission",
               JsError.toJson(e)
             )
@@ -96,13 +98,6 @@ class VariationService @Inject()(
             Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
         }
       case e: JsError =>
-        auditService.auditVariationTransformationError(
-          utr,
-          internalId,
-          cachedWithAmendedPerRepAddress,
-          "Failed to transform estate info",
-          JsError.toJson(e)
-        )
         Logger.error(s"[VariationDeclarationService] utr $utr: Failed to transform estate info ${JsError.toJson(e)}")
         Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
     }

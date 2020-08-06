@@ -89,7 +89,7 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
 
         Logger.debug(s"[VariationsTransformationService] utr $utr applying the following transforms $transformations")
 
-        for {
+        val result = for {
           initial <- {
             Logger.info(s"[VariationsTransformationService] utr $utr applying transformations")
             transformations.applyTransform(json)
@@ -99,6 +99,8 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
             transformations.applyDeclarationTransform(initial)
           }
         } yield transformed
+
+        auditIfError(result, utr, internalId, json, transformations, "Failed to apply declaration transformations.")
     }
   }
 
@@ -113,6 +115,28 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
       val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
       val copyAddress = __.json.update(pathToPersonalRepAddress.json.copyFrom(pathToCorrespondenceAddress.json.pick))
       beforeJson.transform(copyAddress)
+    }
+  }
+
+  private def auditIfError(result: JsResult[JsValue],
+                           utr: String,
+                           internalId: String,
+                           json: JsValue,
+                           transforms: ComposedDeltaTransform,
+                           errorReason: String)
+                          (implicit hc : HeaderCarrier): JsResult[JsValue] = {
+    result match {
+      case JsError(e) =>
+        auditService.auditVariationTransformationError(
+          utr,
+          internalId,
+          json,
+          Json.toJson(transforms),
+          errorReason,
+          JsError.toJson(e)
+        )
+        result
+      case _ => result
     }
   }
 }

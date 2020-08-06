@@ -21,8 +21,8 @@ import java.time.LocalDate
 import javax.inject.Inject
 import uk.gov.hmrc.estates.models.Success
 import uk.gov.hmrc.estates.services.VariationsTransformationService
+import uk.gov.hmrc.estates.transformers.JsonOperations
 import uk.gov.hmrc.estates.transformers.variations.AddCloseEstateTransform
-import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, JsonOperations}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,17 +31,6 @@ class CloseEstateTransformationService @Inject()(transformationService: Variatio
 
   def addCloseEstateTransformer(utr: String, internalId: String, closeDate: LocalDate): Future[Success.type] = {
     transformationService.addNewTransform(utr, internalId, AddCloseEstateTransform(closeDate)).map(_ => Success)
-  }
-
-  def getCloseDate(utr: String, internalId: String): Future[Option[LocalDate]] = {
-    transformationService.getTransformations(utr, internalId) map {
-      case Some(ComposedDeltaTransform(transforms)) =>
-        transforms.flatMap {
-          case AddCloseEstateTransform(date) => Some(date)
-          case _ => None
-        }.lastOption
-      case _ => None
-    }
   }
 
 }

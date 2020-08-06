@@ -24,7 +24,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, MustMatchers}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.estates.services.VariationsTransformationService
-import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.variations.AddCloseEstateTransform
 import uk.gov.hmrc.estates.utils.JsonRequests
 import uk.gov.hmrc.http.HeaderCarrier
@@ -57,37 +56,6 @@ class CloseEstateTransformationServiceSpec extends FreeSpec with MockitoSugar wi
           internalId,
           AddCloseEstateTransform(closeDate)
         )
-      }
-    }
-
-    "must check the current transformations and" - {
-
-      "return Some close date if an AddCloseEstateTransform exists" in {
-
-        val date: LocalDate = LocalDate.parse("2000-01-01")
-
-        val transform = AddCloseEstateTransform(date)
-
-        when(transformationService.getTransformations(any(), any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(List(transform)))))
-
-        whenReady(service.getCloseDate(fakeUtr, internalId)) { result =>
-
-          result mustBe Some(date)
-
-        }
-      }
-
-      "return None if an AddCloseEstateTransform doesn't exist" in {
-
-        when(transformationService.getTransformations(any(), any()))
-          .thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
-
-        whenReady(service.getCloseDate(fakeUtr, internalId)) { result =>
-
-          result mustBe None
-
-        }
       }
     }
   }

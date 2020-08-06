@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 import javax.inject.Inject
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{JsError, JsSuccess, JsValue}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.services.maintain.CloseEstateTransformationService
@@ -48,15 +48,6 @@ class CloseEstateTransformationController @Inject()(
         case JsError(errors) =>
           logger.warn(s"Supplied payload could not be read as LocalDate - $errors")
           Future.successful(BadRequest)
-      }
-    }
-  }
-
-  def getCloseDate(utr: String): Action[AnyContent] = identify.async {
-    implicit request => {
-      closeEstateTransformationService.getCloseDate(utr, request.identifier) map {
-        case Some(date) => Ok(Json.toJson(date))
-        case _ => Ok(Json.obj())
       }
     }
   }

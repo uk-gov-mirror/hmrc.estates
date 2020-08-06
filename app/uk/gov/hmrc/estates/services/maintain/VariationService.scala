@@ -21,11 +21,11 @@ import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.estates.exceptions.InternalServerErrorException
 import uk.gov.hmrc.estates.models.DeclarationForApi
-import uk.gov.hmrc.estates.models.getEstate.{EtmpCacheDataStaleResponse, GetEstateProcessedResponse, GetEstateResponse}
+import uk.gov.hmrc.estates.models.getEstate.{EtmpCacheDataStaleResponse, GetEstateProcessedResponse, GetEstateResponse, NotEnoughDataResponse}
 import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.JsonOps._
-import uk.gov.hmrc.estates.utils.VariationErrorResponses.EtmpDataStaleErrorResponse
+import uk.gov.hmrc.estates.utils.VariationErrorResponses.{EtmpDataStaleErrorResponse, InternalServerErrorErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -73,7 +73,9 @@ class VariationService @Inject()(
             Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
         }
       case EtmpCacheDataStaleResponse => Future.successful(VariationFailureResponse(EtmpDataStaleErrorResponse))
-   }
+        // TODO: Do we need to be more specific?
+      case _ => Future.successful(VariationFailureResponse(InternalServerErrorErrorResponse))
+    }
   }
 
   private def getCachedEstateData(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {

@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.utils.JsonRequests
-import uk.gov.hmrc.estates.utils.VariationErrorResponses._
+import uk.gov.hmrc.estates.utils.ErrorResponses._
 
 class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 

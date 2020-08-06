@@ -27,7 +27,7 @@ import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.repositories.CacheRepositoryImpl
-import uk.gov.hmrc.estates.utils.VariationErrorResponses.DuplicateSubmissionErrorResponse
+import uk.gov.hmrc.estates.utils.ErrorResponses.DuplicateSubmissionErrorResponse
 import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}
 
 import scala.concurrent.Future
@@ -141,20 +141,8 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
       }
     }
 
-    "return AlreadyRegisteredException " when {
-      "connector returns  AlreadyRegisteredException." in new DesServiceFixture {
-        when(mockConnector.registerEstate(estateRegRequest)).
-          thenReturn(Future.failed(AlreadyRegisteredException))
-        val futureResult = SUT.registerEstate(estateRegRequest)
-
-        whenReady(futureResult.failed) {
-          result => result mustBe AlreadyRegisteredException
-        }
-      }
-    }
-
     "return same Exception " when {
-      "connector returns  exception." in new DesServiceFixture {
+      "connector returns exception." in new DesServiceFixture {
         when(mockConnector.registerEstate(estateRegRequest)).
           thenReturn(Future.failed(InternalServerErrorException("")))
         val futureResult = SUT.registerEstate(estateRegRequest)

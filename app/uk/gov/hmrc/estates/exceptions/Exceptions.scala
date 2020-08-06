@@ -18,7 +18,5 @@ package uk.gov.hmrc.estates.exceptions
 
 case class ServiceNotAvailableException(message : String )  extends Exception(message)
 case class InternalServerErrorException(message : String )  extends Exception(message)
-case object AlreadyRegisteredException extends Exception("Already registered")
 case object NotFoundException extends Exception("Not found")
-case object NoMatchException extends Exception("No matched")
 case object BadRequestException extends Exception("Bad request")

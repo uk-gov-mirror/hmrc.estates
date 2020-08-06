@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, VariationsResp
 import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.maintain.VariationService
-import uk.gov.hmrc.estates.utils.VariationErrorResults
+import uk.gov.hmrc.estates.utils.ErrorResults
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,7 +47,7 @@ class EstateVariationsController @Inject()(
             .submitDeclaration(utr, request.identifier, declarationForApi)
             .map {
               case response: VariationSuccessResponse => Ok(Json.toJson(response))
-              case VariationFailureResponse(errorResponse) => VariationErrorResults.fromErrorResponse(errorResponse)
+              case VariationFailureResponse(errorResponse) => ErrorResults.fromErrorResponse(errorResponse)
             }
         } recover responseHandler.recoverFromException("EstateVariationAuditingToBeFixed")
       )

@@ -25,7 +25,7 @@ import uk.gov.hmrc.estates.models.getEstate.{EtmpCacheDataStaleResponse, GetEsta
 import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.{AuditService, DesService, LocalDateService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.JsonOps._
-import uk.gov.hmrc.estates.utils.VariationErrorResponses.{EtmpDataStaleErrorResponse, InternalServerErrorErrorResponse}
+import uk.gov.hmrc.estates.utils.ErrorResponses.{EtmpDataStaleErrorResponse, InternalServerErrorErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global

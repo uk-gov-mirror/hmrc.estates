@@ -84,7 +84,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
       "estate already registered" in {
 
         when(mockRegistrationService.submit(any())(any(), any()))
-          .thenReturn(Future.failed(AlreadyRegisteredException))
+          .thenReturn(Future.successful(AlreadyRegisteredResponse))
 
         val result = controller.register().apply(request)
 

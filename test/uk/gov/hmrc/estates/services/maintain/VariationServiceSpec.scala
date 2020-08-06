@@ -31,7 +31,7 @@ import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, Variation
 import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
 import uk.gov.hmrc.estates.services._
 import uk.gov.hmrc.estates.utils.JsonRequests
-import uk.gov.hmrc.estates.utils.VariationErrorResponses.{DuplicateSubmissionErrorResponse, EtmpDataStaleErrorResponse}
+import uk.gov.hmrc.estates.utils.ErrorResponses.{DuplicateSubmissionErrorResponse, EtmpDataStaleErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future

@@ -18,7 +18,7 @@ package uk.gov.hmrc.estates.controllers
 
 import play.api.libs.json._
 import play.api.mvc.{ControllerComponents, Request, Result}
-import uk.gov.hmrc.estates.utils.VariationErrorResults._
+import uk.gov.hmrc.estates.utils.ErrorResults._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.Future

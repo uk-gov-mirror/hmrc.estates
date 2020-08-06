@@ -22,7 +22,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc.Result
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.services.AuditService
-import uk.gov.hmrc.estates.utils.VariationErrorResults._
+import uk.gov.hmrc.estates.utils.ErrorResults._
 import uk.gov.hmrc.http.HeaderCarrier
 
 class VariationsResponseHandler @Inject()(auditService: AuditService) {

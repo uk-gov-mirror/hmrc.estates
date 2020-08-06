@@ -20,7 +20,7 @@ import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.estates.models.ErrorResponse
-import uk.gov.hmrc.estates.utils.VariationErrorResponses._
+import uk.gov.hmrc.estates.utils.ErrorResponses._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 trait VariationResponse

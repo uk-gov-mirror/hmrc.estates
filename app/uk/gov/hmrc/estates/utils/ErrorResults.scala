@@ -20,9 +20,9 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.mvc.Results._
 import uk.gov.hmrc.estates.models.ErrorResponse
-import uk.gov.hmrc.estates.utils.VariationErrorResponses._
+import uk.gov.hmrc.estates.utils.ErrorResponses._
 
-object VariationErrorResults {
+object ErrorResults {
 
   protected def toBody(response: ErrorResponse): JsValue = Json.toJson(response)
 

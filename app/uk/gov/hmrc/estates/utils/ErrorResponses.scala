@@ -18,7 +18,7 @@ package uk.gov.hmrc.estates.utils
 
 import uk.gov.hmrc.estates.models.ErrorResponse
 
-object VariationErrorResponses {
+object ErrorResponses {
   object InvalidNameErrorResponse extends ErrorResponse("INVALID_NAME", "Provided name is invalid.")
   object InvalidUtrErrorResponse extends ErrorResponse("INVALID_UTR", "Provided utr is invalid.")
   object InvalidPostcodeErrorResponse extends ErrorResponse("INVALID_POSTCODE", "Provided postcode is invalid.")

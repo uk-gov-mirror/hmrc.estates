@@ -35,7 +35,7 @@ import uk.gov.hmrc.estates.models.{DeclarationForApi, DeclarationName, NameType}
 import uk.gov.hmrc.estates.services.maintain.VariationService
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.estates.utils.Headers
-import uk.gov.hmrc.estates.utils.VariationErrorResponses._
+import uk.gov.hmrc.estates.utils.ErrorResponses._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

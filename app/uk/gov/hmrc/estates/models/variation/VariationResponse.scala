@@ -19,6 +19,8 @@ package uk.gov.hmrc.estates.models.variation
 import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.estates.models.ErrorResponse
+import uk.gov.hmrc.estates.utils.VariationErrorResponses._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 trait VariationResponse
@@ -29,7 +31,7 @@ object VariationSuccessResponse {
   implicit val formats: Format[VariationSuccessResponse] = Json.format[VariationSuccessResponse]
 }
 
-case class VariationFailureResponse(status: Int, body: String="", message: String="") extends VariationResponse
+case class VariationFailureResponse(response: ErrorResponse) extends VariationResponse
 
 object VariationFailureResponse {
   implicit val formats: OFormat[VariationFailureResponse] = Json.format[VariationFailureResponse]
@@ -37,35 +39,35 @@ object VariationFailureResponse {
 
 object VariationResponse {
 
-  private val logPrefix = "[VariationTvnResponse]"
+  private val logPrefix = "[VariationResponse]"
   implicit lazy val httpReads: HttpReads[VariationResponse] =
     new HttpReads[VariationResponse] {
       override def read(method: String, url: String, response: HttpResponse): VariationResponse = {
 
-        Logger.debug(s"[VariationResponse] response body ${response.body}")
+        Logger.debug(s"$logPrefix response body ${response.body}")
 
-        Logger.info(s"[VariationTvnResponse]  response status received from des: ${response.status}")
+        Logger.info(s"$logPrefix  response status received from des: ${response.status}")
         response.status match {
           case OK =>
             response.json.as[VariationSuccessResponse](VariationSuccessResponse.formats)
           case BAD_REQUEST if response.body contains "INVALID_CORRELATIONID" =>
-            failure(response, "Invalid correlation id response from DES")
-          case BAD_REQUEST =>
-            failure(response, "Bad Request response from DES")
+            failure(InvalidCorrelationIdErrorResponse)
           case CONFLICT if response.body contains "DUPLICATE_SUBMISSION" =>
-            failure(response, "Duplicate submission response from DES")
+            failure(DuplicateSubmissionErrorResponse)
+          case BAD_REQUEST =>
+            failure(InvalidRequestErrorResponse)
           case INTERNAL_SERVER_ERROR =>
-            failure(response, "Internal server error response from DES")
+            failure(InternalServerErrorErrorResponse)
           case SERVICE_UNAVAILABLE =>
-            failure(response, "Service unavailable response from DES")
+            failure(ServiceUnavailableErrorResponse)
           case status =>
-            failure(response, s"Error response from DES: $status")
+            failure(ErrorResponse(status.toString, s"Error response from DES: $status"))
         }
       }
     }
 
-  private def failure(response: HttpResponse, message: String) = {
-    Logger.error(s"$logPrefix $message")
-    VariationFailureResponse(response.status, response.body, message)
+  private def failure(errorResponse: ErrorResponse) = {
+    Logger.error(s"$logPrefix ${errorResponse.message}")
+    VariationFailureResponse(errorResponse)
   }
 }

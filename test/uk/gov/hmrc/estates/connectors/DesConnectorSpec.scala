@@ -24,6 +24,7 @@ import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, EstateRegistration, ExistingCheckRequest, NoMatchResponse, RegistrationFailureResponse, RegistrationTrnResponse, SubscriptionIdResponse}
 import uk.gov.hmrc.estates.utils.JsonRequests
+import uk.gov.hmrc.estates.utils.VariationErrorResponses.{DuplicateSubmissionErrorResponse, InternalServerErrorErrorResponse, InvalidCorrelationIdErrorResponse, InvalidRequestErrorResponse, ServiceUnavailableErrorResponse}
 
 class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
@@ -525,8 +526,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
       whenReady(futureResult) {
         result =>
-          result mustBe a[VariationFailureResponse]
-          result.asInstanceOf[VariationFailureResponse].status mustBe BAD_REQUEST
+          result mustBe VariationFailureResponse(InvalidRequestErrorResponse)
       }
 
     }
@@ -541,8 +541,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         whenReady(futureResult) {
           result =>
-            result mustBe a[VariationFailureResponse]
-            result.asInstanceOf[VariationFailureResponse].status mustBe CONFLICT
+            result mustBe VariationFailureResponse(DuplicateSubmissionErrorResponse)
         }
       }
     }
@@ -556,8 +555,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         whenReady(futureResult) {
           result =>
-            result mustBe a[VariationFailureResponse]
-            result.asInstanceOf[VariationFailureResponse].status mustBe BAD_REQUEST
+            result mustBe VariationFailureResponse(InvalidCorrelationIdErrorResponse)
         }
       }
     }
@@ -572,8 +570,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         whenReady(futureResult) {
           result =>
-            result mustBe a[VariationFailureResponse]
-            result.asInstanceOf[VariationFailureResponse].status mustBe SERVICE_UNAVAILABLE
+            result mustBe VariationFailureResponse(ServiceUnavailableErrorResponse)
         }
       }
     }
@@ -588,8 +585,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
         whenReady(futureResult) {
           result =>
-            result mustBe a[VariationFailureResponse]
-            result.asInstanceOf[VariationFailureResponse].status mustBe INTERNAL_SERVER_ERROR
+            result mustBe VariationFailureResponse(InternalServerErrorErrorResponse)
         }
       }
     }

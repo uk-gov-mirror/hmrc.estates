@@ -18,7 +18,7 @@ package uk.gov.hmrc.estates.controllers
 
 import play.api.libs.json._
 import play.api.mvc.{ControllerComponents, Request, Result}
-import uk.gov.hmrc.estates.utils.ErrorResponses._
+import uk.gov.hmrc.estates.utils.VariationErrorResults._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.Future
@@ -53,17 +53,17 @@ class EstatesBaseController(cc: ControllerComponents) extends BackendController(
   def getErrorResponse(key: String, error: String): Result = {
     error match {
       case "error.path.missing" =>
-        invalidRequestErrorResponse
+        invalidRequestErrorResult
       case _ =>
         errors(key)
     }
   }
 
   protected val errors: Map[String, Result] = Map(
-    "name" -> invalidNameErrorResponse,
-    "utr" -> invalidUtrErrorResponse,
-    "postcode" -> invalidPostcodeErrorResponse
+    "name" -> invalidNameErrorResult,
+    "utr" -> invalidUtrErrorResult,
+    "postcode" -> invalidPostcodeErrorResult
 
-  ).withDefaultValue(invalidRequestErrorResponse)
+  ).withDefaultValue(invalidRequestErrorResult)
 
 }

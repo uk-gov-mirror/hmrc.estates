@@ -26,7 +26,7 @@ import uk.gov.hmrc.estates.models.RegistrationTrnResponse
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
 import uk.gov.hmrc.estates.services.RosmPatternService
 import uk.gov.hmrc.estates.services.register.RegistrationService
-import uk.gov.hmrc.estates.utils.ErrorResponses._
+import uk.gov.hmrc.estates.utils.VariationErrorResults._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,11 +51,11 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
                     Ok(Json.toJson(response))
                 }
               case _ =>
-                Future.successful(internalServerErrorErrorResponse)
+                Future.successful(internalServerErrorErrorResult)
             }
         } recover {
-          case AlreadyRegisteredException => duplicateSubmissionErrorResponse
-          case _ => internalServerErrorErrorResponse
+          case AlreadyRegisteredException => duplicateSubmissionErrorResult
+          case _ => internalServerErrorErrorResult
         }
       )
     }
@@ -68,7 +68,7 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
         .getRegistration()
         .map(response => Ok(Json.toJson(response)))
         .recover {
-          case _ => internalServerErrorErrorResponse
+          case _ => internalServerErrorErrorResult
         }
   }
 

@@ -21,7 +21,7 @@ import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc.Result
 import uk.gov.hmrc.estates.exceptions._
-import uk.gov.hmrc.estates.utils.ErrorResponses._
+import uk.gov.hmrc.estates.utils.VariationErrorResults._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.services.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -38,7 +38,7 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
         request.identifier,
         errorReason = "Submission has not passed validation. Invalid CorrelationId."
       )
-      invalidCorrelationIdErrorResponse
+      invalidCorrelationIdErrorResult
 
     case DuplicateSubmissionException =>
       Logger.error(s"[ErrorHandler] DuplicateSubmissionException returned")
@@ -48,7 +48,7 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
         request.identifier,
         errorReason = "Duplicate Correlation Id was submitted."
       )
-      duplicateSubmissionErrorResponse
+      duplicateSubmissionErrorResult
 
     case ServiceNotAvailableException(_) =>
       Logger.error(s"[ErrorHandler] ServiceNotAvailableException returned")
@@ -58,7 +58,7 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
         request.identifier,
         errorReason = "Service unavailable."
       )
-      serviceUnavailableErrorResponse
+      serviceUnavailableErrorResult
 
     case EtmpCacheDataStaleException =>
       Logger.error(s"[ErrorHandler] EtmpCacheDataStaleException returned")
@@ -68,7 +68,7 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
         request.identifier,
         errorReason = "Cached ETMP data stale."
       )
-      etmpDataStaleErrorResponse
+      etmpDataStaleErrorResult
 
     case e =>
       Logger.error(s"[ErrorHandler] Exception returned ${e.getMessage}")
@@ -79,7 +79,7 @@ class VariationsResponseHandler @Inject()(auditService: AuditService) {
         request.identifier,
         errorReason = s"${e.getMessage}"
       )
-      internalServerErrorErrorResponse
+      internalServerErrorErrorResult
   }
 
 

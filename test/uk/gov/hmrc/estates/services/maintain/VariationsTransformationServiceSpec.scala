@@ -24,7 +24,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{FreeSpec, MustMatchers}
-import play.api.libs.json.{JsResult, JsValue}
+import play.api.libs.json.{JsResult, JsValue, Json}
 import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
 import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
 import uk.gov.hmrc.estates.models.{AddressType, IdentificationType, NameType}
@@ -194,6 +194,24 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
             AddAmendIndividualPersonalRepTransform(existingPersonalRepInfo),
             AddAmendIndividualPersonalRepTransform(newPersonalRepIndInfo))))
       }
+    }
+  }
+
+  "remove all transforms" - {
+
+    val utr: String = "utr"
+    val internalId: String = "internalId"
+
+    val repository = mock[VariationsTransformationRepositoryImpl]
+    val service = new VariationsTransformationService(repository, mock[DesService], auditService)
+
+    when(repository.resetCache(any(), any())).thenReturn(Future.successful(Some(Json.obj())))
+
+    val result = service.removeAllTransformations(utr, internalId)
+
+    whenReady(result) { r =>
+      verify(repository).resetCache(utr, internalId)
+      r.get mustBe Json.obj()
     }
   }
 }

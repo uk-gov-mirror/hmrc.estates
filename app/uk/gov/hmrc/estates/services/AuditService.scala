@@ -53,6 +53,8 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
     val CLOSURE_SUBMITTED_BY_ORGANISATION = "ClosureSubmittedByOrganisation"
     val CLOSURE_SUBMITTED_BY_AGENT = "ClosureSubmittedByAgent"
 
+    val ENROLMENT_SUCCEEDED = "EnrolmentSucceeded"
+    val ENROLMENT_FAILED = "EnrolmentFailed"
   }
 
   def auditGetRegistrationSuccess(result: EstateRegistrationNoDeclaration)
@@ -229,6 +231,38 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       request = request,
       internalId = internalId,
       response = response
+    )
+  }
+
+  def auditEnrolSuccess(subscriptionId: String, trn: String, internalId: String)
+                       (implicit hc: HeaderCarrier): Unit = {
+
+    val request = Json.obj(
+      "trn" -> trn,
+      "subscriptionID" -> subscriptionId
+    )
+
+    audit(
+      event = AuditEvent.ENROLMENT_SUCCEEDED,
+      request = request,
+      internalId = internalId,
+      response = Json.obj()
+    )
+  }
+
+  def auditEnrolFailed(subscriptionId: String, trn: String, internalId: String, errorMessage: String)
+                      (implicit hc: HeaderCarrier): Unit = {
+
+    val request = Json.obj(
+      "trn" -> trn,
+      "subscriptionID" -> subscriptionId
+    )
+
+    auditErrorResponse(
+      eventName = AuditEvent.ENROLMENT_FAILED,
+      request = request,
+      internalId = internalId,
+      errorReason = JsString(errorMessage)
     )
   }
 

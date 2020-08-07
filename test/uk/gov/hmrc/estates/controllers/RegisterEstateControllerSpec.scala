@@ -66,7 +66,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
         when(mockRegistrationService.submit(any())(any(), any()))
           .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
 
-        when(mockRosmPatternService.enrol(any(), any())(any())).thenReturn(Future.successful(TaxEnrolmentSuccess))
+        when(mockRosmPatternService.enrol(any(), any(), any())(any())).thenReturn(Future.successful(TaxEnrolmentSuccess))
 
         val result = controller.register().apply(request)
 
@@ -74,7 +74,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
 
         (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
 
-        verify(mockRosmPatternService, times(1)).enrol(any(), any())(any[HeaderCarrier])
+        verify(mockRosmPatternService, times(1)).enrol(any(), any(), any())(any[HeaderCarrier])
       }
 
     }

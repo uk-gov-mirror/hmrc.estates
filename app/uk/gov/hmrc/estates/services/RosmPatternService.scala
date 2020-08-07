@@ -20,7 +20,8 @@ import com.google.inject.ImplementedBy
 import javax.inject.Inject
 import play.api.Logger
 import uk.gov.hmrc.auth.core.AffinityGroup
-import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentNotProcessed, TaxEnrolmentSuccess, TaxEnrolmentSubscriberResponse}
+import uk.gov.hmrc.estates.exceptions.InternalServerErrorException
+import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentNotProcessed, TaxEnrolmentSubscriberResponse, TaxEnrolmentSuccess}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,30 +30,50 @@ import scala.util.control.NonFatal
 
 
 class RosmPatternServiceImpl @Inject()(desService: DesService,
-                                       taxEnrolmentService : TaxEnrolmentsService
+                                       taxEnrolmentService : TaxEnrolmentsService,
+                                       auditService: AuditService
                                       ) extends RosmPatternService {
 
-  def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
+  def getSubscriptionIdAndEnrol(trn : String, identifier: String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
 
     for {
       subscriptionIdResponse <- desService.getSubscriptionId(trn = trn)
-      taxEnrolmentSuscriberResponse <- taxEnrolmentService.setSubscriptionId(subscriptionIdResponse.subscriptionId)
+      taxEnrolmentResponse <- taxEnrolmentService.setSubscriptionId(subscriptionIdResponse.subscriptionId)
     } yield {
-      taxEnrolmentSuscriberResponse
+      taxEnrolmentResponse match {
+        case TaxEnrolmentSuccess =>
+          auditService.auditEnrolSuccess(
+            subscriptionIdResponse.subscriptionId,
+            trn,
+            identifier
+          )
+          TaxEnrolmentSuccess
+
+        case response: TaxEnrolmentFailure =>
+          auditService.auditEnrolFailed(
+            subscriptionIdResponse.subscriptionId,
+            trn,
+            identifier,
+            response.reason
+          )
+          response
+        case r => r
+      }
     }
   }
 
-  override def enrol(trn: String, affinityGroup: AffinityGroup)
+  override def enrol(trn: String, affinityGroup: AffinityGroup, identifier: String)
                     (implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse] = {
     affinityGroup match {
       case AffinityGroup.Organisation =>
-        getSubscriptionIdAndEnrol(trn) map {
+        getSubscriptionIdAndEnrol(trn, identifier) map {
           case TaxEnrolmentSuccess =>
             Logger.info(s"Rosm completed successfully for provided trn: $trn.")
             TaxEnrolmentSuccess
           case response: TaxEnrolmentFailure =>
             Logger.error(s"Rosm pattern is not completed for trn: $trn. with reason: ${response.reason}")
             response
+          case r => r
         } recover {
           case NonFatal(e) =>
             Logger.error(s"Rosm pattern is not completed for trn: $trn.")
@@ -67,5 +88,5 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
 }
 @ImplementedBy(classOf[RosmPatternServiceImpl])
 trait RosmPatternService {
-  def enrol(trn: String, affinityGroup: AffinityGroup)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse]
+  def enrol(trn: String, affinityGroup: AffinityGroup, identifier: String)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse]
 }

@@ -84,7 +84,7 @@ class VariationService @Inject()(
           case JsSuccess(value, _) =>
             Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
             Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")
-            doSubmit(value, internalId, declaration.agentDetails.isDefined)
+            doSubmit(value, internalId)
           case e: JsError =>
             auditService.auditVariationTransformationError(
               utr,
@@ -120,7 +120,7 @@ class VariationService @Inject()(
     }
   }
 
-  private def doSubmit(value: JsValue, internalId: String, isAgent: Boolean)
+  private def doSubmit(value: JsValue, internalId: String)
                       (implicit hc: HeaderCarrier): Future[VariationResponse] = {
 
     val payload = value.applyRules
@@ -130,7 +130,7 @@ class VariationService @Inject()(
 
         Logger.info(s"[VariationService][doSubmit] variation submitted")
 
-        auditService.auditVariationSubmitted(isAgent, internalId, payload, response)
+        auditService.auditVariationSubmitted(internalId, payload, response)
 
         response
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.services
 
 import javax.inject.Inject
-import play.api.libs.json.{JsString, JsValue, Json}
+import play.api.libs.json.{JsPath, JsString, JsValue, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration}
@@ -47,9 +47,11 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
     val REGISTRATION_SUBMITTED_BY_AGENT = "RegistrationSubmittedByAGent"
 
     val VARIATION_PREPARATION_FAILED = "VariationPreparationFailed"
-    val VARIATION_SUBMITTED_BY_ORGANISATION = "VariationSubmittedByOrganisation"
-    val VARIATION_SUBMITTED_BY_AGENT = "VariationSubmittedByAGent"
     val VARIATION_SUBMISSION_FAILED = "VariationSubmissionFailed"
+    val VARIATION_SUBMITTED_BY_ORGANISATION = "VariationSubmittedByOrganisation"
+    val VARIATION_SUBMITTED_BY_AGENT = "VariationSubmittedByAgent"
+    val CLOSURE_SUBMITTED_BY_ORGANISATION = "ClosureSubmittedByOrganisation"
+    val CLOSURE_SUBMITTED_BY_AGENT = "ClosureSubmittedByAgent"
 
   }
 
@@ -157,11 +159,15 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
     )
   }
 
-  def auditVariationSubmitted(isAgent: Boolean,
-                              internalId: String,
+  def auditVariationSubmitted(internalId: String,
                               payload: JsValue,
                               response: VariationSuccessResponse
                              )(implicit hc: HeaderCarrier): Unit = {
+    val hasField = (field: String) =>
+      payload.transform((JsPath \ field).json.pick).isSuccess
+
+    val isAgent = hasField("agentDetails")
+
     val event = if (isAgent) {
       AuditEvent.VARIATION_SUBMITTED_BY_AGENT
     } else {

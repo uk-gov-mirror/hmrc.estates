@@ -84,9 +84,8 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
           .transform(equalTo(transformedResponse), equalTo(response.getEstate), equalTo(declaration), any())
 
         verify(auditService).auditVariationSubmitted(
-          equalTo(false),
           equalTo(internalId),
-          any(),
+          equalTo(transformedJson),
           equalTo(successfulResponse))(any())
 
         val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
@@ -115,7 +114,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
         verify(auditService).auditVariationFailed(
           equalTo(internalId),
-          any(),
+          equalTo(transformedJson),
           equalTo(failedResponse))(any())
       }}
     }

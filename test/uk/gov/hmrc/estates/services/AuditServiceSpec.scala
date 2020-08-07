@@ -83,7 +83,7 @@ class AuditServiceSpec extends BaseSpec {
         val service = new AuditService(connector, appConfig)
 
         val request = Json.obj(
-          "endTrustDate" -> "2012-02-12"
+          "trustEndDate" -> "2012-02-12"
         )
 
         val response = VariationSuccessResponse("TRN123456")
@@ -107,7 +107,7 @@ class AuditServiceSpec extends BaseSpec {
         val service = new AuditService(connector, appConfig)
 
         val request = Json.obj(
-          "endTrustDate" -> "2012-02-12",
+          "trustEndDate" -> "2012-02-12",
           "agentDetails" -> Json.obj()    // Doesn't care about contents of object
         )
 

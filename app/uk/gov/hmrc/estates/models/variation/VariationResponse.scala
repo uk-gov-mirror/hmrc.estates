@@ -18,46 +18,56 @@ package uk.gov.hmrc.estates.models.variation
 
 import play.api.Logger
 import play.api.http.Status._
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.estates.models.ErrorResponse
+import uk.gov.hmrc.estates.utils.ErrorResponses._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import uk.gov.hmrc.estates.exceptions._
 
-final case class VariationResponse(tvn: String)
+trait VariationResponse
+
+final case class VariationSuccessResponse(tvn: String) extends VariationResponse
+
+object VariationSuccessResponse {
+  implicit val formats: Format[VariationSuccessResponse] = Json.format[VariationSuccessResponse]
+}
+
+case class VariationFailureResponse(response: ErrorResponse) extends VariationResponse
+
+object VariationFailureResponse {
+  implicit val formats: OFormat[VariationFailureResponse] = Json.format[VariationFailureResponse]
+}
 
 object VariationResponse {
 
-  implicit val formats: Format[VariationResponse] = Json.format[VariationResponse]
-
+  private val logPrefix = "[VariationResponse]"
   implicit lazy val httpReads: HttpReads[VariationResponse] =
     new HttpReads[VariationResponse] {
       override def read(method: String, url: String, response: HttpResponse): VariationResponse = {
 
-        Logger.debug(s"[VariationResponse] response body ${response.body}")
+        Logger.debug(s"$logPrefix response body ${response.body}")
 
-        Logger.info(s"[VariationTvnResponse]  response status received from des: ${response.status}")
+        Logger.info(s"$logPrefix  response status received from des: ${response.status}")
         response.status match {
           case OK =>
-            response.json.as[VariationResponse]
+            response.json.as[VariationSuccessResponse](VariationSuccessResponse.formats)
           case BAD_REQUEST if response.body contains "INVALID_CORRELATIONID" =>
-            Logger.error(s"[VariationTvnResponse] Bad Request for invalid correlation id response from des ")
-            throw InternalServerErrorException("Invalid correlation id response from des")
+            failure(InvalidCorrelationIdErrorResponse)
+          case CONFLICT if response.body contains "DUPLICATE_SUBMISSION" =>
+            failure(DuplicateSubmissionErrorResponse)
           case BAD_REQUEST =>
-            Logger.error(s"[VariationTvnResponse] Bad Request response from des ")
-            throw BadRequestException
-          case CONFLICT =>
-            Logger.error(s"[VariationTvnResponse] Conflict response from des")
-            throw InternalServerErrorException("Conflict response from des")
+            failure(InvalidRequestErrorResponse)
           case INTERNAL_SERVER_ERROR =>
-            Logger.error(s"[VariationTvnResponse] Internal server error response from des")
-            throw InternalServerErrorException("des is currently experiencing problems that require live service intervention")
+            failure(InternalServerErrorErrorResponse)
           case SERVICE_UNAVAILABLE =>
-            Logger.error("[VariationTvnResponse] Service unavailable response from des.")
-            throw ServiceNotAvailableException("des dependent service is down.")
+            failure(ServiceUnavailableErrorResponse)
           case status =>
-            Logger.error(s"[VariationTvnResponse]  Error response from des : $status")
-            throw InternalServerErrorException(s"Error response from des $status")
+            failure(ErrorResponse(status.toString, s"Error response from DES: $status"))
         }
       }
     }
 
+  private def failure(errorResponse: ErrorResponse) = {
+    Logger.error(s"$logPrefix ${errorResponse.message}")
+    VariationFailureResponse(errorResponse)
+  }
 }

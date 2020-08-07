@@ -18,7 +18,7 @@ package uk.gov.hmrc.estates.controllers
 
 import play.api.libs.json._
 import play.api.mvc.{ControllerComponents, Request, Result}
-import uk.gov.hmrc.estates.utils.ErrorResponses._
+import uk.gov.hmrc.estates.utils.ErrorResults._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.Future
@@ -37,33 +37,33 @@ class EstatesBaseController(cc: ControllerComponents) extends BackendController(
       case JsSuccess(payload, _) =>
         f(payload)
       case JsError(errs: Seq[(JsPath, Seq[JsonValidationError])]) =>
-        val response = handleErrorResponseByField(errs)
+        val response = handleErrorResultByField(errs)
         Future.successful(response)
     }
 
 
-  def handleErrorResponseByField(field: Seq[(JsPath, Seq[JsonValidationError])]): Result = {
+  def handleErrorResultByField(field: Seq[(JsPath, Seq[JsonValidationError])]): Result = {
 
     val fields = field.map { case (key, validationError) =>
       (key.toString.stripPrefix("/"), validationError.head.message)
     }
-    getErrorResponse(fields.head._1, fields.head._2)
+    getErrorResult(fields.head._1, fields.head._2)
   }
 
-  def getErrorResponse(key: String, error: String): Result = {
+  def getErrorResult(key: String, error: String): Result = {
     error match {
       case "error.path.missing" =>
-        invalidRequestErrorResponse
+        invalidRequestErrorResult
       case _ =>
-        errors(key)
+        errorResults(key)
     }
   }
 
-  protected val errors: Map[String, Result] = Map(
-    "name" -> invalidNameErrorResponse,
-    "utr" -> invalidUtrErrorResponse,
-    "postcode" -> invalidPostcodeErrorResponse
+  protected val errorResults: Map[String, Result] = Map(
+    "name" -> invalidNameErrorResult,
+    "utr" -> invalidUtrErrorResult,
+    "postcode" -> invalidPostcodeErrorResult
 
-  ).withDefaultValue(invalidRequestErrorResponse)
+  ).withDefaultValue(invalidRequestErrorResult)
 
 }

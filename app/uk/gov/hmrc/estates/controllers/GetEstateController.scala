@@ -17,10 +17,9 @@
 package uk.gov.hmrc.estates.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsPath, JsValue, Json}
+import play.api.libs.json.{JsPath, JsString, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
-import uk.gov.hmrc.estates.models.auditing.Auditing
 import uk.gov.hmrc.estates.models.getEstate._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
@@ -68,34 +67,19 @@ class GetEstateController @Inject()(identify: IdentifierAction,
       "errors" -> errors
     )
 
-    auditService.audit(
-      event = Auditing.GET_ESTATE,
-      request = Json.obj("utr" -> utr),
-      internalId = request.identifier,
-      response = reason
-    )
+    auditService.auditGetVariationFailed(utr, reason)
 
     InternalServerError(errors)
   }
 
   private def statusResponse(utr: String, status: GetEstateStatusResponse)
                             (implicit request: IdentifierRequest[AnyContent]): Unit = {
-    auditService.audit(
-      event = Auditing.GET_ESTATE,
-      request = Json.obj("utr" -> utr),
-      internalId = request.identifier,
-      response = Json.toJson(status)
-    )
+    auditService.auditGetVariationFailed(utr, Json.obj("status" -> Json.toJson(status)))
   }
 
   private def processedResponse(utr: String, processed: GetEstateProcessedResponse)
                                (implicit request: IdentifierRequest[AnyContent]): Unit = {
-    auditService.audit(
-      event = Auditing.GET_ESTATE,
-      request = Json.obj("utr" -> utr),
-      internalId = request.identifier,
-      response = Json.toJson(processed)
-    )
+    auditService.auditGetVariationSuccess(utr, processed)
   }
 
   private def getItemAtPath(utr: String, path: JsPath): Action[AnyContent] = {
@@ -147,13 +131,13 @@ class GetEstateController @Inject()(identify: IdentifierAction,
           case NotEnoughDataResponse(json, errors) =>
             notEnoughInformationResponse(utr, json, errors)
           case ResourceNotFoundResponse =>
-            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "Not Found received from DES.")
+            auditService.auditGetVariationFailed(utr, JsString(ResourceNotFoundResponse.toString))
             NotFound
           case errorResponse: GetEstateErrorResponse =>
-            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, errorResponse.toString)
+            auditService.auditGetVariationFailed(utr, JsString(errorResponse.toString))
             InternalServerError
           case _ =>
-            auditService.auditErrorResponse(Auditing.GET_ESTATE, Json.obj("utr" -> utr), request.identifier, "UNKNOWN")
+            auditService.auditGetVariationFailed(utr, JsString("UNKNOWN"))
             InternalServerError
         }
     }

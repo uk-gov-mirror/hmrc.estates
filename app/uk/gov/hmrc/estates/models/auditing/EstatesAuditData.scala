@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.estates.models.auditing
 
-object Auditing {
+import play.api.libs.json.{Format, JsValue, Json}
 
-  val ESTATE_REGISTRATION_SUBMITTED = "EstateRegistrationSubmitted"
+case class EstatesAuditData(request: JsValue,
+                            internalAuthId : String,
+                            response: Option[JsValue])
 
-  val GET_ESTATE = "GetEstate"
+object EstatesAuditData {
 
-  val ESTATE_VARIATION = "EstateVariation"
-  val ESTATE_VARIATION_ATTEMPT = "EstateVariationAttempt"
+  implicit val formats: Format[EstatesAuditData] = Json.format[EstatesAuditData]
 
-  val ESTATE_TRANSFORMATIONS = "EstateTransformations"
 }

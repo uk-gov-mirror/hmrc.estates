@@ -17,6 +17,7 @@
 package uk.gov.hmrc.estates.models.getEstate
 
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.estates.utils.ErrorResponses.EtmpDataStaleErrorResponse
 
 sealed trait GetEstateErrorResponse extends GetEstateResponse {
   override def toString: String = super.toString
@@ -52,4 +53,8 @@ case object ServiceUnavailableResponse extends GetEstateErrorResponse {
 
 case class TransformationErrorResponse(errors: String) extends GetEstateErrorResponse {
   override def toString: String = errors
+}
+
+case object EtmpCacheDataStaleResponse extends GetEstateErrorResponse {
+  override def toString: String = EtmpDataStaleErrorResponse.message
 }

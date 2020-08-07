@@ -22,15 +22,14 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, VariationsResponseHandler}
 import uk.gov.hmrc.estates.models.DeclarationForApi
-import uk.gov.hmrc.estates.models.auditing.Auditing
-import uk.gov.hmrc.estates.services.AuditService
+import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.maintain.VariationService
+import uk.gov.hmrc.estates.utils.ErrorResults
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class EstateVariationsController @Inject()(
                                             identify: IdentifierAction,
-                                            auditService: AuditService,
                                             variationService: VariationService,
                                             responseHandler: VariationsResponseHandler
                                           )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
@@ -40,14 +39,6 @@ class EstateVariationsController @Inject()(
     implicit request => {
       request.body.validate[DeclarationForApi].fold(
         errors => {
-
-          auditService.audit(
-            Auditing.ESTATE_VARIATION,
-            Json.obj("declaration" -> request.body),
-            request.identifier,
-            Json.toJson(Json.obj())
-          )
-
           Logger.error(s"[EstateVariationsDeclarationController][declare] unable to parse json as DeclarationForApi, $errors")
           Future.successful(BadRequest)
         },
@@ -55,17 +46,10 @@ class EstateVariationsController @Inject()(
           variationService
             .submitDeclaration(utr, request.identifier, declarationForApi)
             .map {
-              response =>
-
-                auditService.audit(
-                  Auditing.ESTATE_VARIATION,
-                  Json.toJson(declarationForApi),
-                  request.identifier,
-                  Json.toJson(response)
-                )
-                Ok(Json.toJson(response))
+              case response: VariationSuccessResponse => Ok(Json.toJson(response))
+              case VariationFailureResponse(errorResponse) => ErrorResults.fromErrorResponse(errorResponse)
             }
-        } recover responseHandler.recoverFromException(Auditing.ESTATE_VARIATION)
+        } recover responseHandler.recoverFromException
       )
     }
   }

@@ -25,7 +25,6 @@ object ErrorResponse {
 }
 
 object ApiResponse {
-  def alreadyRegisteredTrustsResponse = ErrorResponse(ALREADY_REGISTERED_CODE, ALREADY_REGISTERED_TRUSTS_MESSAGE)
   def alreadyRegisteredEstateResponse = ErrorResponse(ALREADY_REGISTERED_CODE, ALREADY_REGISTERED_ESTATE_MESSAGE)
   def invalidUTRErrorResponse = ErrorResponse(INVALID_UTR_CODE, INVALID_UTR_MESSAGE)
   def noMatchRegistrationResponse = ErrorResponse(NO_MATCH_CODE, NO_MATCH_MESSAGE)

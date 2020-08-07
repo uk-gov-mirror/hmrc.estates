@@ -76,9 +76,9 @@ class AuditServiceSpec extends BaseSpec {
           equalTo(expectedAuditData))(any(), any(), any())
       }
     }
-    
+
     "send Closure Submitted by Organisation" when {
-      "there are is an endTrustDate field" in {
+      "there is an endTrustDate field" in {
         val connector = mock[AuditConnector]
         val service = new AuditService(connector, appConfig)
 
@@ -102,7 +102,7 @@ class AuditServiceSpec extends BaseSpec {
     }
 
     "send Closure Submitted by Agent" when {
-      "there is are agentDetails and endTrustDate JSON fields" in {
+      "there are agentDetails and endTrustDate JSON fields" in {
         val connector = mock[AuditConnector]
         val service = new AuditService(connector, appConfig)
 

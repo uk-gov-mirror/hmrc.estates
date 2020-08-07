@@ -21,12 +21,10 @@ import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
-import uk.gov.hmrc.estates.exceptions._
-import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, RegistrationFailureResponse, RegistrationTrnResponse}
 import uk.gov.hmrc.estates.models.register.RegistrationDeclaration
+import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, RegistrationTrnResponse}
 import uk.gov.hmrc.estates.services.RosmPatternService
 import uk.gov.hmrc.estates.services.register.RegistrationService
-import uk.gov.hmrc.estates.utils.ErrorResults
 import uk.gov.hmrc.estates.utils.ErrorResults._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -48,7 +46,7 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
             .submit(declaration)
             .flatMap {
               case response @ RegistrationTrnResponse(trn) =>
-                rosmPatternService.enrol(trn, request.affinityGroup) map { _ =>
+                rosmPatternService.enrol(trn, request.affinityGroup, request.identifier) map { _ =>
                     Ok(Json.toJson(response))
                 }
               case AlreadyRegisteredResponse => Future.successful(duplicateSubmissionErrorResult)

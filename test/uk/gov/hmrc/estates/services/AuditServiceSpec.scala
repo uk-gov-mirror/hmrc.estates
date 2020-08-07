@@ -24,9 +24,12 @@ import uk.gov.hmrc.estates.models.auditing.EstatesAuditData
 import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class AuditServiceSpec extends BaseSpec {
+
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
   "auditVariationSubmitted" should {
     "send Variation Submitted by Organisation" when {
       "there are no special JSON fields" in {
@@ -49,6 +52,7 @@ class AuditServiceSpec extends BaseSpec {
           equalTo(expectedAuditData))(any(), any(), any())
       }
     }
+
     "send Variation Submitted by Agent" when {
       "there is an AgentDetails JSON field" in {
         val connector = mock[AuditConnector]
@@ -69,6 +73,55 @@ class AuditServiceSpec extends BaseSpec {
 
         verify(connector).sendExplicitAudit[EstatesAuditData](
           equalTo("VariationSubmittedByAgent"),
+          equalTo(expectedAuditData))(any(), any(), any())
+      }
+    }
+    
+    "send Closure Submitted by Organisation" when {
+      "there are is an endTrustDate field" in {
+        val connector = mock[AuditConnector]
+        val service = new AuditService(connector, appConfig)
+
+        val request = Json.obj(
+          "endTrustDate" -> "2012-02-12"
+        )
+
+        val response = VariationSuccessResponse("TRN123456")
+        service.auditVariationSubmitted("internalId", request, response)
+
+        val expectedAuditData = EstatesAuditData(
+          request,
+          "internalId",
+          Some(Json.toJson(response))
+        )
+
+        verify(connector).sendExplicitAudit[EstatesAuditData](
+          equalTo("ClosureSubmittedByOrganisation"),
+          equalTo(expectedAuditData))(any(), any(), any())
+      }
+    }
+
+    "send Closure Submitted by Agent" when {
+      "there is are agentDetails and endTrustDate JSON fields" in {
+        val connector = mock[AuditConnector]
+        val service = new AuditService(connector, appConfig)
+
+        val request = Json.obj(
+          "endTrustDate" -> "2012-02-12",
+          "agentDetails" -> Json.obj()    // Doesn't care about contents of object
+        )
+
+        val response = VariationSuccessResponse("TRN123456")
+        service.auditVariationSubmitted("internalId", request, response)
+
+        val expectedAuditData = EstatesAuditData(
+          request,
+          "internalId",
+          Some(Json.toJson(response))
+        )
+
+        verify(connector).sendExplicitAudit[EstatesAuditData](
+          equalTo("ClosureSubmittedByAgent"),
           equalTo(expectedAuditData))(any(), any(), any())
       }
     }

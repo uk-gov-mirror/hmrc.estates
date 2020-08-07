@@ -167,11 +167,13 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
       payload.transform((JsPath \ field).json.pick).isSuccess
 
     val isAgent = hasField("agentDetails")
+    val isClose = hasField("endTrustDate")
 
-    val event = if (isAgent) {
-      AuditEvent.VARIATION_SUBMITTED_BY_AGENT
-    } else {
-      AuditEvent.VARIATION_SUBMITTED_BY_ORGANISATION
+    val event = (isAgent, isClose) match {
+      case (false, false) => AuditEvent.VARIATION_SUBMITTED_BY_ORGANISATION
+      case (false, true) => AuditEvent.CLOSURE_SUBMITTED_BY_ORGANISATION
+      case (true, false) => AuditEvent.VARIATION_SUBMITTED_BY_AGENT
+      case (true, true) => AuditEvent.CLOSURE_SUBMITTED_BY_AGENT
     }
 
     audit(

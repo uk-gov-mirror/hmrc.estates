@@ -57,8 +57,7 @@ class VariationDeclarationService {
         endPreviousPersonalRepIfChanged(amendJson, cachedDocument, date) andThen
         putNewValue(__ \ 'reqHeader \ 'formBundleNo, JsString(responseHeader.formBundleNo)) andThen
         addDeclaration(declaration, amendJson) andThen
-        addAgentIfDefined(declaration.agentDetails) andThen
-        addEndDateIfDefined(declaration.endDate)
+        addAgentIfDefined(declaration.agentDetails)
     )
   }
 
@@ -169,13 +168,6 @@ class VariationDeclarationService {
       case Some(x) =>
         __.json.update(agentPath.json.put(Json.toJson(x)))
       case None =>
-        __.json.pick[JsObject]
-    }
-
-  private def addEndDateIfDefined(endDate: Option[LocalDate]): Reads[JsObject] = endDate match {
-      case Some(date) =>
-        __.json.update((__ \ 'trustEndDate).json.put(Json.toJson(date)))
-      case _ =>
         __.json.pick[JsObject]
     }
 

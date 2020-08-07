@@ -23,9 +23,9 @@ import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json._
 import uk.gov.hmrc.estates.config.{AppConfig, WSHttp}
-import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
-import uk.gov.hmrc.estates.models.variation.{EstateVariation, VariationResponse}
 import uk.gov.hmrc.estates.models._
+import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
+import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
 

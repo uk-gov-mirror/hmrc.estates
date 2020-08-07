@@ -16,40 +16,17 @@
 
 package uk.gov.hmrc.estates.utils
 
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Result
-import play.api.mvc.Results._
 import uk.gov.hmrc.estates.models.ErrorResponse
 
 object ErrorResponses {
+  object InvalidNameErrorResponse extends ErrorResponse("INVALID_NAME", "Provided name is invalid.")
+  object InvalidUtrErrorResponse extends ErrorResponse("INVALID_UTR", "Provided utr is invalid.")
+  object InvalidPostcodeErrorResponse extends ErrorResponse("INVALID_POSTCODE", "Provided postcode is invalid.")
 
-  protected def doErrorResponse(code: String, message: String): JsValue =
-    Json.toJson(ErrorResponse(code: String, message: String))
-
-  def invalidNameErrorResponse: Result =
-    BadRequest(doErrorResponse("INVALID_NAME", "Provided name is invalid."))
-
-  def invalidUtrErrorResponse: Result =
-    BadRequest(doErrorResponse("INVALID_UTR", "Provided utr is invalid."))
-
-  def invalidPostcodeErrorResponse: Result =
-    BadRequest(doErrorResponse("INVALID_POSTCODE", "Provided postcode is invalid."))
-
-  def invalidRequestErrorResponse: Result =
-    BadRequest(doErrorResponse("BAD_REQUEST", "Provided request is invalid."))
-
-  def invalidCorrelationIdErrorResponse: Result =
-    InternalServerError(doErrorResponse("INVALID_CORRELATIONID", "Submission has not passed validation. Invalid CorrelationId."))
-
-  def duplicateSubmissionErrorResponse: Result =
-    Conflict(doErrorResponse("DUPLICATE_SUBMISSION", "Duplicate Correlation Id was submitted."))
-
-  def internalServerErrorErrorResponse: Result =
-    InternalServerError(doErrorResponse("INTERNAL_SERVER_ERROR", "Internal server error."))
-
-  def serviceUnavailableErrorResponse: Result =
-    ServiceUnavailable(doErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable."))
-
-  def etmpDataStaleErrorResponse: Result =
-    BadRequest(doErrorResponse("ETMP_DATA_STALE", "ETMP returned a changed form bundle number for the estate."))
+  object InvalidRequestErrorResponse extends ErrorResponse("BAD_REQUEST", "Provided request is invalid.")
+  object InvalidCorrelationIdErrorResponse extends ErrorResponse("INVALID_CORRELATIONID", "Submission has not passed validation. Invalid CorrelationId.")
+  object DuplicateSubmissionErrorResponse extends ErrorResponse("DUPLICATE_SUBMISSION", "Duplicate Correlation Id was submitted.")
+  object InternalServerErrorErrorResponse extends ErrorResponse("INTERNAL_SERVER_ERROR", "Internal server error.")
+  object ServiceUnavailableErrorResponse extends ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable.")
+  object EtmpDataStaleErrorResponse extends ErrorResponse("ETMP_DATA_STALE", "ETMP returned a changed form bundle number for the estate.")
 }

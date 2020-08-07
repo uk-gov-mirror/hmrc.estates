@@ -25,8 +25,9 @@ import uk.gov.hmrc.estates.exceptions._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate._
-import uk.gov.hmrc.estates.models.variation.VariationResponse
+import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.repositories.CacheRepositoryImpl
+import uk.gov.hmrc.estates.utils.ErrorResponses.DuplicateSubmissionErrorResponse
 import uk.gov.hmrc.estates.utils.{JsonRequests, JsonUtils}
 
 import scala.concurrent.Future
@@ -140,20 +141,8 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
       }
     }
 
-    "return AlreadyRegisteredException " when {
-      "connector returns  AlreadyRegisteredException." in new DesServiceFixture {
-        when(mockConnector.registerEstate(estateRegRequest)).
-          thenReturn(Future.failed(AlreadyRegisteredException))
-        val futureResult = SUT.registerEstate(estateRegRequest)
-
-        whenReady(futureResult.failed) {
-          result => result mustBe AlreadyRegisteredException
-        }
-      }
-    }
-
     "return same Exception " when {
-      "connector returns  exception." in new DesServiceFixture {
+      "connector returns exception." in new DesServiceFixture {
         when(mockConnector.registerEstate(estateRegRequest)).
           thenReturn(Future.failed(InternalServerErrorException("")))
         val futureResult = SUT.registerEstate(estateRegRequest)
@@ -320,12 +309,12 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
       "connector returns VariationResponse." in new DesServiceFixture {
 
         when(mockConnector.estateVariation(estateVariationsRequest)).
-          thenReturn(Future.successful(VariationResponse("tvn123")))
+          thenReturn(Future.successful(VariationSuccessResponse("tvn123")))
 
         val futureResult = SUT.estateVariation(estateVariationsRequest)
 
         whenReady(futureResult) {
-          result => result mustBe VariationResponse("tvn123")
+          result => result mustBe VariationSuccessResponse("tvn123")
         }
 
       }
@@ -336,12 +325,12 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         "connector returns  DuplicateSubmissionException." in new DesServiceFixture {
 
           when(mockConnector.estateVariation(estateVariationsRequest)).
-            thenReturn(Future.failed(DuplicateSubmissionException))
+            thenReturn(Future.successful(VariationFailureResponse(DuplicateSubmissionErrorResponse)))
 
           val futureResult = SUT.estateVariation(estateVariationsRequest)
 
-          whenReady(futureResult.failed) {
-            result => result mustBe DuplicateSubmissionException
+          whenReady(futureResult) {
+            result => result mustBe VariationFailureResponse(DuplicateSubmissionErrorResponse)
           }
 
         }

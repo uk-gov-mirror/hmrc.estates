@@ -72,6 +72,7 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
   }
 
   private def applyTransformations(utr: String, internalId: String, json: JsValue)(implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
+    println("*******")
     transformRepository.get(utr, internalId).map {
       case None =>
         JsSuccess(json)

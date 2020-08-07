@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 sealed trait TaxEnrolmentSubscriberResponse
 
 case object TaxEnrolmentSuccess extends TaxEnrolmentSubscriberResponse
-case object TaxEnrolmentFailure extends TaxEnrolmentSubscriberResponse
+case class TaxEnrolmentFailure(reason: String) extends TaxEnrolmentSubscriberResponse
 case object TaxEnrolmentNotProcessed extends TaxEnrolmentSubscriberResponse
 
 object TaxEnrolmentSubscriberResponse {
@@ -38,12 +38,10 @@ object TaxEnrolmentSubscriberResponse {
         response.status match {
           case NO_CONTENT =>
             TaxEnrolmentSuccess
-          case BAD_REQUEST =>
-            Logger.error("[TaxEnrolmentSubscriberResponse] Bad request response received from tax enrolments")
-            TaxEnrolmentFailure
           case status =>
-            Logger.error(s"[TaxEnrolmentSubscriberResponse] Error response from tax enrolments:  $status")
-            TaxEnrolmentFailure
+            val reason = s"Error response from tax enrolments: $status"
+            Logger.error(s"[TaxEnrolmentSubscriberResponse] $reason")
+            TaxEnrolmentFailure(reason)
         }
       }
     }

@@ -47,7 +47,7 @@ class TaxEnrolmentConnectorSpec extends BaseConnectorSpec {
         val futureResult = connector.enrolSubscriber("987654321")
 
         whenReady(futureResult) {
-          result => result mustBe TaxEnrolmentFailure
+          result => result mustBe TaxEnrolmentFailure("Error response from tax enrolments: 400")
         }
       }
 
@@ -58,7 +58,7 @@ class TaxEnrolmentConnectorSpec extends BaseConnectorSpec {
         val futureResult = connector.enrolSubscriber("987654321")
 
         whenReady(futureResult) {
-          result => result mustBe TaxEnrolmentFailure
+          result => result mustBe TaxEnrolmentFailure("Error response from tax enrolments: 500")
         }
       }
     }

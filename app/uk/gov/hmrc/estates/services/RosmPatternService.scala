@@ -32,7 +32,7 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
                                        taxEnrolmentService : TaxEnrolmentsService
                                       ) extends RosmPatternService {
 
-  override def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
+  def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
 
     for {
       subscriptionIdResponse <- desService.getSubscriptionId(trn = trn)
@@ -50,13 +50,13 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
           case TaxEnrolmentSuccess =>
             Logger.info(s"Rosm completed successfully for provided trn: $trn.")
             TaxEnrolmentSuccess
-          case TaxEnrolmentFailure =>
-            Logger.error(s"Rosm pattern is not completed for trn: $trn.")
-            TaxEnrolmentFailure
+          case response: TaxEnrolmentFailure =>
+            Logger.error(s"Rosm pattern is not completed for trn: $trn. with reason: ${response.reason}")
+            response
         } recover {
-          case NonFatal(_) =>
+          case NonFatal(e) =>
             Logger.error(s"Rosm pattern is not completed for trn: $trn.")
-            TaxEnrolmentFailure
+            TaxEnrolmentFailure(s"Non-fatal error: ${e.getMessage}")
           }
       case _ =>
         Logger.info("Tax enrolments is not required for Agent.")
@@ -67,6 +67,5 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
 }
 @ImplementedBy(classOf[RosmPatternServiceImpl])
 trait RosmPatternService {
-  def getSubscriptionIdAndEnrol(trn : String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse]
   def enrol(trn: String, affinityGroup: AffinityGroup)(implicit hc: HeaderCarrier) : Future[TaxEnrolmentSubscriberResponse]
 }

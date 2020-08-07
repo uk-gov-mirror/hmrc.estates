@@ -70,12 +70,12 @@ class RosmPatternServiceSpec extends BaseSpec {
         when(mockDesService.getSubscriptionId("trn123456789")).
           thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
         when(mockTaxEnrolmentsService.setSubscriptionId("123456789")).
-          thenReturn(Future.successful(TaxEnrolmentFailure))
+          thenReturn(Future.successful(TaxEnrolmentFailure("test tax enrolment failure")))
 
         val futureResult = SUT.getSubscriptionIdAndEnrol("trn123456789")
 
         whenReady(futureResult) {
-          result => result mustBe TaxEnrolmentFailure
+          result => result mustBe TaxEnrolmentFailure("test tax enrolment failure")
         }
       }
     }

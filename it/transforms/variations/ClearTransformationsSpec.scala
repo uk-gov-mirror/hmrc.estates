@@ -40,7 +40,7 @@ import scala.concurrent.Future
 class ClearTransformationsSpec extends AsyncFreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
   val getEstateResponseFromDES: GetEstateResponse = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse]
-  val expectedInitialGetJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-initial.json")
+  val noTransformsAppliedJson: JsValue = JsonUtils.getJsonValueFromFile("it/estates-integration-get-initial.json")
 
   "a clear transformations call" - {
 
@@ -85,10 +85,8 @@ class ClearTransformationsSpec extends AsyncFreeSpec with MustMatchers with Mock
       val subsequentGetResult = route(application, FakeRequest(GET, s"/estates/$utr/transformed")).get
       status(subsequentGetResult) mustBe OK
 
-      val expectedGetAfterClearingTransformsJson: JsValue = expectedInitialGetJson
-
-      contentAsJson(initialGetResult) mustNot be(expectedGetAfterClearingTransformsJson)
-      contentAsJson(subsequentGetResult) mustBe expectedGetAfterClearingTransformsJson
+      contentAsJson(initialGetResult) mustNot be(noTransformsAppliedJson)
+      contentAsJson(subsequentGetResult) mustBe noTransformsAppliedJson
     }
   }
 }

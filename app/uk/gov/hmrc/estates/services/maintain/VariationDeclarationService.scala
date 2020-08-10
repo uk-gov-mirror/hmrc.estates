@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.estates.services.maintain
 
-import java.time.LocalDate
-
+import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models._
-import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
+import uk.gov.hmrc.estates.models.getEstate.ResponseHeader
+import uk.gov.hmrc.estates.services.LocalDateService
 
-class VariationDeclarationService {
+class VariationDeclarationService @Inject()(localDateService: LocalDateService) {
 
   private lazy val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
   private lazy val pathToPersonalRep: JsPath = pathToEntities \ 'personalRepresentative
@@ -37,26 +37,22 @@ class VariationDeclarationService {
   private lazy val declarationPath = __ \ 'declaration
   private lazy val agentPath = __ \ 'agentDetails
 
-  def transform(workingDocument: GetEstateProcessedResponse,
+  def transform(amendDocument: JsValue,
+                responseHeader: ResponseHeader,
                 cachedDocument: JsValue,
-                declaration: DeclarationForApi,
-                date: LocalDate): JsResult[JsValue] = {
+                declaration: DeclarationForApi): JsResult[JsValue] = {
+    Logger.debug(s"[VariationDeclarationService] applying declaration transforms to document $amendDocument from cached $cachedDocument")
 
-    val amendJson = workingDocument.getEstate
-    val responseHeader = workingDocument.responseHeader
-
-    Logger.debug(s"[VariationDeclarationService] applying declaration transforms to document $workingDocument from cached $cachedDocument")
-
-    amendJson.transform(
+    amendDocument.transform(
       (__ \ 'applicationType).json.prune andThen
         (__ \ 'declaration).json.prune andThen
         (__ \ 'yearsReturns).json.prune andThen
-        updateCorrespondence(amendJson) andThen
-        removePersonalRepAddressIfHasNinoOrUtr(amendJson, pathToPersonalRep) andThen
-        convertPersonalRepresentativeToArray(amendJson) andThen
-        endPreviousPersonalRepIfChanged(amendJson, cachedDocument, date) andThen
+        updateCorrespondence(amendDocument) andThen
+        removePersonalRepAddressIfHasNinoOrUtr(amendDocument, pathToPersonalRep) andThen
+        convertPersonalRepresentativeToArray(amendDocument) andThen
+        endPreviousPersonalRepIfChanged(amendDocument, cachedDocument) andThen
         putNewValue(__ \ 'reqHeader \ 'formBundleNo, JsString(responseHeader.formBundleNo)) andThen
-        addDeclaration(declaration, amendJson) andThen
+        addDeclaration(declaration, amendDocument) andThen
         addAgentIfDefined(declaration.agentDetails)
     )
   }
@@ -103,12 +99,12 @@ class VariationDeclarationService {
     }
   }
 
-  private def addPreviousPersonalRepAsExpiredStep(previousPersonalRepJson: JsValue, date: LocalDate): Reads[JsObject] = {
+  private def addPreviousPersonalRepAsExpiredStep(previousPersonalRepJson: JsValue, date: JsValue): Reads[JsObject] = {
     val personalRepField = determinePersonalRepField(__, previousPersonalRepJson)
 
     previousPersonalRepJson.transform(__.json.update {
       Logger.info(s"[VariationDeclarationService] setting end date on original personal representative")
-      (__ \ 'entityEnd).json.put(Json.toJson(date))
+      (__ \ 'entityEnd).json.put(date)
     }).fold(
       errors => {
         Logger.error(s"[VariationDeclarationService] unable to set end date on original personal representative")
@@ -121,24 +117,32 @@ class VariationDeclarationService {
       })
   }
 
-  private def endPreviousPersonalRepIfChanged(newJson: JsValue, originalJson: JsValue, date: LocalDate): Reads[JsObject] = {
+  private def endPreviousPersonalRepIfChanged(newJson: JsValue, originalJson: JsValue): Reads[JsObject] = {
     val newPersonalRep = newJson.transform(pickPersonalRep)
     val originalPersonalRep = originalJson.transform(pickPersonalRep)
 
     (newPersonalRep, originalPersonalRep) match {
-      case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if (newPersonalRepJson != originalPersonalRepJson) =>
-        Logger.info(s"[VariationDeclarationService] Personal representative has changed")
-        val fixPersonalRepReads = removePersonalRepAddressIfHasNinoOrUtr(originalPersonalRepJson, __)
-        originalPersonalRepJson.transform(fixPersonalRepReads) match {
-          case JsSuccess(value, _) =>
-            Logger.info(s"[VariationDeclarationService] Restored personal representative to original state, removed address")
-            addPreviousPersonalRepAsExpiredStep(value, date)
-          case e: JsError =>
-            Logger.error(s"[VariationDeclarationService] Unable to restore personal representative to original state")
-            Reads(_ => e)
-        }
+      case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if newPersonalRepJson != originalPersonalRepJson =>
+        Logger.info(s"[VariationDeclarationService] personal representative has changed")
+
+        val startDateReads = (__ \ "entityStart").json.pick
+
+        (for {
+          previousPersonalRepWithAddressRemoved <- originalPersonalRepJson.transform {
+            removePersonalRepAddressIfHasNinoOrUtr(originalPersonalRepJson, __)
+          }
+          originalStartDate <- previousPersonalRepWithAddressRemoved.transform(startDateReads)
+          newStartDate <- newPersonalRepJson.transform(startDateReads)
+        } yield {
+          val startDateHasChanged = originalStartDate != newStartDate
+          if (startDateHasChanged) {
+            addPreviousPersonalRepAsExpiredStep(previousPersonalRepWithAddressRemoved, newStartDate)
+          } else {
+            addPreviousPersonalRepAsExpiredStep(previousPersonalRepWithAddressRemoved, Json.toJson(localDateService.now))
+          }
+        }).getOrElse(Reads(_ => JsError.apply("[VariationDeclarationService] unable to end previous personal representative")))
       case _ =>
-        Logger.info(s"[VariationDeclarationService] Personal representative has not changed")
+        Logger.info(s"[VariationDeclarationService] personal representative has not changed")
         __.json.pick[JsObject]
     }
   }
@@ -146,20 +150,23 @@ class VariationDeclarationService {
   private def putNewValue(path: JsPath, value: JsValue ): Reads[JsObject] = __.json.update(path.json.put(value))
 
   private def declarationAddress(agentDetails: Option[AgentDetails],
-                                 responseJson: JsValue) : JsResult[AddressType] = agentDetails match {
+                                 amendJson: JsValue) : JsResult[AddressType] = agentDetails match {
       case Some(x) =>
+        Logger.info(s"[VariationDeclarationService] using agents address as declaration")
         JsSuccess(x.agentAddress)
       case None =>
-        responseJson.transform((pathToPersonalRep \ 'identification \ 'address).json.pick).flatMap(_.validate[AddressType])
+        Logger.info(s"[VariationDeclarationService] using personal representatives address as declaration")
+        amendJson.transform((pathToPersonalRep \ 'identification \ 'address).json.pick).flatMap(_.validate[AddressType])
     }
 
-  private def addDeclaration(declarationForApi: DeclarationForApi, responseJson: JsValue) : Reads[JsObject] = {
-    declarationAddress(declarationForApi.agentDetails, responseJson) match {
+  private def addDeclaration(declarationForApi: DeclarationForApi, amendJson: JsValue) : Reads[JsObject] = {
+    declarationAddress(declarationForApi.agentDetails, amendJson) match {
       case JsSuccess(value, _) =>
         val declarationToSend = Declaration(declarationForApi.declaration.name, value)
         putNewValue(declarationPath, Json.toJson(declarationToSend))
       case e : JsError =>
-        Logger.error(s"[VariationDeclarationService] unable to set declaration address, hadAgent: ${declarationForApi.agentDetails.isDefined}")
+        Logger.error(s"[VariationDeclarationService] unable to set declaration address," +
+          s" hadAgent: ${declarationForApi.agentDetails.isDefined}, due to ${e.errors}")
         Reads(_ => e)
     }
   }

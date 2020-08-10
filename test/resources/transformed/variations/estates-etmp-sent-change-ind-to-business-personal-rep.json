@@ -32,6 +32,16 @@
         },
         "personalRepresentative": [
           {
+            "estatePerRepOrg": {
+              "entityStart": "2020-02-28",
+              "orgName": "New Business Name",
+              "identification": {
+                "utr": "1234567890"
+              },
+              "phoneNumber": "078888888"
+            }
+          },
+          {
             "estatePerRepInd": {
               "lineNo": "1",
               "phoneNumber": "078888888",
@@ -39,6 +49,7 @@
                 "nino": "JS123456A"
               },
               "entityStart": "2017-02-28",
+              "entityEnd": "2020-02-28",
               "bpMatchStatus": "01",
               "name": {
                 "firstName": "Alister",

@@ -71,7 +71,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
       val service = new VariationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
 
-      val transformedResponse = GetEstateProcessedResponse(transformedEtmpResponseJson, ResponseHeader("Processed", formBundleNo))
+      val responseHeader = ResponseHeader("Processed", formBundleNo)
 
       whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
 
@@ -81,7 +81,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
           .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
 
         verify(transformer, times(1))
-          .transform(equalTo(transformedResponse), equalTo(response.getEstate), equalTo(declaration), any())
+          .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
 
         verify(auditService).auditVariationSubmitted(
           equalTo(internalId),

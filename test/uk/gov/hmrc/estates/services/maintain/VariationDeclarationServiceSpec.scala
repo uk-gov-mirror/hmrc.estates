@@ -24,35 +24,57 @@ import uk.gov.hmrc.estates.models.getEstate.{GetEstateProcessedResponse, GetEsta
 import uk.gov.hmrc.estates.utils.JsonUtils
 
 class VariationDeclarationServiceSpec extends FreeSpec with MustMatchers with OptionValues {
-
-  private val entityEnd: LocalDate = LocalDate.of(2020, 1, 30)
-
   "the declaration transformer should" - {
 
     val declaration = DeclarationName(NameType("First", None, "Last"))
     val declarationForApi = DeclarationForApi(declaration, None)
 
-    "transform json successfully for an individual personal rep" in {
-      val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json")
-      val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
-      val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent.json")
+    "build submission json successfully where personal representative has not changed" in {
+      val cached = JsonUtils
+        .getJsonValueFromFile("etmp/valid-get-estate-response.json")
+        .as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+
+      val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-no-change.json")
       val transformer = new VariationDeclarationService
 
-      val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
+      val result = transformer.transform(
+        cached.getEstate, cached.responseHeader, cached.getEstate, declarationForApi
+      )
       result.asOpt.value mustBe afterJson
     }
 
-    "transform json successfully for an org personal rep" in {
+    "build submission json successfully where personal representative has changed (individual to individual)" in {
+      val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json")
+
+      val amendedDocWithAmendedPerRepTransform = JsonUtils
+        .getJsonValueFromFile("etmp/valid-get-estate-response-with-amended-personal-rep.json")
+        .as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+        .getEstate
+
+      val cached = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+
+      val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-new-ind-personal-rep.json")
+      val transformer = new VariationDeclarationService
+
+      val result = transformer.transform(
+        amendedDocWithAmendedPerRepTransform, cached.responseHeader, cached.getEstate, declarationForApi
+      )
+      result.asOpt.value mustBe afterJson
+    }
+
+    "build submission json successfully for an org personal rep" in {
       val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response-org-personal-rep.json")
-      val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+
+      val cached = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-org-personal-rep.json")
       val transformer = new VariationDeclarationService
 
-      val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
+      val result = transformer.transform(cached.getEstate, cached.responseHeader, cached.getEstate, declarationForApi)
       result.asOpt.value mustBe afterJson
     }
 
-    "transform json successfully for an individual personal rep with agent details" in {
+    "build submission json for an individual personal representative with an agent" in {
       val agentDetails = AgentDetails(
         "arn",
         "agent name",
@@ -63,11 +85,11 @@ class VariationDeclarationServiceSpec extends FreeSpec with MustMatchers with Op
 
       val declarationForApi = DeclarationForApi(declaration, Some(agentDetails))
       val beforeJson = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json")
-      val estateResponse = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+      val cached = beforeJson.as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
       val afterJson = JsonUtils.getJsonValueFromFile("transformed/variations/estates-etmp-sent-with-agent-details.json")
       val transformer = new VariationDeclarationService
 
-      val result = transformer.transform(estateResponse, estateResponse.getEstate, declarationForApi, entityEnd)
+      val result = transformer.transform(cached.getEstate, cached.responseHeader, cached.getEstate, declarationForApi)
       result.asOpt.value mustBe afterJson
     }
   }

@@ -51,10 +51,6 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
   private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None)
 
-  object LocalDateServiceStub extends LocalDateService {
-    override def now: LocalDate = LocalDate.of(1999, 3, 14)
-  }
-
   "submitDeclaration" should {
 
     "submit data correctly when the version matches, and then reset the cache" in {
@@ -69,7 +65,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
       val response = setupForTest(desService, successfulResponse, variationsTransformationService, transformer)
 
-      val service = new VariationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
+      val service = new VariationService(desService, variationsTransformationService, transformer, auditService)
 
       val responseHeader = ResponseHeader("Processed", formBundleNo)
 
@@ -106,7 +102,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
       setupForTest(desService, failedResponse, variationsTransformationService, transformer)
 
-      val service = new VariationService(desService, variationsTransformationService, transformer, auditService, LocalDateServiceStub)
+      val service = new VariationService(desService, variationsTransformationService, transformer, auditService)
 
       whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
 
@@ -160,7 +156,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
     when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
       .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))))
 
-    val service = new VariationService(desService, transformationService, transformer, auditService, LocalDateServiceStub)
+    val service = new VariationService(desService, transformationService, transformer, auditService)
 
     whenReady(service.submitDeclaration(utr, internalId, declaration)) { response =>
       response mustBe VariationFailureResponse(EtmpDataStaleErrorResponse)

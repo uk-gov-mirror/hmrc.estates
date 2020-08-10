@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.estates.services.maintain
 
+import javax.inject.Inject
 import play.api.Logger
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate.ResponseHeader
+import uk.gov.hmrc.estates.services.LocalDateService
 
-class VariationDeclarationService {
+class VariationDeclarationService @Inject()(localDateService: LocalDateService) {
 
   private lazy val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
   private lazy val pathToPersonalRep: JsPath = pathToEntities \ 'personalRepresentative
@@ -120,23 +122,25 @@ class VariationDeclarationService {
     val originalPersonalRep = originalJson.transform(pickPersonalRep)
 
     (newPersonalRep, originalPersonalRep) match {
-      case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if (newPersonalRepJson != originalPersonalRepJson) =>
+      case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if newPersonalRepJson != originalPersonalRepJson =>
         Logger.info(s"[VariationDeclarationService] personal representative has changed")
-        val fixPersonalRepReads = removePersonalRepAddressIfHasNinoOrUtr(originalPersonalRepJson, __)
-        originalPersonalRepJson.transform(fixPersonalRepReads) match {
-          case JsSuccess(personalRep, _) =>
-            newPersonalRepJson.transform((__ \ "entityStart").json.pick) match {
-              case JsSuccess(startDate, _) =>
-                Logger.info(s"[VariationDeclarationService] restored personal representative to original state, removed address")
-                addPreviousPersonalRepAsExpiredStep(personalRep, startDate)
-              case e : JsError =>
-                Logger.error(s"[VariationDeclarationService] unable to get start date of new personal representative")
-                Reads(_ => e)
-            }
-          case e: JsError =>
-            Logger.error(s"[VariationDeclarationService] unable to restore personal representative to original state")
-            Reads(_ => e)
-        }
+
+        val startDateReads = (__ \ "entityStart").json.pick
+
+        (for {
+          previousPersonalRepWithAddressRemoved <- originalPersonalRepJson.transform {
+            removePersonalRepAddressIfHasNinoOrUtr(originalPersonalRepJson, __)
+          }
+          originalStartDate <- previousPersonalRepWithAddressRemoved.transform(startDateReads)
+          newStartDate <- newPersonalRepJson.transform(startDateReads)
+        } yield {
+          val startDateHasChanged = originalStartDate != newStartDate
+          if (startDateHasChanged) {
+            addPreviousPersonalRepAsExpiredStep(previousPersonalRepWithAddressRemoved, newStartDate)
+          } else {
+            addPreviousPersonalRepAsExpiredStep(previousPersonalRepWithAddressRemoved, Json.toJson(localDateService.now))
+          }
+        }).getOrElse(Reads(_ => JsError.apply("[VariationDeclarationService] unable to end previous personal representative")))
       case _ =>
         Logger.info(s"[VariationDeclarationService] personal representative has not changed")
         __.json.pick[JsObject]
@@ -161,7 +165,8 @@ class VariationDeclarationService {
         val declarationToSend = Declaration(declarationForApi.declaration.name, value)
         putNewValue(declarationPath, Json.toJson(declarationToSend))
       case e : JsError =>
-        Logger.error(s"[VariationDeclarationService] unable to set declaration address, hadAgent: ${declarationForApi.agentDetails.isDefined}, due to ${e.errors}")
+        Logger.error(s"[VariationDeclarationService] unable to set declaration address," +
+          s" hadAgent: ${declarationForApi.agentDetails.isDefined}, due to ${e.errors}")
         Reads(_ => e)
     }
   }

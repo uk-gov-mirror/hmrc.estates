@@ -59,7 +59,7 @@ class AuditServiceSpec extends BaseSpec {
         val service = new AuditService(connector, appConfig)
 
         val request = Json.obj(
-          "agentDetails" -> Json.obj()    // Doesn't care about contents of object
+          "agentDetails" -> Json.obj() // Doesn't care about contents of object
         )
 
         val response = VariationSuccessResponse("TRN123456")
@@ -108,7 +108,7 @@ class AuditServiceSpec extends BaseSpec {
 
         val request = Json.obj(
           "trustEndDate" -> "2012-02-12",
-          "agentDetails" -> Json.obj()    // Doesn't care about contents of object
+          "agentDetails" -> Json.obj() // Doesn't care about contents of object
         )
 
         val response = VariationSuccessResponse("TRN123456")
@@ -124,6 +124,50 @@ class AuditServiceSpec extends BaseSpec {
           equalTo("ClosureSubmittedByAgent"),
           equalTo(expectedAuditData))(any(), any(), any())
       }
+    }
+  }
+
+  "auditEnrolmentSucceeded" should {
+    "send EnrolmentSucceeded audit" in {
+      val connector = mock[AuditConnector]
+      val service = new AuditService(connector, appConfig)
+
+      service.auditEnrolSuccess("ChickenSub", "TheTRN", "internalId")
+
+      val expectedAuditData = EstatesAuditData(
+        Json.obj(
+          "trn" -> "TheTRN",
+          "subscriptionID" -> "ChickenSub"
+        ),
+        "internalId",
+        Some(Json.obj())
+      )
+
+      verify(connector).sendExplicitAudit[EstatesAuditData](
+        equalTo("EnrolmentSucceeded"),
+        equalTo(expectedAuditData))(any(), any(), any())
+    }
+  }
+
+  "auditEnrolmentFailure" should {
+    "send EnrolmentFailed audit" in {
+      val connector = mock[AuditConnector]
+      val service = new AuditService(connector, appConfig)
+
+      service.auditEnrolFailed("ChickenSub", "TheTRN", "internalId", "bad juju")
+
+      val expectedAuditData = EstatesAuditData(
+        Json.obj(
+          "trn" -> "TheTRN",
+          "subscriptionID" -> "ChickenSub"
+        ),
+        "internalId",
+        Some(Json.obj( "errorReason" -> "bad juju"))
+      )
+
+      verify(connector).sendExplicitAudit[EstatesAuditData](
+        equalTo("EnrolmentFailed"),
+        equalTo(expectedAuditData))(any(), any(), any())
     }
   }
 }

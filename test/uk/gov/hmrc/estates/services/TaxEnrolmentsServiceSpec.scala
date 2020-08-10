@@ -41,7 +41,7 @@ class TaxEnrolmentsServiceSpec extends BaseSpec {
   ".setSubscriptionId" should {
 
     "return TaxEnrolmentSuccess  " when {
-      "connector returns success taxEnrolmentSuscriberResponse." in {
+      "connector returns success taxEnrolmentSuscriberResponse" in {
         when(mockConnector.enrolSubscriber("123456789")).
           thenReturn(Future.successful(TaxEnrolmentSuccess))
 
@@ -57,11 +57,11 @@ class TaxEnrolmentsServiceSpec extends BaseSpec {
 
     "return TaxEnrolmentFailure " when {
 
-      "tax enrolment returns internal server error." in {
+      "tax enrolment returns internal server error" in {
         when(mockConnector.enrolSubscriber("123456789")).
           thenReturn(Future.failed(InternalServerErrorException("")))
         val result = Await.result(SUT.setSubscriptionId("123456789"), Duration.Inf)
-        result mustBe TaxEnrolmentFailure
+        result mustBe a[TaxEnrolmentFailure]
         verify(mockConnector, times(10)).enrolSubscriber(any())(any[HeaderCarrier])
       }
     }
@@ -73,7 +73,7 @@ class TaxEnrolmentsServiceSpec extends BaseSpec {
           thenReturn(Future.failed(BadRequestException))
 
         val result = Await.result(SUT.setSubscriptionId("123456789"), Duration.Inf)
-        result mustBe TaxEnrolmentFailure
+        result mustBe a[TaxEnrolmentFailure]
         verify(mockConnector, times(10)).enrolSubscriber(any())(any[HeaderCarrier])
       }
 

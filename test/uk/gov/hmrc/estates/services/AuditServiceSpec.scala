@@ -20,7 +20,9 @@ import org.mockito.Mockito.verify
 import org.mockito.Matchers.{any, eq => equalTo}
 import play.api.libs.json.Json
 import uk.gov.hmrc.estates.BaseSpec
+import uk.gov.hmrc.estates.models.RegistrationFailureResponse
 import uk.gov.hmrc.estates.models.auditing.EstatesAuditData
+import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.models.variation.VariationSuccessResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
@@ -29,6 +31,31 @@ import scala.concurrent.ExecutionContext
 class AuditServiceSpec extends BaseSpec {
 
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
+  "auditRegistrationFailed" should {
+    "send error details" when {
+      "a failure response comes in" in {
+        val connector = mock[AuditConnector]
+        val service = new AuditService(connector, appConfig)
+
+        val request = Json.obj("someField" -> "someValue")
+
+        val response = RegistrationFailureResponse(403, "des response", "General error message")
+        service.auditRegistrationFailed("internalId", request, response)
+
+        val expectedAuditData = EstatesAuditData(
+          request,
+          "internalId",
+          Some(Json.obj("errorReason" -> Json.toJson(response)))
+        )
+
+        verify(connector).sendExplicitAudit[EstatesAuditData](
+          equalTo("RegistrationSubmissionFailed"),
+          equalTo(expectedAuditData))(any(), any(), any())
+
+      }
+    }
+  }
 
   "auditVariationSubmitted" should {
     "send Variation Submitted by Organisation" when {

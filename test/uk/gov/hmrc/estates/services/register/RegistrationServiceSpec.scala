@@ -190,10 +190,10 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       result.futureValue mustBe AlreadyRegisteredResponse
 
       verify(mockAuditService).auditRegistrationFailed(
+        mockEq("id"),
         any(),
-        mockEq(AlreadyRegisteredResponse.message),
-        any()
-      )(any(), any())
+        mockEq(AlreadyRegisteredResponse)
+      )(any())
     }
 
     "return run time exception" when {

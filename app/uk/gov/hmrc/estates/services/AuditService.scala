@@ -20,7 +20,7 @@ import javax.inject.Inject
 import play.api.libs.json.{JsPath, JsString, JsValue, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.estates.config.AppConfig
-import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration}
+import uk.gov.hmrc.estates.models.{EstateRegistration, EstateRegistrationNoDeclaration, RegistrationFailureResponse}
 import uk.gov.hmrc.estates.models.auditing.EstatesAuditData
 import uk.gov.hmrc.estates.models.getEstate.GetEstateProcessedResponse
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
@@ -113,15 +113,15 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
   }
 
   def auditRegistrationFailed(
-                               payload: EstateRegistration,
-                               errorReason: String,
-                               jsErrors: String = "")
-                             (implicit hc: HeaderCarrier, request: IdentifierRequest[_]): Unit =
+                               internalId: String,
+                               payload: JsValue,
+                               response: RegistrationFailureResponse)
+                             (implicit hc: HeaderCarrier): Unit =
     audit(
       event = AuditEvent.REGISTRATION_SUBMISSION_FAILED,
-      request = Json.toJson(payload),
-      internalId = request.identifier,
-      response = Json.obj("errorReason" -> errorReason)
+      request = payload,
+      internalId = internalId,
+      response = Json.obj("errorReason" -> Json.toJson(response))
     )
 
   def auditRegistrationTransformationError(

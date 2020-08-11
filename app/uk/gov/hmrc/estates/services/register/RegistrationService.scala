@@ -113,8 +113,8 @@ class RegistrationService @Inject()(repository: TransformationRepository,
       case r@RegistrationTrnResponse(trn) =>
         auditService.auditRegistrationSubmitted(payload, trn)
         r
-      case r @RegistrationFailureResponse(_, _, message) =>
-        auditService.auditRegistrationFailed(payload, message)
+      case r: RegistrationFailureResponse =>
+        auditService.auditRegistrationFailed(request.identifier, Json.toJson(payload), r)
         r
     }
   }

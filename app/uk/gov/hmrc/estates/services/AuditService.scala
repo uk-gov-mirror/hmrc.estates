@@ -44,7 +44,7 @@ class AuditService @Inject()(auditConnector: AuditConnector, config : AppConfig)
     val REGISTRATION_PREPARATION_FAILED = "RegistrationPreparationFailed"
     val REGISTRATION_SUBMISSION_FAILED = "RegistrationSubmissionFailed"
     val REGISTRATION_SUBMITTED_BY_ORGANISATION = "RegistrationSubmittedByOrganisation"
-    val REGISTRATION_SUBMITTED_BY_AGENT = "RegistrationSubmittedByAGent"
+    val REGISTRATION_SUBMITTED_BY_AGENT = "RegistrationSubmittedByAgent"
 
     val VARIATION_PREPARATION_FAILED = "VariationPreparationFailed"
     val VARIATION_SUBMISSION_FAILED = "VariationSubmissionFailed"

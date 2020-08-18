@@ -21,7 +21,6 @@ import play.api.libs.json.Format
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.estates.utils.Constants
 
-
 sealed trait ExistingCheckResponse
 
 object ExistingCheckResponse {

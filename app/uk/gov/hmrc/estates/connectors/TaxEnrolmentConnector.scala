@@ -19,15 +19,16 @@ package uk.gov.hmrc.estates.connectors
 import com.google.inject.ImplementedBy
 import javax.inject.Inject
 import play.api.libs.json.{JsValue, Json, Writes}
-import uk.gov.hmrc.estates.config.{AppConfig, WSHttp}
-import uk.gov.hmrc.estates.models.{TaxEnrolmentSubscription, TaxEnrolmentSubscriberResponse}
+import uk.gov.hmrc.estates.config.AppConfig
+import uk.gov.hmrc.estates.models.{TaxEnrolmentSubscriberResponse, TaxEnrolmentSubscription}
 import uk.gov.hmrc.estates.utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TaxEnrolmentConnectorImpl @Inject()(http: WSHttp, config: AppConfig) extends TaxEnrolmentConnector {
+class TaxEnrolmentConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends TaxEnrolmentConnector {
 
   private def headers =
     Seq(

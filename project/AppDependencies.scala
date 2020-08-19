@@ -4,12 +4,9 @@ import sbt._
 object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
-
     "org.reactivemongo"          %% "play2-reactivemongo"      % "0.18.8-play26",
     "uk.gov.hmrc"                %% "logback-json-logger"      % "4.8.0",
-    "uk.gov.hmrc"                %% "bootstrap-play-26"        % "1.8.0",
-    "uk.gov.hmrc"                %% "microservice-bootstrap"   % "10.9.0",
-    "uk.gov.hmrc"                %% "http-caching-client"      % "8.5.0-play-26",
+    "uk.gov.hmrc"                %% "bootstrap-play-26"        % "1.14.0",
     "com.github.java-json-tools" % "json-schema-validator"     % "2.2.8",
     "uk.gov.hmrc"                %% "tax-year"                 % "1.1.0"
   )
@@ -29,7 +26,7 @@ object AppDependencies {
   val akkaVersion = "2.5.23"
   val akkaHttpVersion = "10.0.15"
 
-  val overrides: Set[ModuleID] = Set(
+  val overrides = Seq(
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-protobuf" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,

@@ -22,19 +22,20 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json._
-import uk.gov.hmrc.estates.config.{AppConfig, WSHttp}
+import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
 import uk.gov.hmrc.estates.models.variation.VariationResponse
 import uk.gov.hmrc.estates.utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
+class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
 
-  private lazy val trustsServiceUrl : String = s"${config.desEstatesBaseUrl}/trusts"
+  private lazy val subscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
 
   private lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"
@@ -89,7 +90,7 @@ class DesConnector @Inject()(http: WSHttp, config: AppConfig) {
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
-    val subscriptionIdEndpointUrl = s"$trustsServiceUrl/trn/$trn/subscription"
+    val subscriptionIdEndpointUrl = s"$subscriptionsUrl/trn/$trn/subscription"
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 

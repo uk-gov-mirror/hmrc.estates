@@ -49,12 +49,17 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
                 rosmPatternService.enrol(trn, request.affinityGroup, request.identifier) map { _ =>
                     Ok(Json.toJson(response))
                 }
-              case AlreadyRegisteredResponse => Future.successful(duplicateSubmissionErrorResult)
-              case _ =>
+              case AlreadyRegisteredResponse =>
+                Logger.info(s"[RegisterEstateController] unable to register estate for session ${hc.sessionId.map(_.value).getOrElse("")} due to it already being registered")
+                Future.successful(duplicateSubmissionErrorResult)
+              case e =>
+                Logger.warn(s"[RegisterEstateController] unable to register estate for session ${hc.sessionId.map(_.value).getOrElse("")} due to $e")
                 Future.successful(internalServerErrorErrorResult)
             }
         } recover {
-          case _ => internalServerErrorErrorResult
+          case e =>
+            Logger.warn(s"[RegisterEstateController] unable to register estate for session ${hc.sessionId.map(_.value).getOrElse("")} due exception ${e.getMessage}")
+            internalServerErrorErrorResult
         }
       )
     }

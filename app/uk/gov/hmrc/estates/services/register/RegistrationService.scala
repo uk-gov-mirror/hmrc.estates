@@ -79,6 +79,8 @@ class RegistrationService @Inject()(repository: TransformationRepository,
               case Some(payload) =>
                 submitAndAuditResponse(payload)
               case None =>
+                Logger.warn(s"[RegistrationService] unable to send registration for session: ${hc.sessionId.map(_.value).getOrElse("")} due to being unable to validate as EstateRegistration")
+
                 val reason = "Unable to parse transformed json as EstateRegistration"
 
                 auditService.auditRegistrationTransformationError(
@@ -89,6 +91,9 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                 Future.failed(new RuntimeException(reason))
             }
           case JsError(errors) =>
+
+            Logger.warn(s"[RegistrationService] unable to build submission payload for session: ${hc.sessionId.map(_.value).getOrElse("")}")
+
             val reason = "Unable to build json from transforms"
 
             auditService.auditRegistrationTransformationError(
@@ -99,6 +104,9 @@ class RegistrationService @Inject()(repository: TransformationRepository,
             Future.failed(new RuntimeException(s"$reason: $errors"))
         }
       case None =>
+
+        Logger.warn(s"[RegistrationService] unable to send registration for session: ${hc.sessionId.map(_.value).getOrElse("")} due to there being no data in mongo")
+
         val reason = "Unable to submit registration due to there being no transforms"
 
         auditService.auditRegistrationTransformationError(errorReason = reason)
@@ -111,9 +119,15 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                     (implicit request: IdentifierRequest[_], hc: HeaderCarrier) : Future[RegistrationResponse] = {
     desService.registerEstate(payload) map {
       case r@RegistrationTrnResponse(trn) =>
+
+        Logger.info(s"[RegistrationService] submission for session: ${hc.sessionId.map(_.value).getOrElse("")} received TRN $trn")
+
         auditService.auditRegistrationSubmitted(payload, trn)
         r
       case r: RegistrationFailureResponse =>
+
+        Logger.error(s"[RegistrationService] submission for session: ${hc.sessionId.map(_.value).getOrElse("")} was unable to be submitted due to status ${r.status} ${r.code} and ${r.message}")
+
         auditService.auditRegistrationFailed(request.identifier, Json.toJson(payload), r)
         r
     }

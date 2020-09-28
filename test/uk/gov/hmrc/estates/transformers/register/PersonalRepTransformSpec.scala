@@ -83,6 +83,16 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
     email = Some("testy@xyz.org")
   )
 
+  val newPersonalRepOrgWithUtrAndAddress = EstatePerRepOrgType(
+    orgName =  "Lovely Organisation",
+    identification = IdentificationOrgType(
+      Some("1234567890"),
+      Some(AddressType("line1", "line2", Some("line3"), Some("line4"), None, "Country"))
+    ),
+    phoneNumber = "078888888",
+    email = Some("testy@xyz.org")
+  )
+
   "the add personal rep transformer should" - {
 
     "add a personal rep individual" - {
@@ -129,6 +139,18 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
       }
     }
     "add a personal rep organisation" - {
+
+      "when there is an existing transform with personal rep with utr, being replaced with a transform without utr" in {
+        val trustJson = JsonUtils.getJsonValueFromFile("mdtp/valid-estate-registration-05-with-per-rep-org-utr.json")
+
+        val afterJson = JsonUtils.getJsonValueFromFile("transformed/valid-estate-registration-01-personal-rep-org-transformed-without-utr.json")
+
+        val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithUkAddress))
+
+        val result = transformer.applyTransform(trustJson).get
+
+        result mustBe afterJson
+      }
 
       "when there is an existing personal rep" in {
 
@@ -198,6 +220,37 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
     }
 
     "individual personal rep" - {
+
+      "must remove address" - {
+
+        "when personal rep has a nino" in {
+            val document = Json.obj(
+              "correspondence" -> Json.obj(
+                "name" -> "Estate of Personal Rep"
+              ),
+              "estate" -> Json.obj(
+                "entities" -> Json.obj(
+                  "personalRepresentative" -> Json.obj(
+                    "estatePerRepInd" -> Json.obj(
+                      "identification" -> Json.obj(
+                        "nino" -> "JP121212A",
+                        "address" -> Json.obj()
+                      )
+                    )
+                  )
+                )
+              )
+            )
+
+            val transformer = new PersonalRepTransform(Some(newPersonalRepIndWithUkAddress), None)
+
+            val result = transformer.applyDeclarationTransform(document).get
+
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-ind-address-removed.json")
+
+            result mustBe expectedResult
+          }
+      }
 
       "UK based" - {
 
@@ -273,6 +326,37 @@ class PersonalRepTransformSpec extends FreeSpec with MustMatchers with OptionVal
     }
 
     "business personal rep" - {
+
+      "must remove address" - {
+
+        "when personal rep has a utr" in {
+            val document = Json.obj(
+              "correspondence" -> Json.obj(
+                "name" -> "Estate of Personal Rep"
+              ),
+              "estate" -> Json.obj(
+                "entities" -> Json.obj(
+                  "personalRepresentative" -> Json.obj(
+                    "estatePerRepOrg" -> Json.obj(
+                      "identification" -> Json.obj(
+                        "utr" -> "1234567890",
+                        "address" -> Json.obj()
+                      )
+                    )
+                  )
+                )
+              )
+            )
+
+            val transformer = new PersonalRepTransform(None, Some(newPersonalRepOrgWithNonUkAddress))
+
+            val result = transformer.applyDeclarationTransform(document).get
+
+            val expectedResult = JsonUtils.getJsonValueFromFile("transformed/declared/declaration-transform-personal-rep-org-address-removed.json")
+
+            result mustBe expectedResult
+          }
+      }
 
       "UK based" - {
 

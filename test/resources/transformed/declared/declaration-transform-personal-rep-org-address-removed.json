@@ -1,0 +1,25 @@
+{
+  "correspondence": {
+    "address": {
+      "line3": "line3",
+      "country": "Country",
+      "line1": "line1",
+      "line4": "line4",
+      "line2": "line2"
+    },
+    "phoneNumber": "078888888",
+    "name": "Estate of Personal Rep",
+    "abroadIndicator": true
+  },
+  "estate": {
+    "entities": {
+      "personalRepresentative": {
+        "estatePerRepOrg": {
+          "identification": {
+            "utr": "1234567890"
+          }
+        }
+      }
+    }
+  }
+}

@@ -43,7 +43,7 @@ class DeceasedTransformationController @Inject()(
   private val logger: Logger = Logger(getClass)
 
   def get: Action[AnyContent] = identify.async {
-    implicit request =>
+    request =>
       val result = transformationService.getTransformations(request.identifier) map {
         case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
           transforms.flatMap {
@@ -59,7 +59,7 @@ class DeceasedTransformationController @Inject()(
   }
 
   def getDateOfDeath: Action[AnyContent] = identify.async {
-    implicit request =>
+    request =>
       val result = transformationService.getTransformations(request.identifier) map {
         case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
           transforms.flatMap {
@@ -75,7 +75,7 @@ class DeceasedTransformationController @Inject()(
   }
 
   def getIsTaxRequired: Action[AnyContent] = identify.async {
-    implicit request =>
+    request =>
       val result = transformationService.getTransformations(request.identifier) map {
         case Some(ComposedDeltaTransform(transforms: Seq[DeltaTransform])) =>
           transforms.flatMap {

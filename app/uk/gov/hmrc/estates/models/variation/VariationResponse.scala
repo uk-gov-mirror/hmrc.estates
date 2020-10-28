@@ -68,7 +68,7 @@ object VariationResponse {
     }
 
   private def failure(errorResponse: ErrorResponse) = {
-    logger.error(errorResponse.message)
+    logger.error(s"[failure] failed due to error: ${errorResponse.message}")
     VariationFailureResponse(errorResponse)
   }
 }

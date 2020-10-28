@@ -26,6 +26,7 @@ import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, Variation
 import uk.gov.hmrc.estates.services.{AuditService, DesService, VariationsTransformationService}
 import uk.gov.hmrc.estates.utils.ErrorResponses.{EtmpDataStaleErrorResponse, InternalServerErrorErrorResponse}
 import uk.gov.hmrc.estates.utils.JsonOps._
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,6 +38,8 @@ class VariationService @Inject()(
                                   transformationService: VariationsTransformationService,
                                   declarationService: VariationDeclarationService,
                                   auditService: AuditService) {
+
+  private val logger: Logger = Logger(getClass)
 
   def submitDeclaration(utr: String,
                         internalId: String,
@@ -61,7 +64,8 @@ class VariationService @Inject()(
               "Failed to populate personal rep address",
               JsError.toJson(e)
             )
-            Logger.error(s"[VariationDeclarationService] utr $utr: Failed to populate personal rep address ${JsError.toJson(e)}")
+            logger.error(s"[submitDeclaration][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+              s" Failed to populate personal rep address ${JsError.toJson(e)}")
             Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
         }
       case EtmpCacheDataStaleResponse => Future.successful(VariationFailureResponse(EtmpDataStaleErrorResponse))
@@ -85,8 +89,10 @@ class VariationService @Inject()(
           declaration
         ) match {
           case JsSuccess(value, _) =>
-            Logger.debug(s"[VariationDeclarationService] utr $utr submitting variation $value")
-            Logger.info(s"[VariationDeclarationService] utr $utr successfully transformed json for declaration")
+            logger.debug(s"[processPopulatedEstate][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+              s" submitting variation $value")
+            logger.info(s"[processPopulatedEstate][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+              s" successfully transformed json for declaration")
             doSubmit(value, internalId)
           case e: JsError =>
             auditService.auditVariationTransformationError(
@@ -97,11 +103,13 @@ class VariationService @Inject()(
               "Problem transforming data for ETMP submission",
               JsError.toJson(e)
             )
-            Logger.error(s"[VariationDeclarationService] utr $utr: Problem transforming data for ETMP submission ${JsError.toJson(e)}")
+            logger.error(s"[processPopulatedEstate][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+              s" Problem transforming data for ETMP submission ${JsError.toJson(e)}")
             Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
         }
       case e: JsError =>
-        Logger.error(s"[VariationDeclarationService] utr $utr: Failed to transform estate info ${JsError.toJson(e)}")
+        logger.error(s"[processPopulatedEstate][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+          s" Failed to transform estate info ${JsError.toJson(e)}")
         Future.failed(InternalServerErrorException("There was a problem transforming data for submission to ETMP"))
     }
   }
@@ -112,13 +120,15 @@ class VariationService @Inject()(
       fbn <- desService.getEstateInfoFormBundleNo(utr)
     } yield response match {
       case tpr: GetEstateProcessedResponse if tpr.responseHeader.formBundleNo == fbn =>
-        Logger.info(s"[VariationDeclarationService][submitDeclaration] utr $utr: returning GetEstateProcessedResponse")
+        logger.info(s"[getCachedEstateData][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+          s" returning GetEstateProcessedResponse")
         response.asInstanceOf[GetEstateProcessedResponse]
       case _: GetEstateProcessedResponse =>
-        Logger.info(s"[VariationDeclarationService][submitDeclaration] utr $utr: ETMP cached data in mongo has become stale, rejecting submission")
+        logger.info(s"[getCachedEstateData][Session ID: ${Session.id(hc)}][UTR: $utr]" +
+          s" ETMP cached data in mongo has become stale, rejecting submission")
         EtmpCacheDataStaleResponse
       case _ =>
-        Logger.warn(s"[VariationDeclarationService][submitDeclaration] utr $utr: Estate was not in a processed state")
+        logger.warn(s"[getCachedEstateData][Session ID: ${Session.id(hc)}][UTR: $utr] Estate was not in a processed state")
         throw InternalServerErrorException("Submission could not proceed, Estate data was not in a processed state")
     }
   }
@@ -131,14 +141,14 @@ class VariationService @Inject()(
     desService.estateVariation(payload) map {
       case response: VariationSuccessResponse =>
 
-        Logger.info(s"[VariationService][doSubmit] variation submitted")
+        logger.info(s"[doSubmit][Session ID: ${Session.id(hc)}] variation submitted")
 
         auditService.auditVariationSubmitted(internalId, payload, response)
 
         response
 
       case response: VariationFailureResponse =>
-        Logger.error(s"[VariationService][doSubmit] variation failed: ${response.response}")
+        logger.error(s"[doSubmit][Session ID: ${Session.id(hc)}] variation failed: ${response.response}")
 
         auditService.auditVariationFailed(internalId, payload, response)
 

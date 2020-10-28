@@ -27,6 +27,7 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.estates.models.ApiResponse._
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -38,6 +39,8 @@ class AuthenticatedIdentifierAction @Inject()(override val authConnector: AuthCo
                                              (implicit val executionContext: ExecutionContext)
   extends IdentifierAction with AuthorisedFunctions {
 
+  private val logger: Logger = Logger(getClass)
+  
   def invokeBlock[A](request: Request[A],
                      block: IdentifierRequest[A] => Future[Result]) : Future[Result] = {
 
@@ -52,11 +55,11 @@ class AuthenticatedIdentifierAction @Inject()(override val authConnector: AuthCo
       case Some(internalId) ~ Some(Organisation) =>
         block(IdentifierRequest(request, internalId, Organisation))
       case _ =>
-        Logger.info(s"[IdentifierAction] Insufficient enrolment")
+        logger.info(s"[Session ID: ${Session.id(hc)}] Insufficient enrolment")
         Future.successful(Unauthorized(Json.toJson(insufficientEnrolmentErrorResponse)))
     } recoverWith {
       case e : AuthorisationException =>
-        Logger.info(s"[IdentifierAction] AuthorisationException: $e")
+        logger.info(s"[Session ID: ${Session.id(hc)}] AuthorisationException: $e")
         Future.successful(Unauthorized)
     }
   }

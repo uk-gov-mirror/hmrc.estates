@@ -26,26 +26,28 @@ final case class SubscriptionIdResponse(subscriptionId: String)
 
 object SubscriptionIdResponse {
 
+  private val logger: Logger = Logger(getClass)
+  
   implicit val formats: OFormat[SubscriptionIdResponse] = Json.format[SubscriptionIdResponse]
 
   implicit lazy val httpReads: HttpReads[SubscriptionIdResponse] =
     new HttpReads[SubscriptionIdResponse] {
       override def read(method: String, url: String, response: HttpResponse): SubscriptionIdResponse = {
-        Logger.info(s"[SubscriptionIdResponse]  response status received from des: ${response.status}")
+        logger.info(s"Response status received from des: ${response.status}")
         response.status match {
           case OK =>
             response.json.as[SubscriptionIdResponse]
           case BAD_REQUEST =>
-            Logger.error(s"[SubscriptionIdResponse] Bad Request response from des ")
+            logger.error(s"Bad Request response from des ")
             throw BadRequestException
           case NOT_FOUND =>
-            Logger.error(s"[SubscriptionIdResponse] Not found response from des")
+            logger.error(s"Not found response from des")
             throw NotFoundException
           case SERVICE_UNAVAILABLE =>
-            Logger.error("[SubscriptionIdResponse] Service unavailable response from des.")
+            logger.error("Service unavailable response from des.")
             throw ServiceNotAvailableException("Des dependent service is down.")
           case status =>
-            Logger.error(s"[SubscriptionIdResponse]  Error response from des : $status")
+            logger.error(s"Error response from des : $status")
             throw InternalServerErrorException(s"Error response from des $status")
         }
       }

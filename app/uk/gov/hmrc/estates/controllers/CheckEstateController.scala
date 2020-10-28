@@ -26,6 +26,7 @@ import uk.gov.hmrc.estates.models.ApiResponse._
 import uk.gov.hmrc.estates.models._
 import uk.gov.hmrc.estates.models.ExistingCheckResponse._
 import uk.gov.hmrc.estates.services.DesService
+import uk.gov.hmrc.estates.utils.Session
 
 import scala.concurrent.ExecutionContext
 
@@ -35,12 +36,14 @@ class CheckEstateController @Inject()(desService: DesService, config: AppConfig,
                                      (implicit val executionContext: ExecutionContext, cc: ControllerComponents)
   extends EstatesBaseController(cc) {
 
+  private val logger: Logger = Logger(getClass)
+  
   def checkExistingEstate(): Action[JsValue] = identify.async(parse.json) { implicit request =>
       withJsonBody[ExistingCheckRequest] {
         estatesCheckRequest =>
           desService.checkExistingEstate(estatesCheckRequest).map {
             result =>
-              Logger.info(s"[CheckEstateController][checkExistingEstate] response: $result")
+              logger.info(s"[checkExistingEstate][Session ID: ${Session.id(hc)}] response: $result")
               result match {
                 case Matched => Ok(matchResponse)
                 case NotMatched => Ok(noMatchResponse)

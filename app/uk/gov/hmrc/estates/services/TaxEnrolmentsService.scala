@@ -24,6 +24,7 @@ import play.api.Logger
 import uk.gov.hmrc.estates.config.AppConfig
 import uk.gov.hmrc.estates.connectors.TaxEnrolmentConnector
 import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentSubscriberResponse}
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,6 +37,8 @@ class TaxEnrolmentsServiceImpl @Inject()(taxEnrolmentConnector: TaxEnrolmentConn
                                          config: AppConfig
                                         ) extends TaxEnrolmentsService {
 
+  private val logger: Logger = Logger(getClass)
+  
   private val DELAY_SECONDS_BETWEEN_REQUEST = config.delayToConnectTaxEnrolment
   private val MAX_TRIES = config.maxRetry
 
@@ -50,11 +53,12 @@ class TaxEnrolmentsServiceImpl @Inject()(taxEnrolmentConnector: TaxEnrolmentConn
       case NonFatal(_) =>
         if (isMaxRetryReached(acc)) {
           val reason = s"Maximum retry completed. Tax enrolment failed for subscription id $subscriptionId"
-          Logger.error(s"[enrolSubscriberWithRetry] $reason")
+          Logger.error(s"[enrolSubscriberWithRetry][Session ID: ${Session.id(hc)}] $reason")
           Future.successful(TaxEnrolmentFailure(reason))
         } else {
           afterSeconds(DELAY_SECONDS_BETWEEN_REQUEST.seconds).flatMap { _ =>
-            Logger.error(s"[enrolSubscriberWithRetry]  Retrying to enrol subscription id $subscriptionId,  $acc")
+            logger.error(s"[enrolSubscriberWithRetry][Session ID: ${Session.id(hc)}]" +
+              s" Retrying to enrol subscription id $subscriptionId,  $acc")
             enrolSubscriberWithRetry(subscriptionId, acc + 1)
           }
       }

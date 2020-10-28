@@ -22,6 +22,7 @@ import play.api.Logger
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.estates.exceptions.InternalServerErrorException
 import uk.gov.hmrc.estates.models.{TaxEnrolmentFailure, TaxEnrolmentNotProcessed, TaxEnrolmentSubscriberResponse, TaxEnrolmentSuccess}
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,6 +35,8 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
                                        auditService: AuditService
                                       ) extends RosmPatternService {
 
+  private val logger: Logger = Logger(getClass)
+  
   def getSubscriptionIdAndEnrol(trn : String, identifier: String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
 
     for {
@@ -68,19 +71,20 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
       case AffinityGroup.Organisation =>
         getSubscriptionIdAndEnrol(trn, identifier) map {
           case TaxEnrolmentSuccess =>
-            Logger.info(s"Rosm completed successfully for provided trn: $trn.")
+            logger.info(s"[Session ID: ${Session.id(hc)}] Rosm completed successfully for provided trn: $trn.")
             TaxEnrolmentSuccess
           case response: TaxEnrolmentFailure =>
-            Logger.error(s"Rosm pattern is not completed for trn: $trn. with reason: ${response.reason}")
+            logger.error(s"[Session ID: ${Session.id(hc)}]" +
+              s" Rosm pattern is not completed for trn: $trn. with reason: ${response.reason}")
             response
           case r => r
         } recover {
           case NonFatal(e) =>
-            Logger.error(s"Rosm pattern is not completed for trn: $trn.")
+            logger.error(s"[Session ID: ${Session.id(hc)}] Rosm pattern is not completed for trn: $trn.")
             TaxEnrolmentFailure(s"Non-fatal error: ${e.getMessage}")
           }
       case _ =>
-        Logger.info("Tax enrolments is not required for Agent.")
+        logger.info(s"[Session ID: ${Session.id(hc)}] Tax enrolments is not required for Agent.")
         Future.successful(TaxEnrolmentNotProcessed)
     }
   }

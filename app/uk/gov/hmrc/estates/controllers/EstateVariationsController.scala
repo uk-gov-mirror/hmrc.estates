@@ -24,7 +24,7 @@ import uk.gov.hmrc.estates.controllers.actions.{IdentifierAction, VariationsResp
 import uk.gov.hmrc.estates.models.DeclarationForApi
 import uk.gov.hmrc.estates.models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import uk.gov.hmrc.estates.services.maintain.VariationService
-import uk.gov.hmrc.estates.utils.ErrorResults
+import uk.gov.hmrc.estates.utils.{ErrorResults, Session}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,12 +34,13 @@ class EstateVariationsController @Inject()(
                                             responseHandler: VariationsResponseHandler
                                           )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
 
-
+  private val logger: Logger = Logger(getClass)
+  
   def declare(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[DeclarationForApi].fold(
         errors => {
-          Logger.error(s"[EstateVariationsDeclarationController][declare] unable to parse json as DeclarationForApi, $errors")
+          logger.error(s"[declare][Session ID: ${Session.id(hc)}][UTR: $utr] unable to parse json as DeclarationForApi, $errors")
           Future.successful(BadRequest)
         },
         declarationForApi => {

@@ -35,6 +35,8 @@ import scala.concurrent.Future
 
 class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
 
+  private val logger: Logger = Logger(getClass)
+  
   private lazy val subscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
 
@@ -69,7 +71,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
-    Logger.info(s"[DesConnector] matching estate for correlationId: $correlationId")
+    logger.info(s"[checkExistingEstate] matching estate for correlationId: $correlationId")
 
     http.POST[JsValue, ExistingCheckResponse](matchEstatesEndpoint, Json.toJson(existingEstateCheckRequest))
   }
@@ -79,7 +81,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
-    Logger.info(s"[DesConnector] registering estate for correlationId: $correlationId")
+    logger.info(s"[registerEstate] registering estate for correlationId: $correlationId")
 
     http.POST[JsValue, RegistrationResponse](estateRegistrationEndpoint, Json.toJson(registration)(EstateRegistration.estateRegistrationWriteToDes))
   }
@@ -99,7 +101,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
 
     implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
-    Logger.info(s"[DesConnector] getting playback for estate for correlationId: $correlationId")
+    logger.info(s"[getEstateInfo][UTR: $utr] getting playback for estate for correlationId: $correlationId")
 
     http.GET[GetEstateResponse](createEstateEndpointForUtr(utr))
   }
@@ -109,7 +111,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
-    Logger.info(s"[DesConnector] submitting estate variation for correlationId: $correlationId")
+    logger.info(s"[estateVariation] submitting estate variation for correlationId: $correlationId")
 
     http.POST[JsValue, VariationResponse](estateVariationsEndpoint, Json.toJson(estateVariations))
   }

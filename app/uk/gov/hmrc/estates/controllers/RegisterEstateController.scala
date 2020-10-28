@@ -26,6 +26,7 @@ import uk.gov.hmrc.estates.models.{AlreadyRegisteredResponse, RegistrationTrnRes
 import uk.gov.hmrc.estates.services.RosmPatternService
 import uk.gov.hmrc.estates.services.register.RegistrationService
 import uk.gov.hmrc.estates.utils.ErrorResults._
+import uk.gov.hmrc.estates.utils.Session
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,11 +35,14 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
                                          rosmPatternService: RosmPatternService)
                                         (implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
 
+  private val logger: Logger = Logger(getClass)
+  
   def register(): Action[JsValue] = identifierAction.async(parse.json) {
     implicit request => {
       request.body.validate[RegistrationDeclaration].fold(
         errors => {
-          Logger.error(s"[RegisterEstateController][declare] unable to parse json as RegistrationDeclaration, $errors")
+          logger.error(s"[register][Session ID: ${Session.id(hc)}]" +
+            s" unable to parse json as RegistrationDeclaration, $errors")
           Future.successful(BadRequest)
         },
         declaration => {
@@ -50,15 +54,18 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
                     Ok(Json.toJson(response))
                 }
               case AlreadyRegisteredResponse =>
-                Logger.info(s"[RegisterEstateController] unable to register estate for session ${hc.sessionId.map(_.value).getOrElse("")} due to it already being registered")
+                logger.info(s"[register][Session ID: ${Session.id(hc)}]" +
+                  s" unable to register estate for session due to it already being registered")
                 Future.successful(duplicateSubmissionErrorResult)
               case e =>
-                Logger.warn(s"[RegisterEstateController] unable to register estate for session ${hc.sessionId.map(_.value).getOrElse("")} due to $e")
+                logger.warn(s"[register][Session ID: ${Session.id(hc)}]" +
+                  s" unable to register estate for session due to $e")
                 Future.successful(internalServerErrorErrorResult)
             }
         } recover {
           case e =>
-            Logger.warn(s"[RegisterEstateController] unable to register estate for session ${hc.sessionId.map(_.value).getOrElse("")} due exception ${e.getMessage}")
+            logger.warn(s"[register][Session ID: ${Session.id(hc)}]" +
+              s" unable to register estate for session due exception ${e.getMessage}")
             internalServerErrorErrorResult
         }
       )

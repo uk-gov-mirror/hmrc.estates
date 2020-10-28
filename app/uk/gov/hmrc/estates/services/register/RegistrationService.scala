@@ -27,6 +27,7 @@ import uk.gov.hmrc.estates.repositories.TransformationRepository
 import uk.gov.hmrc.estates.services.{AuditService, DesService}
 import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
 import uk.gov.hmrc.estates.transformers.register.DeclarationTransform
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,6 +38,8 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                     auditService: AuditService
                                    )(implicit ec: ExecutionContext) {
 
+  private val logger: Logger = Logger(getClass)
+  
   def getRegistration()(implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[EstateRegistrationNoDeclaration] = {
 
     repository.get(request.identifier) flatMap {
@@ -79,7 +82,8 @@ class RegistrationService @Inject()(repository: TransformationRepository,
               case Some(payload) =>
                 submitAndAuditResponse(payload)
               case None =>
-                Logger.warn(s"[RegistrationService] unable to send registration for session: ${hc.sessionId.map(_.value).getOrElse("")} due to being unable to validate as EstateRegistration")
+                logger.warn(s"[submit][Session ID: ${Session.id(hc)}]" +
+                  s" unable to send registration for session due to being unable to validate as EstateRegistration")
 
                 val reason = "Unable to parse transformed json as EstateRegistration"
 
@@ -92,7 +96,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
             }
           case JsError(errors) =>
 
-            Logger.warn(s"[RegistrationService] unable to build submission payload for session: ${hc.sessionId.map(_.value).getOrElse("")}")
+            logger.warn(s"[submit][Session ID: ${Session.id(hc)}] unable to build submission payload for session")
 
             val reason = "Unable to build json from transforms"
 
@@ -105,7 +109,8 @@ class RegistrationService @Inject()(repository: TransformationRepository,
         }
       case None =>
 
-        Logger.warn(s"[RegistrationService] unable to send registration for session: ${hc.sessionId.map(_.value).getOrElse("")} due to there being no data in mongo")
+        logger.warn(s"[submit][Session ID: ${Session.id(hc)}]" +
+          s" unable to send registration for session due to there being no data in mongo")
 
         val reason = "Unable to submit registration due to there being no transforms"
 
@@ -120,13 +125,14 @@ class RegistrationService @Inject()(repository: TransformationRepository,
     desService.registerEstate(payload) map {
       case r@RegistrationTrnResponse(trn) =>
 
-        Logger.info(s"[RegistrationService] submission for session: ${hc.sessionId.map(_.value).getOrElse("")} received TRN $trn")
+        logger.info(s"[submitAndAuditResponse][Session ID: ${Session.id(hc)}] submission for session received TRN $trn")
 
         auditService.auditRegistrationSubmitted(payload, trn)
         r
       case r: RegistrationFailureResponse =>
 
-        Logger.error(s"[RegistrationService] submission for session: ${hc.sessionId.map(_.value).getOrElse("")} was unable to be submitted due to status ${r.status} ${r.code} and ${r.message}")
+        logger.error(s"[submitAndAuditResponse][Session ID: ${Session.id(hc)}]" +
+          s" submission for session was unable to be submitted due to status ${r.status} ${r.code} and ${r.message}")
 
         auditService.auditRegistrationFailed(request.identifier, Json.toJson(payload), r)
         r
@@ -150,19 +156,19 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   }
 
   private def applyTransforms(transforms: ComposedDeltaTransform): JsResult[JsValue] = {
-    Logger.info(s"[RegistrationService] applying transformations")
+    logger.info(s"[applyTransforms] applying transformations")
     transforms.applyTransform(Json.obj())
   }
 
   private def applyTransformsForDeclaration(transforms: ComposedDeltaTransform, original: JsValue): JsResult[JsValue] = {
-    Logger.info(s"[RegistrationService] applying declaration transformations")
+    logger.info(s"[applyTransformsForDeclaration] applying declaration transformations")
     transforms.applyDeclarationTransform(original)
   }
 
   private def applyDeclarationAddressTransform(original: JsValue,
                                                affinityGroup: AffinityGroup,
                                                name: NameType): JsResult[JsValue] = {
-    Logger.info(s"[RegistrationService] applying declaration address transform")
+    logger.info(s"[applyDeclarationAddressTransform] applying declaration address transform")
     declarationTransformer.transform(affinityGroup, original, name)
   }
 

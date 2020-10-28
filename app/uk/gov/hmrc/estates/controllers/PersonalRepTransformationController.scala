@@ -17,13 +17,13 @@
 package uk.gov.hmrc.estates.controllers
 
 import javax.inject.Inject
-import org.slf4j.LoggerFactory
+import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.{EstatePerRepIndType, EstatePerRepOrgType}
 import uk.gov.hmrc.estates.services.{LocalDateService, PersonalRepTransformationService}
-import uk.gov.hmrc.estates.utils.ValidationUtil
+import uk.gov.hmrc.estates.utils.{Session, ValidationUtil}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +34,7 @@ class PersonalRepTransformationController @Inject()(
                                           localDateService: LocalDateService
                                         )(implicit val executionContext: ExecutionContext) extends EstatesBaseController(cc) with ValidationUtil {
 
-  private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
 
   def getPersonalRepInd(): Action[AnyContent] = identify.async {
     implicit request =>
@@ -62,7 +62,8 @@ class PersonalRepTransformationController @Inject()(
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Supplied Personal Rep could not be read as EstatePerRepIndType - $errors")
+          logger.warn(s"[Session ID: ${Session.id(hc)}] " +
+            s"Supplied Personal Rep could not be read as EstatePerRepIndType - $errors")
           Future.successful(BadRequest)
       }
     }
@@ -76,7 +77,8 @@ class PersonalRepTransformationController @Inject()(
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Supplied Personal Rep could not be read as EstatePerRepIndType - $errors")
+          logger.warn(s"[Session ID: ${Session.id(hc)}] " +
+            s"Supplied Personal Rep could not be read as EstatePerRepIndType - $errors")
           Future.successful(BadRequest)
       }
     }

@@ -20,6 +20,7 @@ import play.api.Logger
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json._
 import uk.gov.hmrc.estates.models.DesErrorResponse
+import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse.getClass
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 trait GetEstateResponse
@@ -60,10 +61,12 @@ object GetEstateResponse extends GetEstateHttpReads {
 
 sealed trait GetEstateHttpReads {
 
+  private val logger: Logger = Logger(getClass)
+
   implicit lazy val httpReads: HttpReads[GetEstateResponse] =
     new HttpReads[GetEstateResponse] {
       override def read(method: String, url: String, response: HttpResponse): GetEstateResponse = {
-        Logger.info(s"[GetEstateResponse] response status received from des: ${response.status}")
+        logger.info(s"Response status received from des: ${response.status}")
         response.status match {
           case OK => readProcessedResponse(response)
           case BAD_REQUEST => readClientErrorResponse(response)
@@ -77,10 +80,10 @@ sealed trait GetEstateHttpReads {
   private def readProcessedResponse(response: HttpResponse) =
     response.json.validate[GetEstateResponse] match {
       case JsSuccess(estateFound,_) =>
-        Logger.info("[GetEstateResponse] response successfully parsed as EstateFoundResponse")
+        logger.info("Response successfully parsed as EstateFoundResponse")
         estateFound
       case JsError(errors) =>
-        Logger.info(s"[GetEstateResponse] Cannot parse as EstateFoundResponse due to $errors")
+        logger.info(s"Cannot parse as EstateFoundResponse due to $errors")
         NotEnoughDataResponse(response.json, JsError.toJson(errors))
     }
 

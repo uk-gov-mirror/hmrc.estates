@@ -17,13 +17,14 @@
 package uk.gov.hmrc.estates.controllers.transformers.register
 
 import javax.inject.Inject
-import org.slf4j.LoggerFactory
+import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.YearsReturns
 import uk.gov.hmrc.estates.services.register.YearsReturnsTransformationService
+import uk.gov.hmrc.estates.utils.Session
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +35,7 @@ class YearsReturnsTransformationController @Inject()(
                                                        )(implicit val executionContext: ExecutionContext)
   extends EstatesBaseController(cc) {
 
-  private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
 
   def get : Action[AnyContent] = identify.async {
     implicit request =>
@@ -53,7 +54,8 @@ class YearsReturnsTransformationController @Inject()(
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Supplied amount could not be read as YearsReturns - $errors")
+          logger.warn(s"[Session ID: ${Session.id(hc)}]" +
+            s" Supplied amount could not be read as YearsReturns - $errors")
           Future.successful(BadRequest)
       }
     }

@@ -17,12 +17,12 @@
 package uk.gov.hmrc.estates.controllers
 
 import javax.inject.Inject
-import org.slf4j.LoggerFactory
+import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.services.CorrespondenceTransformationService
-import uk.gov.hmrc.estates.utils.ValidationUtil
+import uk.gov.hmrc.estates.utils.{Session, ValidationUtil}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,7 +32,7 @@ class CorrespondenceTransformationController @Inject()(
                                                         cc: ControllerComponents
                                         )(implicit val executionContext: ExecutionContext) extends EstatesBaseController(cc) with ValidationUtil {
 
-  private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
 
   def getCorrespondenceName(): Action[AnyContent] = identify.async {
     implicit request =>
@@ -51,7 +51,8 @@ class CorrespondenceTransformationController @Inject()(
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Supplied details could not be read as JsString - $errors")
+          logger.warn(s"[addCorrespondenceName][Session ID: ${Session.id(hc)}]" +
+            s" Supplied details could not be read as JsString - $errors")
           Future.successful(BadRequest)
       }
     }

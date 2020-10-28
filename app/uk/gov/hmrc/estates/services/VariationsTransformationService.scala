@@ -31,6 +31,8 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
                                                 desService: DesService,
                                                 auditService: AuditService){
 
+  private val logger: Logger = Logger(getClass)
+  
   def addNewTransform(utr: String, internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
     transformRepository.get(utr, internalId) map {
       case None =>
@@ -43,7 +45,7 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
       transformRepository.set(utr, internalId, newTransforms)
     } recoverWith {
       case e =>
-        Logger.error(s"[TransformationService] utr $utr exception adding new transform: ${e.getMessage}")
+        logger.error(s"[addNewTransform][UTR: $utr] exception adding new transform: ${e.getMessage}")
         Future.failed(e)
     }
   }
@@ -83,19 +85,19 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
 
     transformRepository.get(utr, internalId).map {
       case None =>
-        Logger.info(s"[VariationsTransformationService] utr $utr no transformations to apply")
+        logger.info(s"[applyDeclarationTransformations][UTR: $utr]no transformations to apply")
         JsSuccess(json)
       case Some(transformations) =>
 
-        Logger.debug(s"[VariationsTransformationService] utr $utr applying the following transforms $transformations")
+        logger.debug(s"[applyDeclarationTransformations][UTR: $utr] applying the following transforms $transformations")
 
         val result = for {
           initial <- {
-            Logger.info(s"[VariationsTransformationService] utr $utr applying transformations")
+            logger.info(s"[applyDeclarationTransformations][UTR: $utr] applying transformations")
             transformations.applyTransform(json)
           }
           transformed <- {
-            Logger.info(s"[VariationsTransformationService] utr $utr applying declaration transformations")
+            logger.info(s"[applyDeclarationTransformations][UTR: $utr] applying declaration transformations")
             transformations.applyDeclarationTransform(initial)
           }
         } yield transformed
@@ -108,10 +110,10 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
     val pathToPersonalRepAddress = __ \ 'details \ 'estate \ 'entities \ 'personalRepresentative \ 'identification \ 'address
 
     if (beforeJson.transform(pathToPersonalRepAddress.json.pick).isSuccess) {
-      Logger.info(s"[VariationTransformationService] record already has an address for the personal representative, not modifying")
+      logger.info(s"[populatePersonalRepAddress] record already has an address for the personal representative, not modifying")
       JsSuccess(beforeJson)
     } else {
-      Logger.info(s"[VariationTransformationService] record does not have an address for personal rep, adding one from correspondence")
+      logger.info(s"[populatePersonalRepAddress] record does not have an address for personal rep, adding one from correspondence")
       val pathToCorrespondenceAddress = __ \ 'correspondence \ 'address
       val copyAddress = __.json.update(pathToPersonalRepAddress.json.copyFrom(pathToCorrespondenceAddress.json.pick))
       beforeJson.transform(copyAddress)

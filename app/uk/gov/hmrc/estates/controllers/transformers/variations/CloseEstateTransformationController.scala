@@ -19,13 +19,13 @@ package uk.gov.hmrc.estates.controllers.transformers.variations
 import java.time.LocalDate
 
 import javax.inject.Inject
-import org.slf4j.LoggerFactory
+import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.services.maintain.CloseEstateTransformationService
-import uk.gov.hmrc.estates.utils.ValidationUtil
+import uk.gov.hmrc.estates.utils.{Session, ValidationUtil}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +36,7 @@ class CloseEstateTransformationController @Inject()(
                                                    )(implicit val executionContext: ExecutionContext)
   extends EstatesBaseController(cc) with ValidationUtil {
 
-  private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
 
   def close(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
@@ -46,7 +46,8 @@ class CloseEstateTransformationController @Inject()(
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Supplied payload could not be read as LocalDate - $errors")
+          logger.warn(s"[Session ID: ${Session.id(hc)}][UTR: $utr]" +
+            s" Supplied payload could not be read as LocalDate - $errors")
           Future.successful(BadRequest)
       }
     }

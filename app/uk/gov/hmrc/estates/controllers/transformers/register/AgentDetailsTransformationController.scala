@@ -17,7 +17,7 @@
 package uk.gov.hmrc.estates.controllers.transformers.register
 
 import javax.inject.Inject
-import org.slf4j.LoggerFactory
+import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
@@ -25,6 +25,7 @@ import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.AgentDetails
 import uk.gov.hmrc.estates.services.LocalDateService
 import uk.gov.hmrc.estates.services.register.AgentDetailsTransformationService
+import uk.gov.hmrc.estates.utils.Session
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +37,7 @@ class AgentDetailsTransformationController @Inject()(
                                                        )(implicit val executionContext: ExecutionContext)
   extends EstatesBaseController(cc) {
 
-  private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
 
   def get : Action[AnyContent] = identify.async {
     implicit request =>
@@ -55,7 +56,7 @@ class AgentDetailsTransformationController @Inject()(
             Ok
           }
         case JsError(errors) =>
-          logger.warn(s"Agent details could not be read as AgentDetails - $errors")
+          logger.warn(s"[Session ID: ${Session.id(hc)}] Agent details could not be read as AgentDetails - $errors")
           Future.successful(BadRequest)
       }
     }

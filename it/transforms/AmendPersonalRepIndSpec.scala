@@ -23,7 +23,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.estates.models.{AddressType, EstatePerRepIndType, IdentificationType, NameType}
+import models.{AddressType, EstatePerRepIndType, IdentificationType, NameType}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 class AmendPersonalRepIndSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {

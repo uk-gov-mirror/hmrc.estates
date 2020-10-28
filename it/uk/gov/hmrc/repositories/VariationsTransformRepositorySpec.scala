@@ -20,11 +20,11 @@ import java.time.LocalDate
 
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import uk.gov.hmrc.estates.models.variation.EstatePerRepIndType
-import uk.gov.hmrc.estates.models.{IdentificationType, NameType}
-import uk.gov.hmrc.estates.repositories.VariationsTransformationRepository
-import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
-import uk.gov.hmrc.estates.transformers.variations.AddAmendIndividualPersonalRepTransform
+import models.variation.EstatePerRepIndType
+import models.{IdentificationType, NameType}
+import repositories.VariationsTransformationRepository
+import transformers.ComposedDeltaTransform
+import transformers.variations.AddAmendIndividualPersonalRepTransform
 
 class VariationsTransformRepositorySpec extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {

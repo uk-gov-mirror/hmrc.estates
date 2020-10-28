@@ -22,8 +22,8 @@ import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.estates.models.register.AmountOfTaxOwed
-import uk.gov.hmrc.estates.models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
+import models.register.AmountOfTaxOwed
+import models.register.TaxAmount.{AmountMoreThanFiveHundredThousand, AmountMoreThanTenThousand}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 class AmountTaxOwedSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {

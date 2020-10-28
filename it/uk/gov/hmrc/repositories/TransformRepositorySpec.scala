@@ -18,8 +18,8 @@ package uk.gov.hmrc.repositories
 
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import uk.gov.hmrc.estates.repositories.TransformationRepository
-import uk.gov.hmrc.estates.transformers.ComposedDeltaTransform
+import repositories.TransformationRepository
+import transformers.ComposedDeltaTransform
 
 class TransformRepositorySpec  extends AsyncFreeSpec with MustMatchers
   with ScalaFutures with OptionValues with Inside with TransformIntegrationTest with EitherValues {

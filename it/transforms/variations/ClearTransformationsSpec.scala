@@ -28,10 +28,10 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.connectors.DesConnector
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.models.getEstate.GetEstateResponse
-import uk.gov.hmrc.estates.utils.JsonUtils
+import connectors.DesConnector
+import controllers.actions.{FakeIdentifierAction, IdentifierAction}
+import models.getEstate.GetEstateResponse
+import utils.JsonUtils
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 import scala.concurrent.ExecutionContext.Implicits.global

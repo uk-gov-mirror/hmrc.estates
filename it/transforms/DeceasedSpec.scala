@@ -24,7 +24,7 @@ import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.estates.models.{EstateWillType, IdentificationType, NameType}
+import models.{EstateWillType, IdentificationType, NameType}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 class DeceasedSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {

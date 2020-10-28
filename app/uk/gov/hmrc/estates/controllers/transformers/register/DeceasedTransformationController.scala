@@ -19,15 +19,16 @@ package uk.gov.hmrc.estates.controllers.transformers.register
 import java.time.LocalDate
 
 import javax.inject.Inject
-import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsBoolean, JsError, JsSuccess, JsValue, Json}
+import play.api.Logger
+import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.estates.controllers.EstatesBaseController
 import uk.gov.hmrc.estates.controllers.actions.IdentifierAction
 import uk.gov.hmrc.estates.models.EstateWillType
 import uk.gov.hmrc.estates.services.TransformationService
-import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
 import uk.gov.hmrc.estates.transformers.register.DeceasedTransform
+import uk.gov.hmrc.estates.transformers.{ComposedDeltaTransform, DeltaTransform}
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +40,7 @@ class DeceasedTransformationController @Inject()(
                                                 )(implicit val executionContext: ExecutionContext)
   extends EstatesBaseController(cc) {
 
-  private val logger = LoggerFactory.getLogger("application." + this.getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
 
   def get: Action[AnyContent] = identify.async {
     request =>
@@ -92,14 +93,14 @@ class DeceasedTransformationController @Inject()(
   }
 
   def save: Action[JsValue] = identify.async(parse.json) {
-    request => {
+    implicit request => {
       request.body.validate[EstateWillType] match {
         case JsSuccess(deceased, _) =>
           transformationService.addNewTransform(request.identifier, DeceasedTransform(deceased)) map {
             _ => Ok
           }
         case JsError(errs) =>
-          logger.warn(s"Supplied amount could not be read as Deceased - $errs")
+          logger.warn(s"[Session ID: ${Session.id(hc)}] Supplied amount could not be read as Deceased - $errs")
           Future.successful(BadRequest)
       }
     }

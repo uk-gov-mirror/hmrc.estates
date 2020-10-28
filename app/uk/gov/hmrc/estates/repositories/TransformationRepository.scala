@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 
 import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
-import org.slf4j.LoggerFactory
+import play.api.Logger
 import play.api.libs.json._
 import reactivemongo.api.WriteConcern
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -48,7 +48,8 @@ class TransformationRepositoryImpl @Inject()(
                             config: AppConfig
                           )(implicit ec: ExecutionContext, m: Materializer) extends TransformationRepository {
 
-  private val logger = LoggerFactory.getLogger("application." + getClass.getCanonicalName)
+  private val logger: Logger = Logger(getClass)
+
   private val collectionName: String = "transforms"
   private val cacheTtl = config.ttlInSeconds
 

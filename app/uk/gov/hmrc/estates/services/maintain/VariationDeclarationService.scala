@@ -26,6 +26,8 @@ import uk.gov.hmrc.estates.services.LocalDateService
 
 class VariationDeclarationService @Inject()(localDateService: LocalDateService) {
 
+  private val logger: Logger = Logger(getClass)
+  
   private lazy val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
   private lazy val pathToPersonalRep: JsPath = pathToEntities \ 'personalRepresentative
   private lazy val pathToPersonalRepAddress = pathToPersonalRep \ 'identification \ 'address
@@ -41,7 +43,7 @@ class VariationDeclarationService @Inject()(localDateService: LocalDateService) 
                 responseHeader: ResponseHeader,
                 cachedDocument: JsValue,
                 declaration: DeclarationForApi): JsResult[JsValue] = {
-    Logger.debug(s"[VariationDeclarationService] applying declaration transforms to document $amendDocument from cached $cachedDocument")
+    logger.debug(s"[VariationDeclarationService] applying declaration transforms to document $amendDocument from cached $cachedDocument")
 
     amendDocument.transform(
       (__ \ 'applicationType).json.prune andThen
@@ -103,15 +105,16 @@ class VariationDeclarationService @Inject()(localDateService: LocalDateService) 
     val personalRepField = determinePersonalRepField(__, previousPersonalRepJson)
 
     previousPersonalRepJson.transform(__.json.update {
-      Logger.info(s"[VariationDeclarationService] setting end date on original personal representative")
+      logger.info(s"[addPreviousPersonalRepAsExpiredStep] setting end date on original personal representative")
       (__ \ 'entityEnd).json.put(date)
     }).fold(
       errors => {
-        Logger.error(s"[VariationDeclarationService] unable to set end date on original personal representative")
+        logger.error(s"[addPreviousPersonalRepAsExpiredStep] unable to set end date on original personal representative")
         Reads(_ => JsError(errors))
       },
       endedJson => {
-        Logger.info(s"[VariationDeclarationService] ended old personal representative, adding them to personal representative array")
+        logger.info(s"[addPreviousPersonalRepAsExpiredStep]" +
+          s" ended old personal representative, adding them to personal representative array")
         pathToPersonalRep.json.update(of[JsArray]
           .map { a => a :+ Json.obj(personalRepField -> endedJson) })
       })
@@ -123,7 +126,7 @@ class VariationDeclarationService @Inject()(localDateService: LocalDateService) 
 
     (newPersonalRep, originalPersonalRep) match {
       case (JsSuccess(newPersonalRepJson, _), JsSuccess(originalPersonalRepJson, _)) if newPersonalRepJson != originalPersonalRepJson =>
-        Logger.info(s"[VariationDeclarationService] personal representative has changed")
+        logger.info(s"[endPreviousPersonalRepIfChanged] personal representative has changed")
 
         val startDateReads = (__ \ "entityStart").json.pick
 
@@ -140,9 +143,9 @@ class VariationDeclarationService @Inject()(localDateService: LocalDateService) 
           } else {
             addPreviousPersonalRepAsExpiredStep(previousPersonalRepWithAddressRemoved, Json.toJson(localDateService.now))
           }
-        }).getOrElse(Reads(_ => JsError.apply("[VariationDeclarationService] unable to end previous personal representative")))
+        }).getOrElse(Reads(_ => JsError.apply("[endPreviousPersonalRepIfChanged] unable to end previous personal representative")))
       case _ =>
-        Logger.info(s"[VariationDeclarationService] personal representative has not changed")
+        logger.info(s"[endPreviousPersonalRepIfChanged] personal representative has not changed")
         __.json.pick[JsObject]
     }
   }
@@ -152,10 +155,10 @@ class VariationDeclarationService @Inject()(localDateService: LocalDateService) 
   private def declarationAddress(agentDetails: Option[AgentDetails],
                                  amendJson: JsValue) : JsResult[AddressType] = agentDetails match {
       case Some(x) =>
-        Logger.info(s"[VariationDeclarationService] using agents address as declaration")
+        logger.info(s"[declarationAddress] using agents address as declaration")
         JsSuccess(x.agentAddress)
       case None =>
-        Logger.info(s"[VariationDeclarationService] using personal representatives address as declaration")
+        logger.info(s"[declarationAddress] using personal representatives address as declaration")
         amendJson.transform((pathToPersonalRep \ 'identification \ 'address).json.pick).flatMap(_.validate[AddressType])
     }
 
@@ -165,7 +168,7 @@ class VariationDeclarationService @Inject()(localDateService: LocalDateService) 
         val declarationToSend = Declaration(declarationForApi.declaration.name, value)
         putNewValue(declarationPath, Json.toJson(declarationToSend))
       case e : JsError =>
-        Logger.error(s"[VariationDeclarationService] unable to set declaration address," +
+        logger.error(s"[addDeclaration] unable to set declaration address," +
           s" hadAgent: ${declarationForApi.agentDetails.isDefined}, due to ${e.errors}")
         Reads(_ => e)
     }

@@ -38,10 +38,7 @@ class ValidationService @Inject()() {
   private val factory = JsonSchemaFactory.byDefault()
 
   def get(schemaFile: String): Validator = {
-    println(s"schemaFile is $schemaFile")
     val resource: URL = getClass.getResource(schemaFile)
-    println(s"resource is $resource")
-    println(s"resource path is ${resource.getPath}")
     val source = Source.fromFile(resource.getPath)
     val schemaJsonFileString = source.mkString
     source.close()
@@ -54,6 +51,8 @@ class ValidationService @Inject()() {
 
 class Validator(schema: JsonSchema) {
 
+  private val logger: Logger = Logger(getClass)
+  
   private val JsonErrorMessageTag = "message"
   private val JsonErrorInstanceTag = "instance"
   private val JsonErrorPointerTag = "pointer"
@@ -70,11 +69,11 @@ class Validator(schema: JsonSchema) {
               validateBusinessRules(request)
           )
         } else {
-          Logger.error(s"[Validator][validate] unable to validate to schema")
+          logger.error(s"[validate] unable to validate to schema")
           Left(getValidationErrors(result))
         }
       case Failure(e) =>
-        Logger.error(s"[Validator][validate] IOException $e")
+        logger.error(s"[validate] IOException $e")
         Left(List(EstatesValidationError(s"[Validator][validate] IOException $e", "")))
     }
 
@@ -86,7 +85,7 @@ class Validator(schema: JsonSchema) {
         EstateBusinessValidation.check(estateRegistration) match {
           case Nil => Right(request)
           case errors @ _ :: _ =>
-            Logger.error(s"[validateBusinessRules] Validation fails : $errors")
+            logger.error(s"[validateBusinessRules] Validation fails : $errors")
             Left(errors)
         }
       case _ => Right(request)
@@ -95,7 +94,7 @@ class Validator(schema: JsonSchema) {
 
   protected def getValidationErrors(errors: Seq[(JsPath, Seq[JsonValidationError])]): List[EstatesValidationError] = {
     val validationErrors = errors.flatMap(errors => errors._2.map(error => EstatesValidationError(error.message, errors._1.toString()))).toList
-    Logger.debug(s"[Validator][getValidationErrors]  validationErrors in validate :  $validationErrors")
+    logger.debug(s"[getValidationErrors] validationErrors in validate :  $validationErrors")
     validationErrors
   }
 
@@ -105,7 +104,7 @@ class Validator(schema: JsonSchema) {
       val message = error.findValue(JsonErrorMessageTag).asText("")
       val location = error.findValue(JsonErrorInstanceTag).at(s"/$JsonErrorPointerTag").asText()
       val locations = error.findValues(JsonErrorPointerTag)
-      Logger.error(s"validation failed at locations :  $locations")
+      logger.error(s"[getValidationErrors] validation failed at locations :  $locations")
       EstatesValidationError(message, location)
     })
     validationErrors

@@ -42,6 +42,8 @@ object NoMatchResponse extends RegistrationFailureResponse(FORBIDDEN, NO_MATCH_C
 
 object RegistrationResponse {
 
+  private val logger: Logger = Logger(getClass)
+
   implicit object RegistrationResponseFormats extends Format[RegistrationResponse] {
 
     override def reads(json: JsValue): JsResult[RegistrationResponse] = json.validate[RegistrationTrnResponse]
@@ -56,22 +58,22 @@ object RegistrationResponse {
   implicit lazy val httpReads: HttpReads[RegistrationResponse] =
     new HttpReads[RegistrationResponse] {
       override def read(method: String, url: String, response: HttpResponse): RegistrationResponse = {
-        Logger.info(s"[RegistrationTrustResponse]  response status received from des: ${response.status}")
+        logger.info(s"Response status received from des: ${response.status}")
         response.status match {
           case OK =>
             response.json.as[RegistrationTrnResponse]
           case FORBIDDEN =>
             response.json.asOpt[DesErrorResponse] match {
               case Some(desReponse) if desReponse.code == ALREADY_REGISTERED_CODE =>
-                Logger.info(s"[RegistrationTrustResponse] already registered response from des.")
+                logger.info(s"Already registered response from des.")
                 AlreadyRegisteredResponse
               case Some(desReponse) if desReponse.code == NO_MATCH_CODE =>
-                Logger.info(s"[RegistrationTrustResponse] No match response from des.")
+                logger.info(s"No match response from des.")
                 NoMatchResponse
               case Some(desResponse) =>
                 RegistrationFailureResponse(response.status, desResponse.code, desResponse.reason)
               case _ =>
-                Logger.error("[RegistrationTrustResponse] Forbidden response from des.")
+                logger.error("Forbidden response from des.")
                 RegistrationFailureResponse(response.status)
             }
           case _ => RegistrationFailureResponse(response.status)

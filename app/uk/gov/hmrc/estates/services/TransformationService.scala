@@ -28,6 +28,8 @@ import scala.concurrent.Future
 
 class TransformationService @Inject()(repository: TransformationRepository){
 
+  private val logger: Logger = Logger(getClass)
+  
   def addNewTransform(internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
     repository.get(internalId) map {
       case None =>
@@ -40,7 +42,7 @@ class TransformationService @Inject()(repository: TransformationRepository){
       repository.set(internalId, newTransforms)
     } recoverWith {
       case e =>
-        Logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
+        logger.error(s"[TransformationService] exception adding new transform: ${e.getMessage}")
         Future.failed(e)
     }
   }
@@ -57,7 +59,7 @@ class TransformationService @Inject()(repository: TransformationRepository){
       repository.set(internalId, newTransforms)
     } recoverWith {
       case e =>
-        Logger.error(s"[TransformationService] exception removing transform: ${e.getMessage}")
+        logger.error(s"[TransformationService] exception removing transform: ${e.getMessage}")
         Future.failed(e)
     }
   }

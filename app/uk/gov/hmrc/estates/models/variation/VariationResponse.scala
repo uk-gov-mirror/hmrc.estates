@@ -39,14 +39,15 @@ object VariationFailureResponse {
 
 object VariationResponse {
 
-  private val logPrefix = "[VariationResponse]"
+  private val logger: Logger = Logger(getClass)
+
   implicit lazy val httpReads: HttpReads[VariationResponse] =
     new HttpReads[VariationResponse] {
       override def read(method: String, url: String, response: HttpResponse): VariationResponse = {
 
-        Logger.debug(s"$logPrefix response body ${response.body}")
+        logger.debug(s"Response body ${response.body}")
 
-        Logger.info(s"$logPrefix  response status received from des: ${response.status}")
+        logger.info(s"Response status received from des: ${response.status}")
         response.status match {
           case OK =>
             response.json.as[VariationSuccessResponse](VariationSuccessResponse.formats)
@@ -67,7 +68,7 @@ object VariationResponse {
     }
 
   private def failure(errorResponse: ErrorResponse) = {
-    Logger.error(s"$logPrefix ${errorResponse.message}")
+    logger.error(s"[failure] failed due to error: ${errorResponse.message}")
     VariationFailureResponse(errorResponse)
   }
 }

@@ -19,6 +19,7 @@ package uk.gov.hmrc.estates.controllers
 import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc.ControllerComponents
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,9 +30,12 @@ class TaxEnrolmentCallbackController @Inject()(
                                                auditConnector :AuditConnector
                                                )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc){
 
+  private val logger: Logger = Logger(getClass)
+
   def subscriptionCallback() = Action.async(parse.json) {
     implicit request =>
-      Logger.info(s"[subscriptionCallback] Tax-Enrolment: subscription callback message was : ${request.body}")
+      logger.info(s"[subscriptionCallback][Session ID: ${Session.id(hc)}]" +
+        s" Tax-Enrolment: subscription callback message was : ${request.body}")
       Future(Ok(""))
   }
 

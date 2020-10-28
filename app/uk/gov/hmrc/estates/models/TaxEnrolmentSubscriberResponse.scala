@@ -30,17 +30,19 @@ case object TaxEnrolmentNotProcessed extends TaxEnrolmentSubscriberResponse
 
 object TaxEnrolmentSubscriberResponse {
 
+  private val logger: Logger = Logger(getClass)
+  
   implicit lazy val httpReads: HttpReads[TaxEnrolmentSubscriberResponse] =
     new HttpReads[TaxEnrolmentSubscriberResponse] {
       override def read(method: String, url: String, response: HttpResponse): TaxEnrolmentSubscriberResponse = {
 
-        Logger.info(s"[TaxEnrolmentSubscriberResponse] response status received from tax enrolments: ${response.status}")
+        logger.info(s"Response status received from tax enrolments: ${response.status}")
         response.status match {
           case NO_CONTENT =>
             TaxEnrolmentSuccess
           case status =>
             val reason = s"Error response from tax enrolments: $status"
-            Logger.error(s"[TaxEnrolmentSubscriberResponse] $reason")
+            logger.error(reason)
             TaxEnrolmentFailure(reason)
         }
       }

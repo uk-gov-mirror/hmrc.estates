@@ -23,14 +23,17 @@ import play.api.mvc.Result
 import uk.gov.hmrc.estates.models.requests.IdentifierRequest
 import uk.gov.hmrc.estates.services.AuditService
 import uk.gov.hmrc.estates.utils.ErrorResults._
+import uk.gov.hmrc.estates.utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 
 class VariationsResponseHandler @Inject()(auditService: AuditService) {
 
+  private val logger: Logger = Logger(getClass)
+
   def recoverFromException(implicit request: IdentifierRequest[JsValue],hc: HeaderCarrier): PartialFunction[Throwable, Result] = {
 
     case e =>
-      Logger.error(s"[ErrorHandler] Exception returned ${e.getMessage}")
+      logger.error(s"[ErrorHandler][Session ID: ${Session.id(hc)}] Exception returned ${e.getMessage}")
 
       auditService.auditVariationError(
         request.identifier,

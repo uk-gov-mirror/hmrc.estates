@@ -4,41 +4,41 @@
 
 ->          /correspondence             correspondence.Routes
 
-GET         /amount-tax-owed            uk.gov.hmrc.estates.controllers.transformers.register.AmountOfTaxOwedTransformationController.get
-POST        /amount-tax-owed            uk.gov.hmrc.estates.controllers.transformers.register.AmountOfTaxOwedTransformationController.save
+GET         /amount-tax-owed            controllers.transform.register.AmountOfTaxOwedTransformationController.get
+POST        /amount-tax-owed            controllers.transform.register.AmountOfTaxOwedTransformationController.save
 
-GET         /tax-liability              uk.gov.hmrc.estates.controllers.transformers.register.YearsReturnsTransformationController.get
-POST        /tax-liability              uk.gov.hmrc.estates.controllers.transformers.register.YearsReturnsTransformationController.save
+GET         /tax-liability              controllers.transform.register.YearsReturnsTransformationController.get
+POST        /tax-liability              controllers.transform.register.YearsReturnsTransformationController.save
 
-POST        /reset-tax-liability        uk.gov.hmrc.estates.controllers.transformers.register.YearsReturnsTransformationController.reset
+POST        /reset-tax-liability        controllers.transform.register.YearsReturnsTransformationController.reset
 
-GET         /deceased                   uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.get
-POST        /deceased                   uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.save
+GET         /deceased                   controllers.transform.register.DeceasedTransformationController.get
+POST        /deceased                   controllers.transform.register.DeceasedTransformationController.save
 
-GET         /date-of-death              uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.getDateOfDeath
-GET         /is-tax-required            uk.gov.hmrc.estates.controllers.transformers.register.DeceasedTransformationController.getIsTaxRequired
+GET         /date-of-death              controllers.transform.register.DeceasedTransformationController.getDateOfDeath
+GET         /is-tax-required            controllers.transform.register.DeceasedTransformationController.getIsTaxRequired
 
-GET         /agent-details              uk.gov.hmrc.estates.controllers.transformers.register.AgentDetailsTransformationController.get
-POST        /agent-details              uk.gov.hmrc.estates.controllers.transformers.register.AgentDetailsTransformationController.save
+GET         /agent-details              controllers.transform.register.AgentDetailsTransformationController.get
+POST        /agent-details              controllers.transform.register.AgentDetailsTransformationController.save
 
-POST        /check                      uk.gov.hmrc.estates.controllers.CheckEstateController.checkExistingEstate
+POST        /check                      controllers.CheckEstateController.checkExistingEstate
 
-POST        /register                   uk.gov.hmrc.estates.controllers.RegisterEstateController.register
+POST        /register                   controllers.RegisterEstateController.register
 
-GET         /registration               uk.gov.hmrc.estates.controllers.RegisterEstateController.get
+GET         /registration               controllers.RegisterEstateController.get
 
-POST        /declare/:utr               uk.gov.hmrc.estates.controllers.EstateVariationsController.declare(utr: String)
+POST        /declare/:utr               controllers.EstateVariationsController.declare(utr: String)
 
-POST        /tax-enrolment/callback/subscriptions   uk.gov.hmrc.estates.controllers.TaxEnrolmentCallbackController.subscriptionCallback
+POST        /tax-enrolment/callback/subscriptions   controllers.TaxEnrolmentCallbackController.subscriptionCallback
 
-POST        /close/:utr                 uk.gov.hmrc.estates.controllers.transformers.variations.CloseEstateTransformationController.close(utr: String)
+POST        /close/:utr                 controllers.transform.variations.CloseEstateTransformationController.close(utr: String)
 
-GET         /:utr                       uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = false)
+GET         /:utr                       controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = false)
 
-GET         /:utr/transformed           uk.gov.hmrc.estates.controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = true)
+GET         /:utr/transformed           controllers.GetEstateController.get(utr: String, applyTransforms: Boolean = true)
 
-GET         /:utr/transformed/personal-representative   uk.gov.hmrc.estates.controllers.GetEstateController.getPersonalRepresentative(utr: String)
+GET         /:utr/transformed/personal-representative   controllers.GetEstateController.getPersonalRepresentative(utr: String)
 
-GET         /:utr/date-of-death         uk.gov.hmrc.estates.controllers.GetEstateController.getDateOfDeath(utr: String)
+GET         /:utr/date-of-death         controllers.GetEstateController.getDateOfDeath(utr: String)
 
-POST        /:utr/clear-transformations      uk.gov.hmrc.estates.controllers.transformers.variations.ClearTransformationsController.clearTransformations(utr: String)
+POST        /:utr/clear-transformations      controllers.transform.variations.ClearTransformationsController.clearTransformations(utr: String)

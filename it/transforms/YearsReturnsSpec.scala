@@ -22,7 +22,7 @@ import play.api.Application
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.estates.models.{YearReturnType, YearsReturns}
+import models.{YearReturnType, YearsReturns}
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
 class YearsReturnsSpec extends AsyncWordSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {

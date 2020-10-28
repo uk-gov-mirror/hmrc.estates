@@ -25,8 +25,8 @@ import play.api.test.Helpers.stubControllerComponents
 import play.api.{Application, Play}
 import reactivemongo.api.{DefaultDB, MongoConnection}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.estates.controllers.actions.{FakeIdentifierAction, IdentifierAction}
-import uk.gov.hmrc.estates.repositories.MongoDriver
+import controllers.actions.{FakeIdentifierAction, IdentifierAction}
+import repositories.MongoDriver
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration

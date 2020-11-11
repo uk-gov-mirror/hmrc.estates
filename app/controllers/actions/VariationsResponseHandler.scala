@@ -17,7 +17,7 @@
 package controllers.actions
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.mvc.Result
 import models.requests.IdentifierRequest
@@ -26,9 +26,7 @@ import utils.ErrorResults._
 import utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
 
-class VariationsResponseHandler @Inject()(auditService: AuditService) {
-
-  private val logger: Logger = Logger(getClass)
+class VariationsResponseHandler @Inject()(auditService: AuditService) extends Logging {
 
   def recoverFromException(implicit request: IdentifierRequest[JsValue],hc: HeaderCarrier): PartialFunction[Throwable, Result] = {
 

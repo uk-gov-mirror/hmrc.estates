@@ -19,7 +19,7 @@ package controllers.transform.register
 import java.time.LocalDate
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import controllers.EstatesBaseController
@@ -38,9 +38,7 @@ class DeceasedTransformationController @Inject()(
                                                   cc: ControllerComponents,
                                                   transformationService: TransformationService
                                                 )(implicit val executionContext: ExecutionContext)
-  extends EstatesBaseController(cc) {
-
-  private val logger: Logger = Logger(getClass)
+  extends EstatesBaseController(cc) with Logging {
 
   def get: Action[AnyContent] = identify.async {
     request =>

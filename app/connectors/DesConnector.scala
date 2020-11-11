@@ -19,7 +19,7 @@ package connectors
 import java.util.UUID
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.http.HeaderNames
 import play.api.libs.json._
 import config.AppConfig
@@ -28,15 +28,13 @@ import models.getEstate.GetEstateResponse
 import models.variation.VariationResponse
 import utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class DesConnector @Inject()(http: HttpClient, config: AppConfig) {
+class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   private lazy val subscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
 

@@ -17,7 +17,7 @@
 package controllers
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import controllers.actions.IdentifierAction
@@ -30,9 +30,8 @@ class CorrespondenceTransformationController @Inject()(
                                                         identify: IdentifierAction,
                                                         personalRepTransformationService: CorrespondenceTransformationService,
                                                         cc: ControllerComponents
-                                        )(implicit val executionContext: ExecutionContext) extends EstatesBaseController(cc) with ValidationUtil {
-
-  private val logger: Logger = Logger(getClass)
+                                        )(implicit val executionContext: ExecutionContext
+) extends EstatesBaseController(cc) with ValidationUtil with Logging {
 
   def getCorrespondenceName(): Action[AnyContent] = identify.async {
     implicit request =>

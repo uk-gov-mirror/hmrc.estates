@@ -16,8 +16,6 @@
 
 package services.maintain
 
-import java.time.LocalDate
-
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.{any, eq => equalTo}
 import org.mockito.Mockito.{times, verify, when}
@@ -86,7 +84,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
         val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
-        verify(desService, times(1)).estateVariation(arg.capture())(any[HeaderCarrier])
+        verify(desService, times(1)).estateVariation(arg.capture())
 
         arg.getValue mustBe transformedJson
       }}
@@ -138,7 +136,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
     when(transformer.transform(any(), any(), any(), any()))
       .thenReturn(JsSuccess(transformedJson))
 
-    when(desService.estateVariation(any())(any[HeaderCarrier]))
+    when(desService.estateVariation(any()))
       .thenReturn(Future.successful(variationResponse))
 
     response
@@ -160,7 +158,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
     whenReady(service.submitDeclaration(utr, internalId, declaration)) { response =>
       response mustBe VariationFailureResponse(EtmpDataStaleErrorResponse)
-      verify(desService, times(0)).estateVariation(any())(any[HeaderCarrier])
+      verify(desService, times(0)).estateVariation(any())
     }
   }
 }

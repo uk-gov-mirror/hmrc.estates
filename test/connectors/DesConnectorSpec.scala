@@ -16,15 +16,15 @@
 
 package connectors
 
-import play.api.http.Status._
-import play.api.libs.json.{JsError, Json, Reads}
 import exceptions._
 import models.ExistingCheckResponse._
-import models.getEstate._
-import models.variation.{EstateVariation, VariationFailureResponse, VariationSuccessResponse}
 import models._
-import utils.JsonRequests
+import models.getEstate._
+import models.variation.{VariationFailureResponse, VariationSuccessResponse}
+import play.api.http.Status._
+import play.api.libs.json.{JsError, Json}
 import utils.ErrorResponses._
+import utils.JsonRequests
 
 class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
@@ -514,8 +514,6 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
     }
 
     "payload sent to DES is invalid" in {
-
-      implicit val invalidVariationRead: Reads[EstateVariation] = Json.reads[EstateVariation]
 
       val variation = estateVariationsRequest
 

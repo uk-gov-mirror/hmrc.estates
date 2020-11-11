@@ -26,14 +26,11 @@ import org.scalatestplus.mockito.MockitoSugar
 import services.VariationsTransformationService
 import transformers.variations.AddCloseEstateTransform
 import utils.JsonRequests
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class CloseEstateTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers with JsonRequests {
-
-  private implicit val hc : HeaderCarrier = HeaderCarrier()
 
   private val fakeUtr: String = "utr"
   private val internalId: String = "id"

@@ -19,7 +19,7 @@ package controllers.transform.variations
 import java.time.LocalDate
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.{Action, ControllerComponents}
 import controllers.EstatesBaseController
@@ -34,9 +34,7 @@ class CloseEstateTransformationController @Inject()(
                                                      cc: ControllerComponents,
                                                      closeEstateTransformationService: CloseEstateTransformationService
                                                    )(implicit val executionContext: ExecutionContext)
-  extends EstatesBaseController(cc) with ValidationUtil {
-
-  private val logger: Logger = Logger(getClass)
+  extends EstatesBaseController(cc) with ValidationUtil with Logging {
 
   def close(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {

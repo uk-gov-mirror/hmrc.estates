@@ -17,7 +17,7 @@
 package controllers
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import controllers.actions.IdentifierAction
@@ -32,9 +32,8 @@ class PersonalRepTransformationController @Inject()(
                                           personalRepTransformationService: PersonalRepTransformationService,
                                           cc: ControllerComponents,
                                           localDateService: LocalDateService
-                                        )(implicit val executionContext: ExecutionContext) extends EstatesBaseController(cc) with ValidationUtil {
-
-  private val logger: Logger = Logger(getClass)
+                                        )(implicit val executionContext: ExecutionContext
+) extends EstatesBaseController(cc) with ValidationUtil with Logging {
 
   def getPersonalRepInd(): Action[AnyContent] = identify.async {
     implicit request =>

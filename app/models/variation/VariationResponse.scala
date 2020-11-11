@@ -16,7 +16,7 @@
 
 package models.variation
 
-import play.api.Logger
+import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.{Format, Json, OFormat}
 import models.ErrorResponse
@@ -37,9 +37,7 @@ object VariationFailureResponse {
   implicit val formats: OFormat[VariationFailureResponse] = Json.format[VariationFailureResponse]
 }
 
-object VariationResponse {
-
-  private val logger: Logger = Logger(getClass)
+object VariationResponse extends Logging {
 
   implicit lazy val httpReads: HttpReads[VariationResponse] =
     new HttpReads[VariationResponse] {

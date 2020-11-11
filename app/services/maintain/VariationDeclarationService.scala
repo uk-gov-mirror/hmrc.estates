@@ -17,17 +17,15 @@
 package services.maintain
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 import models._
 import models.getEstate.ResponseHeader
 import services.LocalDateService
 
-class VariationDeclarationService @Inject()(localDateService: LocalDateService) {
+class VariationDeclarationService @Inject()(localDateService: LocalDateService) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   private lazy val pathToEntities: JsPath = __ \ 'details \ 'estate \ 'entities
   private lazy val pathToPersonalRep: JsPath = pathToEntities \ 'personalRepresentative
   private lazy val pathToPersonalRepAddress = pathToPersonalRep \ 'identification \ 'address

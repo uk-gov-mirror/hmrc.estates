@@ -17,7 +17,7 @@
 package controllers
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import controllers.actions.IdentifierAction
@@ -33,10 +33,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
                                          registrationService: RegistrationService,
                                          rosmPatternService: RosmPatternService)
-                                        (implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
+                                        (implicit ec: ExecutionContext, cc: ControllerComponents
+                                        ) extends EstatesBaseController(cc) with Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def register(): Action[JsValue] = identifierAction.async(parse.json) {
     implicit request => {
       request.body.validate[RegistrationDeclaration].fold(

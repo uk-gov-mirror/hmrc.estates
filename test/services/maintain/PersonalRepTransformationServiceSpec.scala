@@ -18,29 +18,23 @@ package services.maintain
 
 import java.time.LocalDate
 
+import models.variation.{EstatePerRepIndType, EstatePerRepOrgType, PersonalRepresentativeType}
+import models.{IdentificationOrgType, IdentificationType, NameType}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{FreeSpec, MustMatchers}
-import models.variation.{EstatePerRepIndType, EstatePerRepOrgType, PersonalRepresentativeType}
-import models.{IdentificationOrgType, IdentificationType, NameType}
-import services.{LocalDateService, VariationsTransformationService}
+import services.VariationsTransformationService
 import transformers.variations.AddAmendIndividualPersonalRepTransform
 import utils.JsonRequests
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar with ScalaFutures with MustMatchers with JsonRequests {
   private implicit val pc: PatienceConfig = PatienceConfig(timeout = Span(1000, Millis), interval = Span(15, Millis))
-
-  private val currentDate: LocalDate = LocalDate.of(1999, 3, 14)
-  private object LocalDateServiceStub extends LocalDateService {
-    override def now: LocalDate = currentDate
-  }
 
   val newPersonalRepIndInfo = EstatePerRepIndType(
     lineNo = Some("newLineNo"),
@@ -64,8 +58,6 @@ class PersonalRepTransformationServiceSpec extends FreeSpec with MockitoSugar wi
     entityStart = LocalDate.parse("2012-03-14"),
     entityEnd = None
   )
-
-  private implicit val hc : HeaderCarrier = HeaderCarrier()
 
   "the amend personal rep transformation service" - {
 

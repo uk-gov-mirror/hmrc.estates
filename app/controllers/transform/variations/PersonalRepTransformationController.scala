@@ -17,7 +17,7 @@
 package controllers.transform.variations
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.{Action, ControllerComponents}
 import controllers.EstatesBaseController
@@ -34,9 +34,7 @@ class PersonalRepTransformationController @Inject()(
                                                           cc: ControllerComponents,
                                                           personalRepTransformationService: PersonalRepTransformationService
                                         )(implicit val executionContext: ExecutionContext)
-                                        extends EstatesBaseController(cc) with ValidationUtil {
-
-  private val logger: Logger = Logger(getClass)
+                                        extends EstatesBaseController(cc) with ValidationUtil with Logging {
 
   def addOrAmendPersonalRep(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {

@@ -22,7 +22,6 @@ import org.mockito.Matchers.{any, eq => equalTo}
 import play.api.libs.json.Json
 import models.RegistrationFailureResponse
 import models.auditing.EstatesAuditData
-import models.requests.IdentifierRequest
 import models.variation.VariationSuccessResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 

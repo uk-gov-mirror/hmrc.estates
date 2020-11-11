@@ -17,7 +17,7 @@
 package controllers.transform.register
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import controllers.EstatesBaseController
@@ -35,9 +35,7 @@ class AgentDetailsTransformationController @Inject()(
                                                          localDateService: LocalDateService,
                                                          agentDetailsTransformationService : AgentDetailsTransformationService
                                                        )(implicit val executionContext: ExecutionContext)
-  extends EstatesBaseController(cc) {
-
-  private val logger: Logger = Logger(getClass)
+  extends EstatesBaseController(cc) with Logging {
 
   def get : Action[AnyContent] = identify.async {
     implicit request =>

@@ -17,7 +17,7 @@
 package services.register
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import models._
@@ -36,10 +36,8 @@ class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
                                     declarationTransformer: DeclarationTransform,
                                     auditService: AuditService
-                                   )(implicit ec: ExecutionContext) {
+                                   )(implicit ec: ExecutionContext) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def getRegistration()(implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[EstateRegistrationNoDeclaration] = {
 
     repository.get(request.identifier) flatMap {
@@ -139,8 +137,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
     }
   }
 
-  private def buildPrintFromTransforms(transforms: ComposedDeltaTransform)
-                                      (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
+  private def buildPrintFromTransforms(transforms: ComposedDeltaTransform): JsResult[JsValue] = {
     for {
       result <- applyTransforms(transforms)
     } yield result

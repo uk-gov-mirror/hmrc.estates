@@ -29,7 +29,6 @@ import play.api.test.Helpers.{CONTENT_TYPE, _}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import controllers.actions.FakeIdentifierAction
 import models.{Success, YearReturnType, YearsReturns}
-import models.register.TaxAmount.AmountMoreThanTenThousand
 import services.register.YearsReturnsTransformationService
 
 import scala.concurrent.Future

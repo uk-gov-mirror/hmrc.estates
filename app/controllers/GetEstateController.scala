@@ -23,7 +23,7 @@ import controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
 import models.getEstate._
 import models.requests.IdentifierRequest
 import services.{AuditService, DesService, VariationsTransformationService}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

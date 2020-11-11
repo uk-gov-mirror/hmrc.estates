@@ -17,7 +17,7 @@
 package controllers
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import controllers.actions.{IdentifierAction, VariationsResponseHandler}
@@ -32,10 +32,9 @@ class EstateVariationsController @Inject()(
                                             identify: IdentifierAction,
                                             variationService: VariationService,
                                             responseHandler: VariationsResponseHandler
-                                          )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc) {
+                                          )(implicit ec: ExecutionContext, cc: ControllerComponents
+) extends EstatesBaseController(cc) with Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def declare(utr: String): Action[JsValue] = identify.async(parse.json) {
     implicit request => {
       request.body.validate[DeclarationForApi].fold(

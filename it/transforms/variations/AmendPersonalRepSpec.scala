@@ -36,7 +36,7 @@ import models.{AddressType, IdentificationType, NameType}
 import utils.JsonUtils
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {
 
@@ -58,7 +58,7 @@ class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoS
         "mongo-async-driver.akka.log-dead-letters" -> 0
       ): _*)
       .overrides(
-        bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)),
+        bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)(ExecutionContext.global)),
         bind[DesConnector].toInstance(stubbedDesConnector)
       )
       .build()

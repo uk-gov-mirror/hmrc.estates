@@ -24,14 +24,12 @@ import models.requests.IdentifierRequest
 import scala.concurrent.{ExecutionContext, Future}
 
 class FakeIdentifierAction @Inject()(bodyParsers: BodyParser[AnyContent], affinityGroup: AffinityGroup)
-                                    (implicit ec: ExecutionContext) extends IdentifierAction {
+                                    (implicit val executionContext: ExecutionContext) extends IdentifierAction {
 
   override def invokeBlock[A](request: Request[A], block: IdentifierRequest[A] => Future[Result]): Future[Result] =
     block(IdentifierRequest(request, "id", affinityGroup))
 
   override def parser: BodyParser[AnyContent] =
     bodyParsers
-
-  override protected def executionContext: ExecutionContext = ec
 
 }

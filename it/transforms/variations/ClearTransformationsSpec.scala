@@ -34,7 +34,6 @@ import models.getEstate.GetEstateResponse
 import utils.JsonUtils
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ClearTransformationsSpec extends AsyncFreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {

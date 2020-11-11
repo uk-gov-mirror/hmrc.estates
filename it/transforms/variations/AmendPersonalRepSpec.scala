@@ -36,7 +36,6 @@ import models.{AddressType, IdentificationType, NameType}
 import utils.JsonUtils
 import uk.gov.hmrc.repositories.TransformIntegrationTest
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoSugar with TransformIntegrationTest {

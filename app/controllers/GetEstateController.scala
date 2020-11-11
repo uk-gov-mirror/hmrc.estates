@@ -25,7 +25,7 @@ import models.requests.IdentifierRequest
 import services.{AuditService, DesService, VariationsTransformationService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class GetEstateController @Inject()(identify: IdentifierAction,
@@ -33,7 +33,7 @@ class GetEstateController @Inject()(identify: IdentifierAction,
                                     desService: DesService,
                                     variationsTransformationService: VariationsTransformationService,
                                     validateUTRActionFactory: ValidateUTRActionFactory
-                                   )(implicit cc: ControllerComponents) extends BackendController(cc) {
+                                   )(implicit cc: ControllerComponents, ec: ExecutionContext) extends BackendController(cc) {
 
   def get(utr: String, applyTransforms: Boolean): Action[AnyContent] =
     doGet(utr, applyTransforms) {

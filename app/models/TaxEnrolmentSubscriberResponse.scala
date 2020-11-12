@@ -16,9 +16,8 @@
 
 package models
 
-import play.api.Logger
+import play.api.Logging
 import play.api.http.Status._
-import exceptions._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 
@@ -28,10 +27,8 @@ case object TaxEnrolmentSuccess extends TaxEnrolmentSubscriberResponse
 case class TaxEnrolmentFailure(reason: String) extends TaxEnrolmentSubscriberResponse
 case object TaxEnrolmentNotProcessed extends TaxEnrolmentSubscriberResponse
 
-object TaxEnrolmentSubscriberResponse {
+object TaxEnrolmentSubscriberResponse extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   implicit lazy val httpReads: HttpReads[TaxEnrolmentSubscriberResponse] =
     new HttpReads[TaxEnrolmentSubscriberResponse] {
       override def read(method: String, url: String, response: HttpResponse): TaxEnrolmentSubscriberResponse = {

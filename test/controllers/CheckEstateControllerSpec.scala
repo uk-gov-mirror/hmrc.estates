@@ -28,7 +28,6 @@ import controllers.actions.FakeIdentifierAction
 import models.{ExistingCheckRequest, ExistingCheckResponse}
 import models.ExistingCheckResponse._
 import services.{DesService, ValidationService}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

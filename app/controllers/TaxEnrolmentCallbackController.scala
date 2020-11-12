@@ -17,20 +17,18 @@
 package controllers
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.mvc.ControllerComponents
 import utils.Session
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 
 class TaxEnrolmentCallbackController @Inject()(
                                                auditConnector :AuditConnector
-                                               )(implicit ec: ExecutionContext, cc: ControllerComponents) extends EstatesBaseController(cc){
-
-  private val logger: Logger = Logger(getClass)
+                                               )(implicit ec: ExecutionContext, cc: ControllerComponents
+) extends EstatesBaseController(cc) with Logging {
 
   def subscriptionCallback() = Action.async(parse.json) {
     implicit request =>

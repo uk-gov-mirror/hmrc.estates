@@ -17,7 +17,7 @@
 package services
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import models.getEstate.{GetEstateProcessedResponse, GetEstateResponse, TransformationErrorResponse}
 import repositories.VariationsTransformationRepository
@@ -29,10 +29,8 @@ import scala.concurrent.Future
 
 class VariationsTransformationService @Inject()(transformRepository: VariationsTransformationRepository,
                                                 desService: DesService,
-                                                auditService: AuditService){
+                                                auditService: AuditService) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def addNewTransform(utr: String, internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
     transformRepository.get(utr, internalId) map {
       case None =>
@@ -71,7 +69,7 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
     }
   }
 
-  private def applyTransformations(utr: String, internalId: String, json: JsValue)(implicit hc : HeaderCarrier): Future[JsResult[JsValue]] = {
+  private def applyTransformations(utr: String, internalId: String, json: JsValue): Future[JsResult[JsValue]] = {
     transformRepository.get(utr, internalId).map {
       case None =>
         JsSuccess(json)

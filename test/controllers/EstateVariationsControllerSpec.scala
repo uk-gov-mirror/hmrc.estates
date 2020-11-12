@@ -19,23 +19,22 @@ package controllers
 import java.util.UUID
 
 import base.BaseSpec
-import org.mockito.Matchers.{eq => Meq, _}
+import config.AppConfig
+import controllers.actions.{FakeIdentifierAction, VariationsResponseHandler}
+import models.variation.{VariationFailureResponse, VariationSuccessResponse}
+import models.{DeclarationForApi, DeclarationName, NameType}
+import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.libs.json.Json
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import config.AppConfig
-import controllers.actions.{FakeIdentifierAction, VariationsResponseHandler}
-import exceptions._
-import models.variation.{VariationFailureResponse, VariationSuccessResponse}
-import models.{DeclarationForApi, DeclarationName, NameType}
 import services.maintain.VariationService
 import services.{AuditService, DesService}
-import utils.Headers
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import utils.ErrorResponses._
+import utils.Headers
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

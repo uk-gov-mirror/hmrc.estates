@@ -17,7 +17,7 @@
 package services
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import connectors.DesConnector
 import exceptions.InternalServerErrorException
@@ -31,10 +31,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) {
+class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def getEstateInfoFormBundleNo(utr: String)(implicit hc: HeaderCarrier): Future[String] =
     desConnector.getEstateInfo(utr).map {
       case response: GetEstateProcessedResponse =>
@@ -96,7 +94,7 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
     }
   }
 
-  def estateVariation(estateVariation: JsValue)(implicit hc: HeaderCarrier): Future[VariationResponse] =
+  def estateVariation(estateVariation: JsValue): Future[VariationResponse] =
     desConnector.estateVariation(estateVariation: JsValue)
 }
 

@@ -17,7 +17,7 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import config.AppConfig
@@ -34,10 +34,8 @@ import scala.concurrent.ExecutionContext
 class CheckEstateController @Inject()(desService: DesService, config: AppConfig,
                                       identify: IdentifierAction)
                                      (implicit val executionContext: ExecutionContext, cc: ControllerComponents)
-  extends EstatesBaseController(cc) {
+  extends EstatesBaseController(cc) with Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def checkExistingEstate(): Action[JsValue] = identify.async(parse.json) { implicit request =>
       withJsonBody[ExistingCheckRequest] {
         estatesCheckRequest =>

@@ -23,8 +23,7 @@ import com.github.fge.jsonschema.core.report.LogLevel.ERROR
 import com.github.fge.jsonschema.core.report.ProcessingReport
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
 import javax.inject.Inject
-import play.api.Logger
-import play.api.data.validation.ValidationError
+import play.api.Logging
 import play.api.libs.json.{JsPath, Json, JsonValidationError, Reads}
 import models.EstateRegistration
 import utils.EstateBusinessValidation
@@ -49,10 +48,8 @@ class ValidationService @Inject()() {
 
 }
 
-class Validator(schema: JsonSchema) {
+class Validator(schema: JsonSchema) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   private val JsonErrorMessageTag = "message"
   private val JsonErrorInstanceTag = "instance"
   private val JsonErrorPointerTag = "pointer"

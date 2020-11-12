@@ -16,11 +16,10 @@
 
 package models.getEstate
 
-import play.api.Logger
+import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json._
 import models.DesErrorResponse
-import models.getEstate.GetEstateResponse.getClass
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 trait GetEstateResponse
@@ -59,9 +58,7 @@ object GetEstateResponse extends GetEstateHttpReads {
 
 }
 
-sealed trait GetEstateHttpReads {
-
-  private val logger: Logger = Logger(getClass)
+sealed trait GetEstateHttpReads extends Logging {
 
   implicit lazy val httpReads: HttpReads[GetEstateResponse] =
     new HttpReads[GetEstateResponse] {

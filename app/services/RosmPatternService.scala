@@ -18,9 +18,8 @@ package services
 
 import com.google.inject.ImplementedBy
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.auth.core.AffinityGroup
-import exceptions.InternalServerErrorException
 import models.{TaxEnrolmentFailure, TaxEnrolmentNotProcessed, TaxEnrolmentSubscriberResponse, TaxEnrolmentSuccess}
 import utils.Session
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,10 +32,8 @@ import scala.util.control.NonFatal
 class RosmPatternServiceImpl @Inject()(desService: DesService,
                                        taxEnrolmentService : TaxEnrolmentsService,
                                        auditService: AuditService
-                                      ) extends RosmPatternService {
+                                      ) extends RosmPatternService with Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def getSubscriptionIdAndEnrol(trn : String, identifier: String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
 
     for {

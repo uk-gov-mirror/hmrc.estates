@@ -19,9 +19,8 @@ package repositories
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import reactivemongo.api.WriteConcern
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -36,9 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CacheRepositoryImpl @Inject()(
                                      mongo: MongoDriver,
                                      config: AppConfig
-                                   )(implicit ec: ExecutionContext, m: Materializer) extends CacheRepository {
-
-  private val logger: Logger = Logger(getClass)
+                                   )(implicit ec: ExecutionContext) extends CacheRepository with Logging {
 
   private val collectionName: String = "estates"
   private val cacheTtl = config.ttlInSeconds

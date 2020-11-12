@@ -17,7 +17,7 @@
 package services
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsObject
 import repositories.TransformationRepository
 import transformers.register.YearsReturnsTransform
@@ -26,10 +26,8 @@ import transformers.{ComposedDeltaTransform, DeltaTransform}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TransformationService @Inject()(repository: TransformationRepository){
+class TransformationService @Inject()(repository: TransformationRepository) extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   def addNewTransform(internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
     repository.get(internalId) map {
       case None =>

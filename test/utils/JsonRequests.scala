@@ -18,7 +18,6 @@ package utils
 
 import play.api.libs.json.JsValue
 import models.EstateRegistration
-import models.variation.EstateVariation
 
 trait JsonRequests extends JsonUtils {
   lazy val invalidEstateRegistrationJson: String =  getJsonFromFile("mdtp/invalid-estate-registration-01.json")

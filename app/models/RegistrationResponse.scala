@@ -16,11 +16,10 @@
 
 package models
 
-import play.api.Logger
+import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.{Format, JsResult, JsValue, Json, OFormat}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import exceptions._
 import utils.Constants._
 
 sealed trait RegistrationResponse
@@ -40,9 +39,7 @@ object RegistrationFailureResponse {
 object AlreadyRegisteredResponse extends RegistrationFailureResponse(FORBIDDEN, ALREADY_REGISTERED_CODE, ALREADY_REGISTERED_ESTATE_MESSAGE)
 object NoMatchResponse extends RegistrationFailureResponse(FORBIDDEN, NO_MATCH_CODE, NO_MATCH_MESSAGE)
 
-object RegistrationResponse {
-
-  private val logger: Logger = Logger(getClass)
+object RegistrationResponse extends Logging {
 
   implicit object RegistrationResponseFormats extends Format[RegistrationResponse] {
 

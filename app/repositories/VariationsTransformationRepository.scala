@@ -19,16 +19,15 @@ package repositories
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-import akka.stream.Materializer
+import config.AppConfig
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import reactivemongo.api.WriteConcern
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 import reactivemongo.play.json.collection.JSONCollection
-import config.AppConfig
 import transformers.ComposedDeltaTransform
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,9 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class VariationsTransformationRepositoryImpl @Inject()(
                             mongo: MongoDriver,
                             config: AppConfig
-                          )(implicit ec: ExecutionContext, m: Materializer) extends VariationsTransformationRepository {
-
-  private val logger: Logger = Logger(getClass)
+                          )(implicit ec: ExecutionContext) extends VariationsTransformationRepository with Logging {
 
   private val collectionName: String = "variationTransforms"
   private val cacheTtl = config.ttlInSeconds

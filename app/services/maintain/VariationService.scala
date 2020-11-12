@@ -17,7 +17,7 @@
 package services.maintain
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import exceptions.InternalServerErrorException
 import models.DeclarationForApi
@@ -37,9 +37,7 @@ class VariationService @Inject()(
                                   desService: DesService,
                                   transformationService: VariationsTransformationService,
                                   declarationService: VariationDeclarationService,
-                                  auditService: AuditService) {
-
-  private val logger: Logger = Logger(getClass)
+                                  auditService: AuditService) extends Logging {
 
   def submitDeclaration(utr: String,
                         internalId: String,

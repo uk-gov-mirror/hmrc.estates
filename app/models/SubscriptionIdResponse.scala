@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.Logger
+import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -24,10 +24,8 @@ import exceptions._
 
 final case class SubscriptionIdResponse(subscriptionId: String)
 
-object SubscriptionIdResponse {
+object SubscriptionIdResponse extends Logging {
 
-  private val logger: Logger = Logger(getClass)
-  
   implicit val formats: OFormat[SubscriptionIdResponse] = Json.format[SubscriptionIdResponse]
 
   implicit lazy val httpReads: HttpReads[SubscriptionIdResponse] =

@@ -19,7 +19,6 @@ package models.getEstate
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json._
-import models.DesErrorResponse
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 trait GetEstateResponse
@@ -60,42 +59,35 @@ object GetEstateResponse extends GetEstateHttpReads {
 
 sealed trait GetEstateHttpReads extends Logging {
 
-  implicit lazy val httpReads: HttpReads[GetEstateResponse] =
-    new HttpReads[GetEstateResponse] {
-      override def read(method: String, url: String, response: HttpResponse): GetEstateResponse = {
-        logger.info(s"Response status received from des: ${response.status}")
-        response.status match {
-          case OK => readProcessedResponse(response)
-          case BAD_REQUEST => readClientErrorResponse(response)
-          case NOT_FOUND => ResourceNotFoundResponse
-          case SERVICE_UNAVAILABLE => ServiceUnavailableResponse
-          case _ => InternalServerErrorResponse
-        }
-      }
-    }
-
-  private def readProcessedResponse(response: HttpResponse) =
-    response.json.validate[GetEstateResponse] match {
-      case JsSuccess(estateFound,_) =>
-        logger.info("Response successfully parsed as EstateFoundResponse")
-        estateFound
-      case JsError(errors) =>
-        logger.info(s"Cannot parse as EstateFoundResponse due to $errors")
-        NotEnoughDataResponse(response.json, JsError.toJson(errors))
-    }
-
-  private def readClientErrorResponse(response: HttpResponse) =
-    response.json.asOpt[DesErrorResponse] match {
-      case Some(desErrorResponse) =>
-        desErrorResponse.code match {
-          case "INVALID_UTR" =>
-            InvalidUTRResponse
-          case "INVALID_REGIME" =>
-            InvalidRegimeResponse
-          case _ =>
-            BadRequestResponse
-        }
-      case None =>
+  implicit def httpReads(utr: String): HttpReads[GetEstateResponse] = (_: String, _: String, response: HttpResponse) => {
+    response.status match {
+      case OK =>
+        parseOkResponse(response, utr)
+      case BAD_REQUEST =>
+        logger.warn(s"[UTR: $utr]" +
+          s" bad request returned from des: ${response.json}")
+        BadRequestResponse
+      case NOT_FOUND =>
+        logger.info(s"[UTR: $utr]" +
+          s" trust not found in ETMP for given identifier")
+        ResourceNotFoundResponse
+      case SERVICE_UNAVAILABLE =>
+        logger.warn(s"[UTR: $utr]" +
+          s" service is unavailable, unable to get trust")
+        ServiceUnavailableResponse
+      case status =>
+        logger.error(s"[UTR: $utr]" +
+          s" error occurred when getting trust, status: $status")
         InternalServerErrorResponse
     }
+  }
+
+  private def parseOkResponse(response: HttpResponse, utr: String) : GetEstateResponse = {
+    response.json.validate[GetEstateResponse] match {
+      case JsSuccess(estateFound, _) => estateFound
+      case JsError(errors) =>
+        logger.error(s"[UTR: $utr] Cannot parse as EstateFoundResponse due to ${JsError.toJson(errors)}")
+        NotEnoughDataResponse(response.json, JsError.toJson(errors))
+    }
+  }
 }

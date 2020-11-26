@@ -105,9 +105,9 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
 
     estatesStoreService.is5mldEnabled.flatMap { is5MLD =>
       if (is5MLD) {
-        http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))
+        http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
       } else {
-        http.GET[GetEstateResponse](create4MLDEstateEndpointForUtr(utr))
+        http.GET[GetEstateResponse](create4MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
       }
     }
   }

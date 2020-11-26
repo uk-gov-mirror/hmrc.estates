@@ -59,7 +59,7 @@ class BaseConnectorSpec extends BaseSpec with WireMockHelper with IntegrationPat
        |  ]
        |}
      """.stripMargin)
-  
+
   val jsonResponseAlreadyRegistered: JsValue = Json.parse(
     s"""
        |{

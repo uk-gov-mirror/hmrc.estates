@@ -218,34 +218,6 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
       }
     }
 
-    "return InvalidUTRResponse" when {
-      "InvalidUTRResponse is returned from DES Connector" in new DesServiceFixture {
-
-        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InvalidUTRResponse))
-
-        val invalidUtr = "123456789"
-        val futureResult = SUT.getEstateInfo(invalidUtr, myId)
-
-        whenReady(futureResult) { result =>
-          result mustBe InvalidUTRResponse
-        }
-      }
-    }
-
-    "return InvalidRegimeResponse" when {
-      "InvalidRegimeResponse is returned from DES Connector" in new DesServiceFixture {
-
-        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InvalidRegimeResponse))
-
-        val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr, myId)
-
-        whenReady(futureResult) { result =>
-          result mustBe InvalidRegimeResponse
-        }
-      }
-    }
-
     "return BadRequestResponse" when {
       "BadRequestResponse is returned from DES Connector" in new DesServiceFixture {
 

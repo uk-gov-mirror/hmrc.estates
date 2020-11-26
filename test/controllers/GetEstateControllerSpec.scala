@@ -125,28 +125,6 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
     }
 
     "return 500 - InternalServerError" when {
-      "the get endpoint returns an ResourceNotFoundResponse" in {
-
-        val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
-          bind[AuditService].toInstance(mockAuditService)
-        ).build()
-
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
-
-        val controller = application.injector.instanceOf[GetEstateController]
-
-        val utr = "1234567890"
-        val result = controller.get(utr, false).apply(FakeRequest(GET, s"/estates/$utr"))
-
-        whenReady(result) { _ =>
-          verify(mockAuditService).auditGetVariationFailed(
-            mockEq(utr),
-            any[JsValue])(any(), any())
-          status(result) mustBe INTERNAL_SERVER_ERROR
-        }
-      }
-
       "the get endpoint returns a BadRequestResponse" in {
 
         val application = applicationBuilder().overrides(

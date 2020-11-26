@@ -32,7 +32,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
   lazy val request: ExistingCheckRequest = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
 
-  def createTrustOrEstateEndpoint(utr: String) = s"/trusts/registration/$utr"
+  def create4MLDTrustOrEstateEndpoint(utr: String) = s"/trusts/registration/$utr"
+  def create5MLDTrustOrEstateEndpoint(utr: String) = s"/trusts/registration/UTR/$utr"
 
   ".checkExistingEstate" should {
 
@@ -306,188 +307,643 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
   ".getEstateInfo" should {
 
-    "return EstateFoundResponse" when {
+    "4MLD" when {
 
-      "DES has returned a 200 with estate details" in {
-        val utr = "1234567890"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getEstateResponseJson)
+      "return EstateFoundResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+        "DES has returned a 200 with estate details" in {
+          val utr = "1234567890"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, get4MLDEstateResponseJson)
 
-        whenReady(futureResult) { result =>
-          Json.toJson(result) mustBe getEstateExpectedResponse
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            Json.toJson(result) mustBe getEstateExpectedResponse
+          }
+        }
+
+        "DES has returned a 200 and indicated that the submission is still being processed" in {
+          val utr = "1234567800"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateProcessingResponseJson)
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
+          }
+        }
+
+        "DES has returned a 200 and indicated that the submission is pending closure" in {
+          val utr = "1234567800"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstatePendingClosureResponseJson)
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe GetEstateStatusResponse(ResponseHeader("Pending Closure", "1"))
+          }
+        }
+
+        "DES has returned a 200 and indicated that the submission is closed" in {
+          val utr = "1234567800"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateClosedResponseJson)
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe GetEstateStatusResponse(ResponseHeader("Closed", "1"))
+          }
+        }
+
+        "DES has returned a 200 and indicated that the submission is suspended" in {
+          val utr = "1234567800"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateSuspendedResponseJson)
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe GetEstateStatusResponse(ResponseHeader("Suspended", "1"))
+          }
+        }
+
+        "DES has returned a 200 and indicated that the submission is parked" in {
+          val utr = "1234567800"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateParkedResponseJson)
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe GetEstateStatusResponse(ResponseHeader("Parked", "1"))
+          }
+        }
+
+        "DES has returned a 200 and indicated that the submission is obsoleted" in {
+          val utr = "1234567800"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateObsoletedResponseJson)
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe GetEstateStatusResponse(ResponseHeader("Obsoleted", "1"))
+          }
         }
       }
 
-      "DES has returned a 200 and indicated that the submission is still being processed" in {
-        val utr = "1234567800"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getTrustOrEstateProcessingResponseJson)
+      "return InvalidUTRResponse" when {
+        "DES has returned a 400 with the code INVALID_UTR" in {
+          val invalidUTR = "123456789"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
 
-        val futureResult = connector.getEstateInfo(utr)
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(invalidUTR), BAD_REQUEST,
+            Json.stringify(jsonResponse400InvalidUTR))
 
-        whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
+          val futureResult = connector.getEstateInfo(invalidUTR)
+
+          whenReady(futureResult) { result =>
+            result mustBe InvalidUTRResponse
+          }
         }
       }
 
-      "DES has returned a 200 and indicated that the submission is pending closure" in {
-        val utr = "1234567800"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getTrustOrEstatePendingClosureResponseJson)
+      "return InvalidRegimeResponse" when {
+        "DES has returned a 400 with the code INVALID_REGIME" in {
+          val utr = "1234567891"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
 
-        val futureResult = connector.getEstateInfo(utr)
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
+            Json.stringify(jsonResponse400InvalidRegime))
 
-        whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("Pending Closure", "1"))
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe InvalidRegimeResponse
+          }
         }
       }
 
-      "DES has returned a 200 and indicated that the submission is closed" in {
-        val utr = "1234567800"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getTrustOrEstateClosedResponseJson)
+      "return BadRequestResponse" when {
+        "DES has returned a 400 with a code which is not INVALID_UTR OR INVALID_REGIME" in {
+          val utr = "1234567891"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
 
-        val futureResult = connector.getEstateInfo(utr)
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
+            Json.stringify(jsonResponse400))
 
-        whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("Closed", "1"))
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe BadRequestResponse
+          }
         }
       }
 
-      "DES has returned a 200 and indicated that the submission is suspended" in {
-        val utr = "1234567800"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getTrustOrEstateSuspendedResponseJson)
+      "return ResourceNotFoundResponse" when {
+        "DES has returned a 404" in {
+          val utr = "1234567892"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
 
-        val futureResult = connector.getEstateInfo(utr)
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), NOT_FOUND, "")
 
-        whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("Suspended", "1"))
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe ResourceNotFoundResponse
+          }
         }
       }
 
-      "DES has returned a 200 and indicated that the submission is parked" in {
-        val utr = "1234567800"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getTrustOrEstateParkedResponseJson)
+      "return NotEnoughDataResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+        "no response header" in {
+          val utr = "6666666666"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
 
-        whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("Parked", "1"))
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, Json.obj().toString())
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe NotEnoughDataResponse(Json.obj(), JsError.toJson(JsError("responseHeader not defined on response")))
+          }
+        }
+
+        "body does not validate as GetEstate" in {
+          val utr = "2000000000"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), OK, getEstateInvalidResponseJson.toString())
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe NotEnoughDataResponse(getEstateInvalidResponseJson, Json.parse("{\"obj.details.estate.entities.personalRepresentative\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}"))
+          }
         }
       }
 
-      "DES has returned a 200 and indicated that the submission is obsoleted" in {
-        val utr = "1234567800"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getTrustOrEstateObsoletedResponseJson)
+      "return InternalServerErrorResponse" when {
+        "DES has returned a 500 with the code SERVER_ERROR" in {
+          val utr = "1234567893"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
 
-        val futureResult = connector.getEstateInfo(utr)
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), INTERNAL_SERVER_ERROR, "")
 
-        whenReady(futureResult) { result =>
-          result mustBe GetEstateStatusResponse(ResponseHeader("Obsoleted", "1"))
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe InternalServerErrorResponse
+          }
+        }
+      }
+
+      "return ServiceUnavailableResponse" when {
+        "DES has returned a 503 with the code SERVICE_UNAVAILABLE" in {
+          val utr = "1234567894"
+          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+            """
+              |{
+              | "name": "5mld",
+              | "isEnabled": false
+              |}""".stripMargin
+          )))
+
+          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), SERVICE_UNAVAILABLE, "")
+
+          val futureResult = connector.getEstateInfo(utr)
+
+          whenReady(futureResult) { result =>
+            result mustBe ServiceUnavailableResponse
+          }
         }
       }
     }
 
-    "return InvalidUTRResponse" when {
-      "DES has returned a 400 with the code INVALID_UTR" in {
-        val invalidUTR = "123456789"
-        stubForGet(server, createTrustOrEstateEndpoint(invalidUTR), BAD_REQUEST,
-          Json.stringify(jsonResponse400InvalidUTR))
+    "5MLD" when {
 
-        val futureResult = connector.getEstateInfo(invalidUTR)
+      "identifier is UTR" must {
+        "return EstateFoundResponse" when {
 
-        whenReady(futureResult) { result =>
-          result mustBe InvalidUTRResponse
+          "DES has returned a 200 with estate details" in {
+            val utr = "1234567890"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, get4MLDEstateResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              Json.toJson(result) mustBe getEstateExpectedResponse
+            }
+          }
+
+          "DES has returned a 200 and indicated that the submission is still being processed" in {
+            val utr = "1234567800"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateProcessingResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe GetEstateStatusResponse(ResponseHeader("In Processing", "1"))
+            }
+          }
+
+          "DES has returned a 200 and indicated that the submission is pending closure" in {
+            val utr = "1234567800"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstatePendingClosureResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe GetEstateStatusResponse(ResponseHeader("Pending Closure", "1"))
+            }
+          }
+
+          "DES has returned a 200 and indicated that the submission is closed" in {
+            val utr = "1234567800"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateClosedResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe GetEstateStatusResponse(ResponseHeader("Closed", "1"))
+            }
+          }
+
+          "DES has returned a 200 and indicated that the submission is suspended" in {
+            val utr = "1234567800"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateSuspendedResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe GetEstateStatusResponse(ResponseHeader("Suspended", "1"))
+            }
+          }
+
+          "DES has returned a 200 and indicated that the submission is parked" in {
+            val utr = "1234567800"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateParkedResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe GetEstateStatusResponse(ResponseHeader("Parked", "1"))
+            }
+          }
+
+          "DES has returned a 200 and indicated that the submission is obsoleted" in {
+            val utr = "1234567800"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getTrustOrEstateObsoletedResponseJson)
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe GetEstateStatusResponse(ResponseHeader("Obsoleted", "1"))
+            }
+          }
         }
-      }
-    }
 
-    "return InvalidRegimeResponse" when {
-      "DES has returned a 400 with the code INVALID_REGIME" in {
-        val utr = "1234567891"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), BAD_REQUEST,
-          Json.stringify(jsonResponse400InvalidRegime))
+        "return NotEnoughData" when {
+          "no response header" in {
+            val utr = "6666666666"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
 
-        val futureResult = connector.getEstateInfo(utr)
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, Json.obj().toString())
 
-        whenReady(futureResult) { result =>
-          result mustBe InvalidRegimeResponse
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe NotEnoughDataResponse(Json.obj(), JsError.toJson(JsError("responseHeader not defined on response")))
+            }
+          }
+
+          "body does not validate as GetEstate" in {
+            val utr = "2000000000"
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, getEstateInvalidResponseJson.toString())
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe NotEnoughDataResponse(getEstateInvalidResponseJson, Json.parse("{\"obj.details.estate.entities.personalRepresentative\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}"))
+            }
+          }
         }
-      }
-    }
 
-    "return BadRequestResponse" when {
-      "DES has returned a 400 with a code which is not INVALID_UTR OR INVALID_REGIME" in {
-        val utr = "1234567891"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), BAD_REQUEST,
-          Json.stringify(jsonResponse400))
+        "return InvalidUTRResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+          "des has returned a 400 with the code INVALID_UTR" in {
 
-        whenReady(futureResult) { result =>
-          result mustBe BadRequestResponse
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            val invalidUTR = "1234567890"
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(invalidUTR), BAD_REQUEST,
+              Json.stringify(jsonResponse400InvalidUTR))
+
+            val futureResult = connector.getEstateInfo(invalidUTR)
+
+
+            whenReady(futureResult) { result =>
+              result mustBe InvalidUTRResponse
+            }
+          }
         }
-      }
-    }
 
-    "return ResourceNotFoundResponse" when {
-      "DES has returned a 404" in {
-        val utr = "1234567892"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), NOT_FOUND, "")
+        "return InvalidRegimeResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+          "des has returned a 400 with the code INVALID_REGIME" in {
 
-        whenReady(futureResult) { result =>
-          result mustBe ResourceNotFoundResponse
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            val utr = "1234567891"
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
+              Json.stringify(jsonResponse400InvalidRegime))
+
+            val futureResult = connector.getEstateInfo(utr)
+
+
+            whenReady(futureResult) { result =>
+              result mustBe InvalidRegimeResponse
+            }
+          }
         }
-      }
-    }
 
-    "return NotEnoughDataResponse" when {
+        "return BadRequestResponse" when {
 
-      "no response header" in {
-        val utr = "6666666666"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, Json.obj().toString())
+          "des has returned a 400 with a code which is not INVALID_UTR OR INVALID_REGIME" in {
 
-        val futureResult = connector.getEstateInfo(utr)
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
 
-        whenReady(futureResult) { result =>
-          result mustBe NotEnoughDataResponse(Json.obj(), JsError.toJson(JsError("responseHeader not defined on response")))
+            val utr = "1234567891"
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
+              Json.stringify(jsonResponse400))
+
+            val futureResult = connector.getEstateInfo(utr)
+
+
+            whenReady(futureResult) { result =>
+              result mustBe BadRequestResponse
+            }
+          }
         }
-      }
 
-      "body does not validate as GetEstate" in {
-        val utr = "2000000000"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), OK, getEstateInvalidResponseJson.toString())
+        "return ResourceNotFoundResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+          "des has returned a 404" in {
 
-        whenReady(futureResult) { result =>
-          result mustBe NotEnoughDataResponse(getEstateInvalidResponseJson, Json.parse("{\"obj.details.estate.entities.personalRepresentative\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}"))
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            val utr = "1234567892"
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), NOT_FOUND, "")
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe ResourceNotFoundResponse
+            }
+          }
         }
-      }
-    }
 
-    "return InternalServerErrorResponse" when {
-      "DES has returned a 500 with the code SERVER_ERROR" in {
-        val utr = "1234567893"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), INTERNAL_SERVER_ERROR, "")
+        "return InternalServerErrorResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+          "des has returned a 500 with the code SERVER_ERROR" in {
 
-        whenReady(futureResult) { result =>
-          result mustBe InternalServerErrorResponse
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            val utr = "1234567893"
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), INTERNAL_SERVER_ERROR, "")
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe InternalServerErrorResponse
+            }
+          }
         }
-      }
-    }
 
-    "return ServiceUnavailableResponse" when {
-      "DES has returned a 503 with the code SERVICE_UNAVAILABLE" in {
-        val utr = "1234567894"
-        stubForGet(server, createTrustOrEstateEndpoint(utr), SERVICE_UNAVAILABLE, "")
+        "return ServiceUnavailableResponse" when {
 
-        val futureResult = connector.getEstateInfo(utr)
+          "des has returned a 503 with the code SERVICE_UNAVAILABLE" in {
 
-        whenReady(futureResult) { result =>
-          result mustBe ServiceUnavailableResponse
+            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
+              """
+                |{
+                | "name": "5mld",
+                | "isEnabled": true
+                |}""".stripMargin
+            )))
+
+            val utr = "1234567894"
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), SERVICE_UNAVAILABLE, "")
+
+            val futureResult = connector.getEstateInfo(utr)
+
+            whenReady(futureResult) { result =>
+              result mustBe ServiceUnavailableResponse
+            }
+          }
         }
       }
     }
@@ -588,4 +1044,5 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
       }
     }
   }
+
 }

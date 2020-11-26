@@ -36,7 +36,8 @@ class BaseConnectorSpec extends BaseSpec with WireMockHelper with IntegrationPat
           "microservice.services.des-estates.port" -> server.port(),
           "microservice.services.des-estates-playback.port" -> server.port(),
           "microservice.services.des-estates-variation.port" -> server.port(),
-          "microservice.services.tax-enrolments.port" -> server.port()
+          "microservice.services.tax-enrolments.port" -> server.port(),
+          "microservice.services.estates-store.port" -> server.port()
         ): _*)
   }
 
@@ -150,6 +151,16 @@ class BaseConnectorSpec extends BaseSpec with WireMockHelper with IntegrationPat
           .withBody(responseBody).withFixedDelay(delayResponse)))
   }
 
+  def stubForHeaderlessGet(server: WireMockServer,
+                           url: String, returnStatus: Int,
+                           responseBody: String,
+                           delayResponse: Int = 0): StubMapping = {
+    server.stubFor(get(urlEqualTo(url))
+      .willReturn(
+        aResponse()
+          .withStatus(returnStatus)
+          .withBody(responseBody).withFixedDelay(delayResponse)))
+  }
 
   def stubForGet(server: WireMockServer,
                  url: String, returnStatus: Int,

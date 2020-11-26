@@ -185,7 +185,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
     "return EstateFoundResponse" when {
       "EstateFoundResponse is returned from DES Connector with a Processed flag and an estate body when not cached" in new DesServiceFixture {
         val utr = "1234567890"
-        val fullEtmpResponseJson = getEstateResponse
+        val fullEtmpResponseJson = get4MLDEstateResponse
         val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
 
         when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(None))
@@ -204,7 +204,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
       "EstateFoundResponse is returned from repository with a Processed flag and an estate body when cached" in new DesServiceFixture {
         val utr = "1234567890"
 
-        val fullEtmpResponseJson = getEstateResponse
+        val fullEtmpResponseJson = get4MLDEstateResponse
         val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
 
         when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(Some(fullEtmpResponseJson)))

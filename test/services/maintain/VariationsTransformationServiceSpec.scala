@@ -119,7 +119,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
 
 
   "must apply transformations to ETMP json read from DES service" in {
-    val response = getEstateResponse.as[GetEstateResponse]
+    val response = get4MLDEstateResponse.as[GetEstateResponse]
     val processedResponse = response.asInstanceOf[GetEstateProcessedResponse]
     val desService = mock[DesService]
     when(desService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(response))

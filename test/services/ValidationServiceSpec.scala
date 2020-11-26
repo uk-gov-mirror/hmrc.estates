@@ -25,7 +25,7 @@ import utils.{EstateDataExamples, JsonUtils}
 class ValidationServiceSpec extends BaseSpec with EitherValues with EstateDataExamples {
 
   private lazy val validationService: ValidationService = new ValidationService()
-  private lazy val estateValidator : Validator = validationService.get("/resources/schemas/estates-api-schema-5.0.json")
+  private lazy val estateValidator : Validator = validationService.get("/resources/schemas/4MLD/estates-api-schema-5.0.json")
 
   "a validator " should {
     "return an empty list of errors when " when {

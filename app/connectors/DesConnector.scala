@@ -26,6 +26,7 @@ import config.AppConfig
 import models._
 import models.getEstate.GetEstateResponse
 import models.variation.VariationResponse
+import services.EstatesStoreService
 import utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpClient
@@ -33,7 +34,7 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
+class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: EstatesStoreService) extends Logging {
 
   private lazy val subscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
@@ -46,7 +47,8 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Loggin
   // So this must remain "trusts" even though we're reading an estate.
   private lazy val getEstateUrl: String =  s"${config.getEstateBaseUrl}/trusts"
 
-  private def createEstateEndpointForUtr(utr: String): String = s"$getEstateUrl/registration/$utr"
+  private def create4MLDEstateEndpointForUtr(utr: String): String = s"$getEstateUrl/registration/$utr"
+  private def create5MLDEstateEndpointForUtr(utr: String): String = s"$getEstateUrl/registration/UTR/$utr"
 
   private lazy val estateVariationsEndpoint : String = s"${config.varyEstateBaseUrl}/estates/variation"
 
@@ -99,7 +101,13 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Loggin
 
     logger.info(s"[getEstateInfo][UTR: $utr] getting playback for estate for correlationId: $correlationId")
 
-    http.GET[GetEstateResponse](createEstateEndpointForUtr(utr))
+    estatesStoreService.is5mldEnabled.flatMap { is5MLD =>
+      if (is5MLD) {
+        http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
+      } else {
+        http.GET[GetEstateResponse](create4MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
+      }
+    }
   }
 
   def estateVariation(estateVariations: JsValue): Future[VariationResponse] = {

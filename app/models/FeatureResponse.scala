@@ -18,14 +18,8 @@ package models
 
 import play.api.libs.json.{Format, Json}
 
-case class Correspondence(abroadIndicator: Boolean,
-                          name: String,
-                          address: AddressType,
-                          phoneNumber: String,
-                          welsh: Option[Boolean],   // new 5MLD optional
-                          braille: Option[Boolean]) // new 5MLD optional
+case class FeatureResponse(name: String, isEnabled: Boolean)
 
-object Correspondence {
-  implicit val correspondenceFormat : Format[Correspondence] = Json.format[Correspondence]
-
+object FeatureResponse {
+  implicit val format: Format[FeatureResponse] = Json.format[FeatureResponse]
 }

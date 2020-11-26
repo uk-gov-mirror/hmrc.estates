@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package models
+package connectors
 
-import play.api.libs.json.{Format, Json}
+import config.AppConfig
+import javax.inject.Inject
+import models.FeatureResponse
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
-case class Correspondence(abroadIndicator: Boolean,
-                          name: String,
-                          address: AddressType,
-                          phoneNumber: String,
-                          welsh: Option[Boolean],   // new 5MLD optional
-                          braille: Option[Boolean]) // new 5MLD optional
+import scala.concurrent.{ExecutionContext, Future}
 
-object Correspondence {
-  implicit val correspondenceFormat : Format[Correspondence] = Json.format[Correspondence]
+class EstatesStoreConnector @Inject()(http: HttpClient, config: AppConfig) {
+
+  private def featureUrl(feature: String): String = s"${config.estatesStoreBaseUrl}/estates-store/features/$feature"
+
+  def getFeature(feature: String)(implicit hc : HeaderCarrier, ec : ExecutionContext): Future[FeatureResponse] = {
+    http.GET[FeatureResponse](featureUrl(feature))
+  }
 
 }

@@ -32,14 +32,18 @@ trait JsonRequests extends JsonUtils {
   lazy val invalidEstateVariationsRequestJson: String = getJsonFromFile("etmp/invalid-estate-variation-api.json")
   lazy val invalidEstateVariationsRequest: JsValue = getJsonValueFromFile("etmp/invalid-estate-variation-api.json")
 
-  lazy val getEstateResponseJson: String = getJsonFromFile("etmp/valid-get-estate-response.json")
-  lazy val getEstateResponse: JsValue = getJsonValueFromFile("etmp/valid-get-estate-response.json")
+  lazy val get4MLDEstateResponseJson: String = getJsonFromFile("etmp/valid-get-estate-4mld-response.json")
+  lazy val get4MLDEstateResponse: JsValue = getJsonValueFromFile("etmp/valid-get-estate-4mld-response.json")
+
+  lazy val get5MLDEstateResponseJson: String = getJsonFromFile("etmp/valid-get-estate-5mld-response.json")
+  lazy val get5MLDEstateResponse: JsValue = getJsonValueFromFile("etmp/valid-get-estate-5mld-response.json")
 
   lazy val getTransformedEstateResponse: JsValue = getJsonValueFromFile("transformed/variations/valid-get-estate-response-transformed.json")
   lazy val getTransformedPersonalRepResponse: JsValue = getJsonValueFromFile("transformed/variations/valid-get-estate-response-transformed-personal-rep-only.json")
 
   lazy val getEstateInvalidResponseJson: JsValue = getJsonValueFromFile("etmp/valid-get-estate-invalid-response.json")
-  lazy val getEstateExpectedResponse: JsValue = getJsonValueFromFile("mdtp/valid-get-estate-expected-response.json")
+  lazy val get4MLDEstateExpectedResponse: JsValue = getJsonValueFromFile("mdtp/valid-get-estate-expected-4mld-response.json")
+  lazy val get5MLDEstateExpectedResponse: JsValue = getJsonValueFromFile("mdtp/valid-get-estate-expected-5mld-response.json")
 
   lazy val getTrustOrEstateProcessingResponseJson: String = getJsonFromFile("etmp/valid-get-trust-or-estate-in-processing-response.json")
   lazy val getTrustOrEstateProcessingResponse: JsValue = getJsonValueFromFile("etmp/valid-get-trust-or-estate-in-processing-response.json")

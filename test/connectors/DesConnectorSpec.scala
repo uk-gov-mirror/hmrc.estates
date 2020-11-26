@@ -69,7 +69,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val wrongPayloadRequest = request.copy(utr = "NUMBER1234")
         val requestBody = Json.stringify(Json.toJson(wrongPayloadRequest))
 
-        stubForPost(server, "/estates/match", requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
+        stubForPost(server, "/estates/match", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
         val futureResult = connector.checkExistingEstate(wrongPayloadRequest)
 
@@ -156,7 +156,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
     "return BadRequest response" when {
       "payload sent to DES is invalid" in {
         val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-        stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
+        stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
         val futureResult = connector.registerEstate(estateRegRequest)
 
@@ -464,7 +464,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
           )))
 
           stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
-            Json.stringify(jsonResponse400))
+            Json.stringify(jsonResponse4004mld))
 
           val futureResult = connector.getEstateInfo(utr)
 
@@ -773,7 +773,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
             val utr = "1234567891"
             stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
-              Json.stringify(jsonResponse400))
+              Json.stringify(jsonResponse4005mld))
 
             val futureResult = connector.getEstateInfo(utr)
 
@@ -881,7 +881,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
       val variation = estateVariationsRequest
 
       val requestBody = Json.stringify(Json.toJson(variation))
-      stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
+      stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
       val futureResult = connector.estateVariation(variation)
 

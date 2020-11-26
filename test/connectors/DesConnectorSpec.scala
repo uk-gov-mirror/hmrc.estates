@@ -325,7 +325,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
           val futureResult = connector.getEstateInfo(utr)
 
           whenReady(futureResult) { result =>
-            Json.toJson(result) mustBe getEstateExpectedResponse
+            Json.toJson(result) mustBe get4MLDEstateExpectedResponse
           }
         }
 
@@ -638,12 +638,13 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
                 |}""".stripMargin
             )))
 
-            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, get4MLDEstateResponseJson)
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, get5MLDEstateResponseJson)
 
             val futureResult = connector.getEstateInfo(utr)
 
             whenReady(futureResult) { result =>
-              Json.toJson(result) mustBe getEstateExpectedResponse
+              Json.toJson(result) mustBe get5MLDEstateExpectedResponse
+              result
             }
           }
 

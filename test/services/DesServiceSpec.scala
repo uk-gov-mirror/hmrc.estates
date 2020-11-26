@@ -46,7 +46,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
   }
 
   ".getEstateInfoFormBundleNo should return formBundle No from ETMP Data" in {
-    val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+    val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-5mld-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
     val mockDesconnector = mock[DesConnector]
     val mockRepository = mock[CacheRepositoryImpl]
     when(mockDesconnector.getEstateInfo(any())).thenReturn(Future.successful(etmpData))

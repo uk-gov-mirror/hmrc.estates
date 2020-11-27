@@ -54,15 +54,13 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
 
   private val ENVIRONMENT_HEADER = "Environment"
   private val CORRELATION_HEADER = "CorrelationId"
-  private val OLD_CORRELATION_HEADER = "Correlation-Id"
 
   private def desHeaders(correlationId : String) : Seq[(String, String)] =
     Seq(
       HeaderNames.AUTHORIZATION -> s"Bearer ${config.desToken}",
       CONTENT_TYPE -> CONTENT_TYPE_JSON,
       ENVIRONMENT_HEADER -> config.desEnvironment,
-      CORRELATION_HEADER -> correlationId,
-      OLD_CORRELATION_HEADER -> correlationId
+      CORRELATION_HEADER -> correlationId
     )
 
   def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest)
@@ -105,9 +103,9 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
 
     estatesStoreService.is5mldEnabled.flatMap { is5MLD =>
       if (is5MLD) {
-        http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))
+        http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
       } else {
-        http.GET[GetEstateResponse](create4MLDEstateEndpointForUtr(utr))
+        http.GET[GetEstateResponse](create4MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
       }
     }
   }

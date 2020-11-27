@@ -69,7 +69,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         val wrongPayloadRequest = request.copy(utr = "NUMBER1234")
         val requestBody = Json.stringify(Json.toJson(wrongPayloadRequest))
 
-        stubForPost(server, "/estates/match", requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
+        stubForPost(server, "/estates/match", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
         val futureResult = connector.checkExistingEstate(wrongPayloadRequest)
 
@@ -156,7 +156,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
     "return BadRequest response" when {
       "payload sent to DES is invalid" in {
         val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-        stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
+        stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
         val futureResult = connector.registerEstate(estateRegRequest)
 
@@ -325,7 +325,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
           val futureResult = connector.getEstateInfo(utr)
 
           whenReady(futureResult) { result =>
-            Json.toJson(result) mustBe getEstateExpectedResponse
+            Json.toJson(result) mustBe get4MLDEstateExpectedResponse
           }
         }
 
@@ -452,52 +452,8 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
         }
       }
 
-      "return InvalidUTRResponse" when {
-        "DES has returned a 400 with the code INVALID_UTR" in {
-          val invalidUTR = "123456789"
-          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
-            """
-              |{
-              | "name": "5mld",
-              | "isEnabled": false
-              |}""".stripMargin
-          )))
-
-          stubForGet(server, create4MLDTrustOrEstateEndpoint(invalidUTR), BAD_REQUEST,
-            Json.stringify(jsonResponse400InvalidUTR))
-
-          val futureResult = connector.getEstateInfo(invalidUTR)
-
-          whenReady(futureResult) { result =>
-            result mustBe InvalidUTRResponse
-          }
-        }
-      }
-
-      "return InvalidRegimeResponse" when {
-        "DES has returned a 400 with the code INVALID_REGIME" in {
-          val utr = "1234567891"
-          stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
-            """
-              |{
-              | "name": "5mld",
-              | "isEnabled": false
-              |}""".stripMargin
-          )))
-
-          stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
-            Json.stringify(jsonResponse400InvalidRegime))
-
-          val futureResult = connector.getEstateInfo(utr)
-
-          whenReady(futureResult) { result =>
-            result mustBe InvalidRegimeResponse
-          }
-        }
-      }
-
       "return BadRequestResponse" when {
-        "DES has returned a 400 with a code which is not INVALID_UTR OR INVALID_REGIME" in {
+        "DES has returned a 400" in {
           val utr = "1234567891"
           stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
             """
@@ -508,7 +464,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
           )))
 
           stubForGet(server, create4MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
-            Json.stringify(jsonResponse400))
+            Json.stringify(jsonResponse4004mld))
 
           val futureResult = connector.getEstateInfo(utr)
 
@@ -638,12 +594,13 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
                 |}""".stripMargin
             )))
 
-            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, get4MLDEstateResponseJson)
+            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), OK, get5MLDEstateResponseJson)
 
             val futureResult = connector.getEstateInfo(utr)
 
             whenReady(futureResult) { result =>
-              Json.toJson(result) mustBe getEstateExpectedResponse
+              Json.toJson(result) mustBe get5MLDEstateExpectedResponse
+              result
             }
           }
 
@@ -802,59 +759,9 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
           }
         }
 
-        "return InvalidUTRResponse" when {
-
-          "des has returned a 400 with the code INVALID_UTR" in {
-
-            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
-              """
-                |{
-                | "name": "5mld",
-                | "isEnabled": true
-                |}""".stripMargin
-            )))
-
-            val invalidUTR = "1234567890"
-            stubForGet(server, create5MLDTrustOrEstateEndpoint(invalidUTR), BAD_REQUEST,
-              Json.stringify(jsonResponse400InvalidUTR))
-
-            val futureResult = connector.getEstateInfo(invalidUTR)
-
-
-            whenReady(futureResult) { result =>
-              result mustBe InvalidUTRResponse
-            }
-          }
-        }
-
-        "return InvalidRegimeResponse" when {
-
-          "des has returned a 400 with the code INVALID_REGIME" in {
-
-            stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
-              """
-                |{
-                | "name": "5mld",
-                | "isEnabled": true
-                |}""".stripMargin
-            )))
-
-            val utr = "1234567891"
-            stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
-              Json.stringify(jsonResponse400InvalidRegime))
-
-            val futureResult = connector.getEstateInfo(utr)
-
-
-            whenReady(futureResult) { result =>
-              result mustBe InvalidRegimeResponse
-            }
-          }
-        }
-
         "return BadRequestResponse" when {
 
-          "des has returned a 400 with a code which is not INVALID_UTR OR INVALID_REGIME" in {
+          "des has returned a 400" in {
 
             stubForGet(server, "/estates-store/features/5mld", OK, Json.stringify(Json.parse(
               """
@@ -866,7 +773,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
             val utr = "1234567891"
             stubForGet(server, create5MLDTrustOrEstateEndpoint(utr), BAD_REQUEST,
-              Json.stringify(jsonResponse400))
+              Json.stringify(jsonResponse4005mld))
 
             val futureResult = connector.getEstateInfo(utr)
 
@@ -974,7 +881,7 @@ class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
       val variation = estateVariationsRequest
 
       val requestBody = Json.stringify(Json.toJson(variation))
-      stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse400))
+      stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
       val futureResult = connector.estateVariation(variation)
 

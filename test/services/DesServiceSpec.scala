@@ -46,7 +46,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
   }
 
   ".getEstateInfoFormBundleNo should return formBundle No from ETMP Data" in {
-    val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
+    val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-5mld-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
     val mockDesconnector = mock[DesConnector]
     val mockRepository = mock[CacheRepositoryImpl]
     when(mockDesconnector.getEstateInfo(any())).thenReturn(Future.successful(etmpData))
@@ -214,34 +214,6 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
         whenReady(futureResult) { result =>
           result mustBe GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", "1"))
           verifyZeroInteractions(mockConnector)
-        }
-      }
-    }
-
-    "return InvalidUTRResponse" when {
-      "InvalidUTRResponse is returned from DES Connector" in new DesServiceFixture {
-
-        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InvalidUTRResponse))
-
-        val invalidUtr = "123456789"
-        val futureResult = SUT.getEstateInfo(invalidUtr, myId)
-
-        whenReady(futureResult) { result =>
-          result mustBe InvalidUTRResponse
-        }
-      }
-    }
-
-    "return InvalidRegimeResponse" when {
-      "InvalidRegimeResponse is returned from DES Connector" in new DesServiceFixture {
-
-        when(mockConnector.getEstateInfo(any())).thenReturn(Future.successful(InvalidRegimeResponse))
-
-        val utr = "123456789"
-        val futureResult = SUT.getEstateInfo(utr, myId)
-
-        whenReady(futureResult) { result =>
-          result mustBe InvalidRegimeResponse
         }
       }
     }

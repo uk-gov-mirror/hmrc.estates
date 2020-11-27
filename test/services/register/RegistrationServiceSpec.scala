@@ -30,8 +30,9 @@ import uk.gov.hmrc.auth.core.AffinityGroup
 import models._
 import models.register.{RegistrationDeclaration, TaxAmount}
 import models.requests.IdentifierRequest
+import org.mockito.ArgumentCaptor
 import repositories.TransformationRepository
-import services.{AuditService, DesService}
+import services.{AuditService, DesService, EstatesStoreService}
 import transformers.ComposedDeltaTransform
 import transformers.register._
 import utils.JsonUtils
@@ -43,11 +44,26 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
   val mockTransformationRepository: TransformationRepository = mock[TransformationRepository]
   val mockDesService: DesService = mock[DesService]
-  val declarationTransformer = new DeclarationTransform
-
+  val mockEstatesStoreService: EstatesStoreService = mock[EstatesStoreService]
   val mockAuditService: AuditService = mock[AuditService]
 
-  val service = new RegistrationService(mockTransformationRepository, mockDesService, declarationTransformer, mockAuditService)
+  val regCapture: ArgumentCaptor[EstateRegistration] = ArgumentCaptor.forClass(classOf[EstateRegistration])
+
+  before {
+    reset(mockAuditService)
+  }
+
+  val declarationTransformer = new DeclarationTransform
+
+  val address = AddressType("AEstateAddress1", "AEstateAddress2", Some("AEstateAddress3"), Some("AEstateAddress4"), Some("TF3 4ER"), "GB")
+
+  val service = new RegistrationService(
+    mockTransformationRepository,
+    mockDesService,
+    mockEstatesStoreService,
+    declarationTransformer,
+    mockAuditService
+  )
 
   val deceased: EstateWillType = EstateWillType(
     name = NameType("Mr TRS Reference 31", None, "TaxPayer 31"),
@@ -62,7 +78,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
     identification = IdentificationType(
       Some("JS123456A"),
       None,
-      Some(AddressType("AEstateAddress1", "AEstateAddress2", Some("AEstateAddress3"), Some("AEstateAddress4"), Some("TF3 4ER"), "GB"))
+      Some(address)
     ),
     phoneNumber = "078888888",
     email = Some("test@abc.com")
@@ -165,19 +181,53 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
   ".submit" must {
 
-    "successfully submit the payload" in {
+    "successfully submit the payload" when {
 
-      when(mockTransformationRepository.get(any())).thenReturn(Future.successful(Some(allTransforms)))
-      when(mockDesService.registerEstate(any())).thenReturn(Future.successful(RegistrationTrnResponse("trn")))
+      "4mld" in {
 
-      val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
+        when(mockEstatesStoreService.is5mldEnabled()(any(), any()))
+          .thenReturn(Future.successful(false))
 
-      result.futureValue mustBe RegistrationTrnResponse("trn")
+        when(mockTransformationRepository.get(any()))
+          .thenReturn(Future.successful(Some(allTransforms)))
 
-      verify(mockAuditService).auditRegistrationSubmitted(
-        any(),
-        mockEq("trn")
-      )(any(), any())
+        when(mockDesService.registerEstate(regCapture.capture()))
+          .thenReturn(Future.successful(RegistrationTrnResponse("trn")))
+
+        val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
+
+        result.futureValue mustBe RegistrationTrnResponse("trn")
+
+        regCapture.getValue.submissionDate mustBe None
+
+        verify(mockAuditService).auditRegistrationSubmitted(
+          any(),
+          mockEq("trn")
+        )(any(), any())
+      }
+
+      "5mld" in {
+
+        when(mockEstatesStoreService.is5mldEnabled()(any(), any()))
+          .thenReturn(Future.successful(true))
+
+        when(mockTransformationRepository.get(any()))
+          .thenReturn(Future.successful(Some(allTransforms)))
+
+        when(mockDesService.registerEstate(regCapture.capture()))
+          .thenReturn(Future.successful(RegistrationTrnResponse("trn")))
+
+        val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
+
+        result.futureValue mustBe RegistrationTrnResponse("trn")
+
+        regCapture.getValue.submissionDate.value mustBe a[LocalDate]
+
+        verify(mockAuditService).auditRegistrationSubmitted(
+          any(),
+          mockEq("trn")
+        )(any(), any())
+      }
     }
 
     "failed to submit the payload for some reason" in {
@@ -275,7 +325,8 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
       val transformedJson = service.buildSubmissionFromTransforms(
         NameType("John", None, "Doe"),
-        transforms
+        transforms,
+        None
       )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
 
       transformedJson.get mustEqual expectedJson
@@ -318,7 +369,8 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
       val transformedJson = service.buildSubmissionFromTransforms(
         NameType("John", None, "Doe"),
-        transforms
+        transforms,
+        None
       )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
 
       transformedJson.get mustEqual expectedJson
@@ -359,7 +411,8 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
       val transformedJson = service.buildSubmissionFromTransforms(
         NameType("John", None, "Doe"),
-        transforms
+        transforms,
+        None
       )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Agent))
 
       transformedJson.get mustEqual expectedJson

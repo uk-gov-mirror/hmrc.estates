@@ -16,6 +16,8 @@
 
 package services.register
 
+import java.time.LocalDate
+
 import javax.inject.Inject
 import play.api.Logging
 import play.api.libs.json._
@@ -24,7 +26,7 @@ import models._
 import models.register.RegistrationDeclaration
 import models.requests.IdentifierRequest
 import repositories.TransformationRepository
-import services.{AuditService, DesService}
+import services.{AuditService, DesService, EstatesStoreService}
 import transformers.ComposedDeltaTransform
 import transformers.register.DeclarationTransform
 import utils.Session
@@ -34,92 +36,105 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
+                                    estatesStoreService: EstatesStoreService,
                                     declarationTransformer: DeclarationTransform,
                                     auditService: AuditService
                                    )(implicit ec: ExecutionContext) extends Logging {
 
   def getRegistration()(implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[EstateRegistrationNoDeclaration] = {
 
-    repository.get(request.identifier) flatMap {
-      case Some(transforms) =>
-        buildPrintFromTransforms(transforms) match {
-          case JsSuccess(json, _) =>
-            json.asOpt[EstateRegistrationNoDeclaration] match {
-              case Some(payload) =>
+      repository.get(request.identifier) flatMap {
+        case Some(transforms) =>
+          buildPrintFromTransforms(transforms) match {
+            case JsSuccess(json, _) =>
+              json.asOpt[EstateRegistrationNoDeclaration] match {
+                case Some(payload) =>
 
-                auditService.auditGetRegistrationSuccess(payload)
+                  auditService.auditGetRegistrationSuccess(payload)
 
-                Future.successful(payload)
-              case None =>
-                val reason = "Unable to parse transformed json as EstateRegistrationNoDeclaration"
-                auditService.auditGetRegistrationFailed(transforms, reason)
-                Future.failed(new RuntimeException(reason))
-            }
-          case JsError(errors) =>
-            val reason = "Unable to build json from transforms"
-            auditService.auditGetRegistrationFailed(transforms, reason, errors.toString)
-            Future.failed(new RuntimeException(s"$reason: $errors"))
-        }
-      case None =>
-        val reason = "Unable to get registration due to there being no transforms"
-        auditService.auditGetRegistrationFailed(ComposedDeltaTransform(Seq.empty), reason)
-        Future.failed(new RuntimeException(reason))
-    }
+                  Future.successful(payload)
+                case None =>
+                  val reason = "Unable to parse transformed json as EstateRegistrationNoDeclaration"
+                  auditService.auditGetRegistrationFailed(transforms, reason)
+                  Future.failed(new RuntimeException(reason))
+              }
+            case JsError(errors) =>
+              val reason = "Unable to build json from transforms"
+              auditService.auditGetRegistrationFailed(transforms, reason, errors.toString)
+              Future.failed(new RuntimeException(s"$reason: $errors"))
+          }
+        case None =>
+          val reason = "Unable to get registration due to there being no transforms"
+          auditService.auditGetRegistrationFailed(ComposedDeltaTransform(Seq.empty), reason)
+          Future.failed(new RuntimeException(reason))
+      }
+
   }
 
   def submit(declaration: RegistrationDeclaration)
             (implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[RegistrationResponse] = {
 
-    repository.get(request.identifier) flatMap {
-      case Some(transforms) =>
+    estatesStoreService.is5mldEnabled() flatMap { is5mld =>
 
-        buildSubmissionFromTransforms(declaration.name, transforms) match {
-          case JsSuccess(json, _) =>
+      val submissionDate = if(is5mld) {
+        Some(LocalDate.now())
+      } else {
+        None
+      }
 
-            json.asOpt[EstateRegistration] match {
-              case Some(payload) =>
-                submitAndAuditResponse(payload)
-              case None =>
-                logger.warn(s"[submit][Session ID: ${Session.id(hc)}]" +
-                  s" unable to send registration for session due to being unable to validate as EstateRegistration")
+      repository.get(request.identifier) flatMap {
+        case Some(transforms) =>
 
-                val reason = "Unable to parse transformed json as EstateRegistration"
+          buildSubmissionFromTransforms(declaration.name, transforms, submissionDate) match {
+            case JsSuccess(json, _) =>
 
-                auditService.auditRegistrationTransformationError(
-                  data = json,
-                  transforms = Json.toJson(transforms),
-                  errorReason = reason
-                )
-                Future.failed(new RuntimeException(reason))
-            }
-          case JsError(errors) =>
+              json.asOpt[EstateRegistration] match {
+                case Some(payload) =>
+                  submitAndAuditResponse(payload)
+                case None =>
+                  logger.warn(s"[submit][Session ID: ${Session.id(hc)}]" +
+                    s" unable to send registration for session due to being unable to validate as EstateRegistration")
 
-            logger.warn(s"[submit][Session ID: ${Session.id(hc)}] unable to build submission payload for session")
+                  val reason = "Unable to parse transformed json as EstateRegistration"
 
-            val reason = "Unable to build json from transforms"
+                  auditService.auditRegistrationTransformationError(
+                    data = json,
+                    transforms = Json.toJson(transforms),
+                    errorReason = reason
+                  )
+                  Future.failed(new RuntimeException(reason))
+              }
+            case JsError(errors) =>
 
-            auditService.auditRegistrationTransformationError(
-              transforms = Json.toJson(transforms),
-              errorReason = reason,
-              jsErrors = errors.toString()
-            )
-            Future.failed(new RuntimeException(s"$reason: $errors"))
-        }
-      case None =>
+              logger.warn(s"[submit][Session ID: ${Session.id(hc)}] unable to build submission payload for session")
 
-        logger.warn(s"[submit][Session ID: ${Session.id(hc)}]" +
-          s" unable to send registration for session due to there being no data in mongo")
+              val reason = "Unable to build json from transforms"
 
-        val reason = "Unable to submit registration due to there being no transforms"
+              auditService.auditRegistrationTransformationError(
+                transforms = Json.toJson(transforms),
+                errorReason = reason,
+                jsErrors = errors.toString()
+              )
+              Future.failed(new RuntimeException(s"$reason: $errors"))
+          }
+        case None =>
 
-        auditService.auditRegistrationTransformationError(errorReason = reason)
+          logger.warn(s"[submit][Session ID: ${Session.id(hc)}]" +
+            s" unable to send registration for session due to there being no data in mongo")
 
-        Future.failed(new RuntimeException(reason))
+          val reason = "Unable to submit registration due to there being no transforms"
+
+          auditService.auditRegistrationTransformationError(errorReason = reason)
+
+          Future.failed(new RuntimeException(reason))
+      }
     }
+
   }
 
   private def submitAndAuditResponse(payload: EstateRegistration)
                                     (implicit request: IdentifierRequest[_], hc: HeaderCarrier) : Future[RegistrationResponse] = {
+
     desService.registerEstate(payload) map {
       case r@RegistrationTrnResponse(trn) =>
 
@@ -143,14 +158,24 @@ class RegistrationService @Inject()(repository: TransformationRepository,
     } yield result
   }
 
-  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform)
+  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform, submissionDate: Option[LocalDate])
                                    (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
     for {
       transformsApplied <- applyTransforms(transforms)
       declarationTransformsApplied <- applyTransformsForDeclaration(transforms, transformsApplied)
       result <- applyDeclarationAddressTransform(declarationTransformsApplied, request.affinityGroup, name)
-    } yield result
+      resultWithSubmissionDate <- applySubmissionDate(result, submissionDate)
+    } yield {
+      resultWithSubmissionDate
+    }
   }
+
+  private def applySubmissionDate(registration: JsValue, submissionDate: Option[LocalDate]) =
+    submissionDate map { date =>
+      registration.transform(
+        __.json.update((__ \ 'submissionDate).json.put(Json.toJson(date)))
+      )
+    } getOrElse JsSuccess(registration)
 
   private def applyTransforms(transforms: ComposedDeltaTransform): JsResult[JsValue] = {
     logger.info(s"[applyTransforms] applying transformations")

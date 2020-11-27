@@ -16,6 +16,8 @@
 
 package models
 
+import java.time.LocalDate
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -24,7 +26,8 @@ case class EstateRegistration(matchData: Option[MatchData],
                               yearsReturns: Option[YearsReturns],
                               declaration: Declaration,
                               estate: Estate,
-                              agentDetails: Option[AgentDetails] = None
+                              agentDetails: Option[AgentDetails] = None,
+                              submissionDate: Option[LocalDate] = None
                              )
 
 object EstateRegistration {
@@ -36,6 +39,7 @@ object EstateRegistration {
       (JsPath \ "declaration").write[Declaration] and
       (JsPath \ "yearsReturns").writeNullable[YearsReturns] and
       (JsPath \ "details" \ "estate").write[Estate](Estate.estateWriteToDes) and
-      (JsPath \ "agentDetails" ).writeNullable[AgentDetails]
-    )(r => (r.matchData, r.correspondence,r.declaration, r.yearsReturns, r.estate,r.agentDetails))
+      (JsPath \ "agentDetails" ).writeNullable[AgentDetails] and
+      (JsPath \ "submissionDate" ).writeNullable[LocalDate]
+    )(r => (r.matchData, r.correspondence,r.declaration, r.yearsReturns, r.estate,r.agentDetails, r.submissionDate))
 }

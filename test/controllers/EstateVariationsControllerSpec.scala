@@ -39,7 +39,7 @@ import utils.Headers
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with BeforeAndAfterEach {
+class EstateVariationsControllerSpec extends BaseSpec {
 
   private implicit val cc: ControllerComponents = stubControllerComponents()
   private val mockDesService: DesService = mock[DesService]
@@ -52,7 +52,7 @@ class EstateVariationsControllerSpec extends BaseSpec with BeforeAndAfter with B
 
   private val responseHandler = new VariationsResponseHandler(mockAuditService)
 
-  override def beforeEach(): Unit = {
+  before {
     reset(mockDesService, mockConfig)
   }
 

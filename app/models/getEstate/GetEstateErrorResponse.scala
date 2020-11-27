@@ -27,10 +27,6 @@ case object InvalidUTRResponse extends GetEstateErrorResponse {
   override def toString: String = "The UTR provided is invalid"
 }
 
-case object InvalidRegimeResponse extends GetEstateErrorResponse {
-  override def toString: String = "Invalid regime received from DES"
-}
-
 case object BadRequestResponse extends GetEstateErrorResponse {
   override def toString: String = "Bad Request received from DES"
 }

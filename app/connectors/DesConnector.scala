@@ -32,7 +32,7 @@ import scala.concurrent.Future
 
 class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
 
-  private lazy val subscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
+  private lazy val subscriptionUrl : String = s"${config.subscriptionBaseUrl}/trusts"
 
   private val ENVIRONMENT_HEADER = "Environment"
   private val CORRELATION_HEADER = "CorrelationId"
@@ -51,7 +51,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Loggin
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
 
-    val subscriptionIdEndpointUrl = s"$subscriptionsUrl/trn/$trn/subscription"
+    val subscriptionIdEndpointUrl = s"$subscriptionUrl/trn/$trn/subscription"
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 }

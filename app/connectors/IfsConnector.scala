@@ -36,7 +36,7 @@ import scala.concurrent.Future
 
 class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: EstatesStoreService) extends Logging {
 
-  private lazy val estatesServiceUrl : String = s"${config.ifsEstatesBaseUrl}/estates"
+  private lazy val estatesServiceUrl : String = s"${config.registrationBaseUrl}/estates"
 
   private lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"
 

@@ -19,7 +19,7 @@ package services
 import javax.inject.Inject
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import connectors.DesConnector
+import connectors.{DesConnector, DesNonMigratingConnector}
 import exceptions.InternalServerErrorException
 import models._
 import models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
@@ -31,7 +31,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) extends Logging {
+class DesService @Inject()(desConnector: DesConnector,
+                           nonMigratingDesConnector: DesNonMigratingConnector,
+                           repository: CacheRepository) extends Logging {
 
   def getEstateInfoFormBundleNo(utr: String)(implicit hc: HeaderCarrier): Future[String] =
     desConnector.getEstateInfo(utr).map {
@@ -52,7 +54,7 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
   }
 
   def getSubscriptionId(trn: String): Future[SubscriptionIdResponse] = {
-    desConnector.getSubscriptionId(trn)
+    nonMigratingDesConnector.getSubscriptionId(trn)
   }
 
   def refreshCacheAndGetEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
@@ -97,5 +99,3 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
   def estateVariation(estateVariation: JsValue): Future[VariationResponse] =
     desConnector.estateVariation(estateVariation: JsValue)
 }
-
-

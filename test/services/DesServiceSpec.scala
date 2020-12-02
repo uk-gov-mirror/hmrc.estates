@@ -20,7 +20,7 @@ import base.BaseSpec
 import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when}
 import org.mockito.Matchers._
 import play.api.libs.json.JsValue
-import connectors.DesConnector
+import connectors.{DesConnector, DesNonMigratingConnector}
 import exceptions._
 import models.ExistingCheckResponse._
 import models._
@@ -37,21 +37,23 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
   private trait DesServiceFixture {
     lazy val request = ExistingCheckRequest("estate name", postcode = Some("NE65TA"), "1234567890")
     val mockConnector: DesConnector = mock[DesConnector]
+    val mockNonMigratingConnector: DesNonMigratingConnector = mock[DesNonMigratingConnector]
     val mockRepository: CacheRepositoryImpl = mock[CacheRepositoryImpl]
     when(mockRepository.get(any[String], any[String])).thenReturn(Future.successful(None))
     when(mockRepository.resetCache(any[String], any[String])).thenReturn(Future.successful(None))
     val myId = "myId"
 
-    val SUT = new DesService(mockConnector, mockRepository)
+    val SUT = new DesService(mockConnector, mockNonMigratingConnector, mockRepository)
   }
 
   ".getEstateInfoFormBundleNo should return formBundle No from ETMP Data" in {
     val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-5mld-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
     val mockDesconnector = mock[DesConnector]
+    val mockDesNonMigratingConnector: DesNonMigratingConnector = mock[DesNonMigratingConnector]
     val mockRepository = mock[CacheRepositoryImpl]
     when(mockDesconnector.getEstateInfo(any())).thenReturn(Future.successful(etmpData))
 
-    val OUT = new DesService(mockDesconnector, mockRepository)
+    val OUT = new DesService(mockDesconnector, mockDesNonMigratingConnector, mockRepository)
 
     whenReady(OUT.getEstateInfoFormBundleNo("75464876")) {formBundleNo =>
       formBundleNo mustBe etmpData.responseHeader.formBundleNo
@@ -159,7 +161,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
 
     "return SubscriptionIdResponse " when {
       "connector returns SubscriptionIdResponse." in new DesServiceFixture {
-        when(mockConnector.getSubscriptionId("trn123456789")).
+        when(mockNonMigratingConnector.getSubscriptionId("trn123456789")).
           thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
         val futureResult = SUT.getSubscriptionId("trn123456789")
         whenReady(futureResult) {
@@ -170,7 +172,7 @@ class DesServiceSpec extends BaseSpec with JsonRequests {
 
     "return same Exception " when {
       "connector returns  exception." in new DesServiceFixture {
-        when(mockConnector.getSubscriptionId("trn123456789")).
+        when(mockNonMigratingConnector.getSubscriptionId("trn123456789")).
           thenReturn(Future.failed(InternalServerErrorException("")))
         val futureResult = SUT.getSubscriptionId("trn123456789")
 

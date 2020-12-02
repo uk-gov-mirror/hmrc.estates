@@ -36,12 +36,11 @@ import scala.concurrent.Future
 
 class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: EstatesStoreService) extends Logging {
 
-  private lazy val desSubscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
-  private lazy val ifsEstatesServiceUrl : String = s"${config.ifsEstatesBaseUrl}/estates"
+  private lazy val estatesServiceUrl : String = s"${config.estatesBaseUrl}/estates"
 
-  private lazy val matchEstatesEndpoint : String = s"$ifsEstatesServiceUrl/match"
+  private lazy val matchEstatesEndpoint : String = s"$estatesServiceUrl/match"
 
-  private lazy val estateRegistrationEndpoint : String = s"$ifsEstatesServiceUrl/registration"
+  private lazy val estateRegistrationEndpoint : String = s"$estatesServiceUrl/registration"
 
   // When reading estates from DES, it's the same endpoint as for trusts.
   // So this must remain "trusts" even though we're reading an estate.
@@ -82,16 +81,6 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
     logger.info(s"[registerEstate] registering estate for correlationId: $correlationId")
 
     http.POST[JsValue, RegistrationResponse](estateRegistrationEndpoint, Json.toJson(registration)(EstateRegistration.estateRegistrationWriteToDes))
-  }
-
-  def getSubscriptionId(trn: String): Future[SubscriptionIdResponse] = {
-
-    val correlationId = UUID.randomUUID().toString
-
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
-
-    val subscriptionIdEndpointUrl = s"$desSubscriptionsUrl/trn/$trn/subscription"
-    http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)
   }
 
   def getEstateInfo(utr: String): Future[GetEstateResponse] = {

@@ -29,8 +29,7 @@ import play.api.test.Helpers.{status, _}
 import exceptions._
 import models._
 import models.register.{RegistrationDeclaration, TaxAmount}
-import org.scalatest.BeforeAndAfter
-import services.{EstatesStoreService, RosmPatternService}
+import services.RosmPatternService
 import services.register.RegistrationService
 import utils.JsonRequests
 import uk.gov.hmrc.http.HeaderCarrier
@@ -41,12 +40,11 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
 
   lazy val mockRegistrationService: RegistrationService = mock[RegistrationService]
   lazy val mockRosmPatternService: RosmPatternService = mock[RosmPatternService]
-  lazy val mockEstatesStoreService: EstatesStoreService = mock[EstatesStoreService]
 
   private val estateTrnResponse = "XTRN123456"
 
   before {
-    reset(mockRosmPatternService, mockRegistrationService, mockEstatesStoreService)
+    reset(mockRosmPatternService, mockRegistrationService)
   }
 
   ".submit" should {
@@ -67,45 +65,20 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
       .withBody(Json.toJson(registrationDeclaration))
       .withHeaders(CONTENT_TYPE -> "application/json")
 
-    "return 200 with TRN" when {
+    "return 200 with TRN valid payload submitted" in {
 
-      "valid payload submitted" when {
-        "4mld" in {
+      when(mockRegistrationService.submit(any())(any(), any()))
+        .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
 
-          when(mockRegistrationService.submit(any())(any(), any()))
-            .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
+      when(mockRosmPatternService.enrol(any(), any(), any())(any())).thenReturn(Future.successful(TaxEnrolmentSuccess))
 
-          when(mockRosmPatternService.enrol(any(), any(), any())(any())).thenReturn(Future.successful(TaxEnrolmentSuccess))
+      val result = controller.register().apply(request)
 
-          val result = controller.register().apply(request)
+      status(result) mustBe OK
 
-          status(result) mustBe OK
+      (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
 
-          (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
-
-          verify(mockRosmPatternService, times(1)).enrol(any(), any(), any())(any[HeaderCarrier])
-        }
-
-        "5mld" in {
-
-          when(mockEstatesStoreService.is5mldEnabled()(any(), any()))
-            .thenReturn(Future.successful(true))
-
-          when(mockRegistrationService.submit(any())(any(), any()))
-            .thenReturn(Future.successful(RegistrationTrnResponse(estateTrnResponse)))
-
-          when(mockRosmPatternService.enrol(any(), any(), any())(any()))
-            .thenReturn(Future.successful(TaxEnrolmentSuccess))
-
-          val result = controller.register().apply(request)
-
-          status(result) mustBe OK
-
-          (contentAsJson(result) \ "trn").as[String] mustBe estateTrnResponse
-
-          verify(mockRosmPatternService, times(1)).enrol(any(), any(), any())(any[HeaderCarrier])
-        }
-      }
+      verify(mockRosmPatternService, times(1)).enrol(any(), any(), any())(any[HeaderCarrier])
 
     }
 
@@ -162,7 +135,7 @@ class RegisterEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite 
     )
 
     val personalRepInd: EstatePerRepIndType = EstatePerRepIndType(
-      name =  NameType("Alister", None, "Mc'Lovern"),
+      name = NameType("Alister", None, "Mc'Lovern"),
       dateOfBirth = LocalDate.parse("1955-09-08"),
       identification = IdentificationType(
         Some("JS123456A"),

@@ -16,7 +16,6 @@
 
 package services.register
 
-import java.time.LocalDate
 import javax.inject.Inject
 import play.api.Logging
 import play.api.libs.json._
@@ -25,7 +24,7 @@ import models._
 import models.register.RegistrationDeclaration
 import models.requests.IdentifierRequest
 import repositories.TransformationRepository
-import services.{AuditService, DesService, Estates5MLDService, EstatesStoreService}
+import services.{AuditService, DesService, Estates5MLDService}
 import transformers.ComposedDeltaTransform
 import transformers.register.DeclarationTransform
 import utils.Session
@@ -35,7 +34,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
-                                    estatesStoreService: EstatesStoreService,
                                     estates5MLDService: Estates5MLDService,
                                     declarationTransformer: DeclarationTransform,
                                     auditService: AuditService
@@ -74,7 +72,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   def submit(declaration: RegistrationDeclaration)
             (implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[RegistrationResponse] = {
 
-    estatesStoreService.is5mldEnabled() flatMap { is5mld =>
+    estates5MLDService.is5mldEnabled() flatMap { is5mld =>
 
       repository.get(request.identifier) flatMap {
         case Some(transforms) =>

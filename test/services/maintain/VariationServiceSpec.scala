@@ -50,6 +50,8 @@ class VariationServiceSpec extends BaseConnectorSpec {
   val transformer = mock[VariationDeclarationService]
   val estatesStoreService = mock[EstatesStoreService]
 
+  val estates5MLDService = new Estates5MLDService(estatesStoreService)
+
   before {
     reset(desService, variationsTransformationService, auditService, transformer, estatesStoreService)
   }
@@ -58,8 +60,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
     desService,
     variationsTransformationService,
     transformer,
-    estatesStoreService,
-    new Estates5MLDService,
+    estates5MLDService,
     auditService
   )
 
@@ -105,7 +106,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
         val responseHeader = ResponseHeader("Processed", formBundleNo)
 
-        when(estatesStoreService.is5mldEnabled()(any(), any()))
+        when(estatesStoreService.isFeatureEnabled(equalTo("5mld"))(any(), any()))
           .thenReturn(Future.successful(true))
 
         whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
@@ -151,7 +152,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
   private def setupForTest(variationResponse: VariationResponse) = {
 
-    when(estatesStoreService.is5mldEnabled()(any(), any()))
+    when(estatesStoreService.isFeatureEnabled(equalTo("5mld"))(any(), any()))
       .thenReturn(Future.successful(false))
 
     when(variationsTransformationService.populatePersonalRepAddress(any[JsValue]))

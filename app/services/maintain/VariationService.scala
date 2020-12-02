@@ -23,7 +23,7 @@ import exceptions.InternalServerErrorException
 import models.DeclarationForApi
 import models.getEstate.{EtmpCacheDataStaleResponse, GetEstateProcessedResponse, GetEstateResponse, ResponseHeader}
 import models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
-import services.{AuditService, DesService, Estates5MLDService, EstatesStoreService, VariationsTransformationService}
+import services.{AuditService, DesService, Estates5MLDService, VariationsTransformationService}
 import utils.ErrorResponses.{EtmpDataStaleErrorResponse, InternalServerErrorErrorResponse}
 import utils.JsonOps._
 import utils.Session
@@ -37,7 +37,6 @@ class VariationService @Inject()(
                                   desService: DesService,
                                   transformationService: VariationsTransformationService,
                                   declarationService: VariationDeclarationService,
-                                  estatesStoreService: EstatesStoreService,
                                   estates5MLDService: Estates5MLDService,
                                   auditService: AuditService) extends Logging {
 
@@ -84,7 +83,7 @@ class VariationService @Inject()(
                                      responseHeader: ResponseHeader)
                                     (implicit hc: HeaderCarrier): Future[VariationResponse] = {
 
-    estatesStoreService.is5mldEnabled() flatMap { is5mld =>
+    estates5MLDService.is5mldEnabled() flatMap { is5mld =>
       transformationService.applyDeclarationTransformations(utr, internalId, cachedWithAmendedPerRepAddress) flatMap {
         case JsSuccess(transformedDocument, _) =>
           declarationService.transform(

@@ -29,15 +29,15 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
 
-  val estatesNonMigratingBaseUrl : String = servicesConfig.baseUrl("des-estates-non-migrating")
+  val estatesNonMigratedBaseUrl : String = servicesConfig.baseUrl("des-estates-non-migrated")
   val estatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
 
   val getEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-playback")
   val varyEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-variation")
   val estatesStoreBaseUrl : String = servicesConfig.baseUrl("estates-store")
 
-  val desEnvironmentNonMigrating : String = loadConfig("microservice.services.des-estates-non-migrating.environment")
-  val desTokenNonMigrating : String = loadConfig("microservice.services.des-estates-non-migrating.token")
+  val desEnvironmentNonMigrated : String = loadConfig("microservice.services.des-estates-non-migrated.environment")
+  val desTokenNonMigrated : String = loadConfig("microservice.services.des-estates-non-migrated.token")
 
   val desEnvironment : String = loadConfig("microservice.services.des-estates.environment")
   val desToken : String = loadConfig("microservice.services.des-estates.token")

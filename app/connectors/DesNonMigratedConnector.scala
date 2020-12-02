@@ -30,18 +30,18 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class DesNonMigratingConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
+class DesNonMigratedConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
 
-  private lazy val subscriptionsUrl : String = s"${config.estatesNonMigratingBaseUrl}/trusts"
+  private lazy val subscriptionsUrl : String = s"${config.estatesNonMigratedBaseUrl}/trusts"
 
   private val ENVIRONMENT_HEADER = "Environment"
   private val CORRELATION_HEADER = "CorrelationId"
 
-  private def desHeadersNonMigrating(correlationId : String) : Seq[(String, String)] =
+  private def desHeadersNonMigrated(correlationId : String) : Seq[(String, String)] =
     Seq(
-      HeaderNames.AUTHORIZATION -> s"Bearer ${config.desTokenNonMigrating}",
+      HeaderNames.AUTHORIZATION -> s"Bearer ${config.desTokenNonMigrated}",
       CONTENT_TYPE -> CONTENT_TYPE_JSON,
-      ENVIRONMENT_HEADER -> config.desEnvironmentNonMigrating,
+      ENVIRONMENT_HEADER -> config.desEnvironmentNonMigrated,
       CORRELATION_HEADER -> correlationId
     )
 
@@ -49,7 +49,7 @@ class DesNonMigratingConnector @Inject()(http: HttpClient, config: AppConfig) ex
 
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeadersNonMigrating(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeadersNonMigrated(correlationId))
 
     val subscriptionIdEndpointUrl = s"$subscriptionsUrl/trn/$trn/subscription"
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)

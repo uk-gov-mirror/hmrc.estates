@@ -48,12 +48,12 @@ class EstatesServiceSpec extends BaseSpec with JsonRequests {
 
   ".getEstateInfoFormBundleNo should return formBundle No from ETMP Data" in {
     val etmpData = JsonUtils.getJsonValueFromFile("etmp/valid-get-estate-5mld-response.json").as[GetEstateResponse].asInstanceOf[GetEstateProcessedResponse]
-    val mockIfsConnector = mock[EstatesConnector]
-    val mockDesConnector: SubscriptionConnector = mock[SubscriptionConnector]
+    val mockEstatesConnector = mock[EstatesConnector]
+    val mockSubscriptionConnector: SubscriptionConnector = mock[SubscriptionConnector]
     val mockRepository = mock[CacheRepositoryImpl]
-    when(mockIfsConnector.getEstateInfo(any())).thenReturn(Future.successful(etmpData))
+    when(mockEstatesConnector.getEstateInfo(any())).thenReturn(Future.successful(etmpData))
 
-    val OUT = new EstatesService(mockIfsConnector, mockDesConnector, mockRepository)
+    val OUT = new EstatesService(mockEstatesConnector, mockSubscriptionConnector, mockRepository)
 
     whenReady(OUT.getEstateInfoFormBundleNo("75464876")) {formBundleNo =>
       formBundleNo mustBe etmpData.responseHeader.formBundleNo

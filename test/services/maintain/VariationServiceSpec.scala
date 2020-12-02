@@ -28,6 +28,7 @@ import services._
 import utils.ErrorResponses.{DuplicateSubmissionErrorResponse, EtmpDataStaleErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class VariationServiceSpec extends BaseConnectorSpec {
@@ -39,6 +40,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
   private val transformedEtmpResponseJson = Json.parse("""{ "field": "Arbitrary transformed JSON" }""")
   private val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
   private val transformedJson = Json.obj("field" -> "value")
+  private val transformedJsonWithSubmission = Json.obj("field" -> "value", "submissionDate" -> LocalDate.now())
   private val declarationName = DeclarationName(NameType("Handy", None, "Andy"))
   private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None)
 
@@ -63,35 +65,71 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
   "submitDeclaration" should {
 
-    "submit data correctly when the version matches, and then reset the cache" in {
+    "submit data correctly when the version matches, and then reset the cache" when {
+      "4mld" in {
 
-      val successfulResponse = VariationSuccessResponse("TVN34567890")
+        val successfulResponse = VariationSuccessResponse("TVN34567890")
 
-      val response = setupForTest(successfulResponse)
+        val response = setupForTest(successfulResponse)
 
-      val responseHeader = ResponseHeader("Processed", formBundleNo)
+        val responseHeader = ResponseHeader("Processed", formBundleNo)
 
-      whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
+        whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
 
-        variationResponse mustBe successfulResponse
+          variationResponse mustBe successfulResponse
 
-        verify(variationsTransformationService, times( 1))
-          .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
+          verify(variationsTransformationService, times( 1))
+            .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
 
-        verify(transformer, times(1))
-          .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
+          verify(transformer, times(1))
+            .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
 
-        verify(auditService).auditVariationSubmitted(
-          equalTo(internalId),
-          equalTo(transformedJson),
-          equalTo(successfulResponse))(any())
+          verify(auditService).auditVariationSubmitted(
+            equalTo(internalId),
+            equalTo(transformedJson),
+            equalTo(successfulResponse))(any())
 
-        val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
+          val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
-        verify(desService, times(1)).estateVariation(arg.capture())
+          verify(desService, times(1)).estateVariation(arg.capture())
 
-        arg.getValue mustBe transformedJson
-      }}
+          arg.getValue mustBe transformedJson
+        }}
+      }
+
+      "5mld" in {
+
+        val successfulResponse = VariationSuccessResponse("TVN34567890")
+
+        val response = setupForTest(successfulResponse)
+
+        val responseHeader = ResponseHeader("Processed", formBundleNo)
+
+        when(estatesStoreService.is5mldEnabled()(any(), any()))
+          .thenReturn(Future.successful(true))
+
+        whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
+
+          variationResponse mustBe successfulResponse
+
+          verify(variationsTransformationService, times( 1))
+            .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
+
+          verify(transformer, times(1))
+            .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
+
+          verify(auditService).auditVariationSubmitted(
+            equalTo(internalId),
+            equalTo(transformedJsonWithSubmission),
+            equalTo(successfulResponse))(any())
+
+          val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
+
+          verify(desService, times(1)).estateVariation(arg.capture())
+
+          arg.getValue mustBe transformedJsonWithSubmission
+        }}
+      }
     }
     "audit error when submission fails" in {
 

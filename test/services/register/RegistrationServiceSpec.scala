@@ -17,7 +17,6 @@
 package services.register
 
 import java.time.LocalDate
-
 import base.BaseSpec
 import org.mockito.Matchers.{any, eq => mockEq}
 import org.mockito.Mockito.{reset, verify, when}
@@ -32,7 +31,7 @@ import models.register.{RegistrationDeclaration, TaxAmount}
 import models.requests.IdentifierRequest
 import org.mockito.ArgumentCaptor
 import repositories.TransformationRepository
-import services.{AuditService, DesService, EstatesStoreService}
+import services.{AuditService, DesService, Estates5MLDService, EstatesStoreService}
 import transformers.ComposedDeltaTransform
 import transformers.register._
 import utils.JsonUtils
@@ -61,6 +60,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
     mockTransformationRepository,
     mockDesService,
     mockEstatesStoreService,
+    new Estates5MLDService(),
     declarationTransformer,
     mockAuditService
   )
@@ -326,7 +326,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       val transformedJson = service.buildSubmissionFromTransforms(
         NameType("John", None, "Doe"),
         transforms,
-        None
+        false
       )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
 
       transformedJson.get mustEqual expectedJson
@@ -370,7 +370,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       val transformedJson = service.buildSubmissionFromTransforms(
         NameType("John", None, "Doe"),
         transforms,
-        None
+        false
       )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Organisation))
 
       transformedJson.get mustEqual expectedJson
@@ -412,7 +412,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       val transformedJson = service.buildSubmissionFromTransforms(
         NameType("John", None, "Doe"),
         transforms,
-        None
+        false
       )(IdentifierRequest(FakeRequest(), "id", AffinityGroup.Agent))
 
       transformedJson.get mustEqual expectedJson

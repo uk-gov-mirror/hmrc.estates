@@ -16,13 +16,16 @@
 
 package controllers
 
-import javax.inject.Inject
-import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import controllers.actions.IdentifierAction
+import javax.inject.Inject
 import models.register.RegistrationDeclaration
 import models.{AlreadyRegisteredResponse, RegistrationTrnResponse}
+import play.api.Logging
+import play.api.http.HttpEntity
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.RosmPatternService
 import services.register.RegistrationService
 import utils.ErrorResults._
@@ -80,6 +83,41 @@ class RegisterEstateController @Inject()(identifierAction: IdentifierAction,
         .recover {
           case _ => internalServerErrorErrorResult
         }
+  }
+
+  def pdf(): Action[AnyContent] = identifierAction.async {
+    implicit request =>
+
+      val lengthFromHeader = 20000L
+
+//      val outputStream = new java.io.ByteArrayOutputStream()
+//      val bufferedOutputStream = new java.io.BufferedOutputStream(outputStream, 1024).write(Array(1, 2, 3).map(_.toByte))
+
+//      bufferedOutputStream
+
+//      val source = Source.fromIterator(bufferedOutputStream)
+
+
+//      val source = new java.util.Array[Byte](lengthFromHeader)
+//      source.
+
+      val source = Source(List(ByteString.apply(Array("").map(_.toByte))))
+
+      Future.successful(Result(
+        header = play.api.mvc.ResponseHeader(
+          status = OK,
+          headers = Map(
+            "Content-Disposition" -> "inline; filename.pdf",
+            "Content-Type" -> "application/json",
+            "Content-Length" -> ""
+          )
+        ),
+        body = HttpEntity.Streamed(
+          data = source,
+          contentLength = Some(lengthFromHeader),
+          contentType = Some("application/pdf")
+        )
+      ))
   }
 
 }

@@ -34,8 +34,8 @@ class BaseConnectorSpec extends BaseSpec with WireMockHelper with IntegrationPat
         Seq(
           "microservice.services.des-estates.port" -> server.port(),
           "microservice.services.ifs-estates.port" -> server.port(),
-          "microservice.services.ifs-estates-playback.port" -> server.port(),
-          "microservice.services.ifs-estates-variation.port" -> server.port(),
+          "microservice.services.des-estates-playback.port" -> server.port(),
+          "microservice.services.des-estates-variation.port" -> server.port(),
           "microservice.services.tax-enrolments.port" -> server.port(),
           "microservice.services.estates-store.port" -> server.port()
         ): _*)

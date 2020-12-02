@@ -32,8 +32,8 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val desEstatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
   val ifsEstatesBaseUrl : String = servicesConfig.baseUrl("ifs-estates")
 
-  val getEstateBaseUrl : String = servicesConfig.baseUrl("ifs-estates-playback")
-  val varyEstateBaseUrl : String = servicesConfig.baseUrl("ifs-estates-variation")
+  val getEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-playback")
+  val varyEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-variation")
   val estatesStoreBaseUrl : String = servicesConfig.baseUrl("estates-store")
 
   val desEnvironment : String = loadConfig("microservice.services.des-estates.environment")

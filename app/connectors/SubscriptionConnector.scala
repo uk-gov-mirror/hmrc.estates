@@ -30,18 +30,18 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
+class SubscriptionConnector @Inject()(http: HttpClient, config: AppConfig) extends Logging {
 
   private lazy val subscriptionUrl : String = s"${config.subscriptionBaseUrl}/trusts"
 
   private val ENVIRONMENT_HEADER = "Environment"
   private val CORRELATION_HEADER = "CorrelationId"
 
-  private def desHeaders(correlationId : String) : Seq[(String, String)] =
+  private def subscriptionHeaders(correlationId : String) : Seq[(String, String)] =
     Seq(
-      HeaderNames.AUTHORIZATION -> s"Bearer ${config.desToken}",
+      HeaderNames.AUTHORIZATION -> s"Bearer ${config.subscriptionToken}",
       CONTENT_TYPE -> CONTENT_TYPE_JSON,
-      ENVIRONMENT_HEADER -> config.desEnvironment,
+      ENVIRONMENT_HEADER -> config.subscriptionEnvironment,
       CORRELATION_HEADER -> correlationId
     )
 
@@ -49,7 +49,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig) extends Loggin
 
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = subscriptionHeaders(correlationId))
 
     val subscriptionIdEndpointUrl = s"$subscriptionUrl/trn/$trn/subscription"
     http.GET[SubscriptionIdResponse](subscriptionIdEndpointUrl)

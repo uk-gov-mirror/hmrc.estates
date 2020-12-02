@@ -28,7 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class VariationsTransformationService @Inject()(transformRepository: VariationsTransformationRepository,
-                                                desService: DesService,
+                                                estatesService: EstatesService,
                                                 auditService: AuditService) extends Logging {
 
   def addNewTransform(utr: String, internalId: String, newTransform: DeltaTransform) : Future[Boolean] = {
@@ -55,7 +55,7 @@ class VariationsTransformationService @Inject()(transformRepository: VariationsT
     transformRepository.resetCache(utr, internalId)
 
   def getTransformedData(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
-    desService.getEstateInfo(utr, internalId).flatMap {
+    estatesService.getEstateInfo(utr, internalId).flatMap {
       case response: GetEstateProcessedResponse =>
         populatePersonalRepAddress(response.getEstate) match {
           case JsSuccess(fixed, _) =>

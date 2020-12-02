@@ -29,7 +29,7 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 
-class RosmPatternServiceImpl @Inject()(desService: DesService,
+class RosmPatternServiceImpl @Inject()(estateService: EstatesService,
                                        taxEnrolmentService : TaxEnrolmentsService,
                                        auditService: AuditService
                                       ) extends RosmPatternService with Logging {
@@ -37,7 +37,7 @@ class RosmPatternServiceImpl @Inject()(desService: DesService,
   def getSubscriptionIdAndEnrol(trn : String, identifier: String)(implicit hc : HeaderCarrier): Future[TaxEnrolmentSubscriberResponse] ={
 
     for {
-      subscriptionIdResponse <- desService.getSubscriptionId(trn = trn)
+      subscriptionIdResponse <- estateService.getSubscriptionId(trn = trn)
       taxEnrolmentResponse <- taxEnrolmentService.setSubscriptionId(subscriptionIdResponse.subscriptionId)
     } yield {
       taxEnrolmentResponse match {

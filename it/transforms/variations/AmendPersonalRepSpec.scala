@@ -28,7 +28,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import connectors.DesConnector
+import connectors.SubscriptionConnector
 import controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import models.getEstate.GetEstateResponse
 import models.variation.{EstatePerRepIndType, PersonalRepresentativeType}
@@ -45,7 +45,7 @@ class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoS
 
   "an amend personal rep call" - {
 
-    val stubbedDesConnector = mock[DesConnector]
+    val stubbedDesConnector = mock[SubscriptionConnector]
     when(stubbedDesConnector.getEstateInfo(any())).thenReturn(Future.successful(getEstateResponseFromDES))
 
     val cc = stubControllerComponents()
@@ -59,7 +59,7 @@ class AmendPersonalRepSpec extends AsyncFreeSpec with MustMatchers with MockitoS
       ): _*)
       .overrides(
         bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)(ExecutionContext.global)),
-        bind[DesConnector].toInstance(stubbedDesConnector)
+        bind[SubscriptionConnector].toInstance(stubbedDesConnector)
       )
       .build()
 

@@ -26,7 +26,7 @@ import models._
 import models.register.RegistrationDeclaration
 import models.requests.IdentifierRequest
 import repositories.TransformationRepository
-import services.{AuditService, DesService, EstatesStoreService}
+import services.{AuditService, EstatesService, EstatesStoreService}
 import transformers.ComposedDeltaTransform
 import transformers.register.DeclarationTransform
 import utils.Session
@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
-                                    desService: DesService,
+                                    estateService: EstatesService,
                                     estatesStoreService: EstatesStoreService,
                                     declarationTransformer: DeclarationTransform,
                                     auditService: AuditService
@@ -135,7 +135,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   private def submitAndAuditResponse(payload: EstateRegistration)
                                     (implicit request: IdentifierRequest[_], hc: HeaderCarrier) : Future[RegistrationResponse] = {
 
-    desService.registerEstate(payload) map {
+    estateService.registerEstate(payload) map {
       case r@RegistrationTrnResponse(trn) =>
 
         logger.info(s"[submitAndAuditResponse][Session ID: ${Session.id(hc)}] submission for session received TRN $trn")

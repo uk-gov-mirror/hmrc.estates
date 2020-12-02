@@ -22,9 +22,9 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import utils.JsonRequests
 
-class DesConnectorSpec extends BaseConnectorSpec with JsonRequests {
+class SubscriptionConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
-  lazy val connector: DesConnector = injector.instanceOf[DesConnector]
+  lazy val connector: SubscriptionConnector = injector.instanceOf[SubscriptionConnector]
 
   lazy val request: ExistingCheckRequest = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
 

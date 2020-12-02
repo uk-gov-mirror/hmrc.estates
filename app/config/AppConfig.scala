@@ -36,11 +36,11 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val varyEstateBaseUrl : String = servicesConfig.baseUrl("variation")
   val estatesStoreBaseUrl : String = servicesConfig.baseUrl("estates-store")
 
-  val desEnvironment : String = loadConfig("microservice.services.registration.environment")
-  val desToken : String = loadConfig("microservice.services.registration.token")
+  val registrationEnvironment : String = loadConfig("microservice.services.registration.environment")
+  val registrationToken : String = loadConfig("microservice.services.registration.token")
 
-  val ifsEnvironment : String = loadConfig("microservice.services.subscription.environment")
-  val ifsToken : String = loadConfig("microservice.services.subscription.token")
+  val subscriptionEnvironment : String = loadConfig("microservice.services.subscription.environment")
+  val subscriptionToken : String = loadConfig("microservice.services.subscription.token")
 
   val taxEnrolmentsBaseUrl : String = servicesConfig.baseUrl("tax-enrolments")
   val taxEnrolmentsPayloadBodyCallback : String = loadConfig("microservice.services.tax-enrolments.callback")

@@ -26,7 +26,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import config.AppConfig
 import models.getEstate._
-import services.{AuditService, DesService, VariationsTransformationService}
+import services.{AuditService, EstatesService, VariationsTransformationService}
 import utils.JsonRequests
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -36,7 +36,7 @@ import scala.concurrent.Future
 
 class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequests with BeforeAndAfterEach {
 
-  val mockDesService: DesService = mock[DesService]
+  val mockEstatesService: EstatesService = mock[EstatesService]
   val mockAuditService: AuditService = mock[AuditService]
 
   val mockAuditConnector = mock[AuditConnector]
@@ -57,7 +57,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       "estate is processed" in {
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
@@ -65,7 +65,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
         val etmpJson = (getJsonValueFromFile("etmp/playback/valid-estate-playback-01.json") \ "trustOrEstateDisplay").get
 
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
+        when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -84,11 +84,11 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "estate is not processed" in {
 
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
+        when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -110,7 +110,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "the UTR given is invalid" in {
 
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
@@ -128,11 +128,11 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "the get endpoint returns a BadRequestResponse" in {
 
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(BadRequestResponse))
+        when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(BadRequestResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -150,11 +150,11 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "the get endpoint returns a ResourceNotFoundResponse" in {
 
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
+        when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ResourceNotFoundResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -172,11 +172,11 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "the get endpoint returns an InternalServerErrorResponse" in {
 
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InternalServerErrorResponse))
+        when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(InternalServerErrorResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -194,11 +194,11 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
       "the get endpoint returns a ServiceUnavailableResponse" in {
 
         val application = applicationBuilder().overrides(
-          bind[DesService].toInstance(mockDesService),
+          bind[EstatesService].toInstance(mockEstatesService),
           bind[AuditService].toInstance(mockAuditService)
         ).build()
 
-        when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ServiceUnavailableResponse))
+        when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(ServiceUnavailableResponse))
 
         val controller = application.injector.instanceOf[GetEstateController]
 
@@ -268,7 +268,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
     "return 200 - Ok with processed content" in {
 
       val application = applicationBuilder().overrides(
-        bind[DesService].toInstance(mockDesService),
+        bind[EstatesService].toInstance(mockEstatesService),
         bind[AuditService].toInstance(mockAuditService)
       ).build()
 
@@ -276,7 +276,7 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
 
       val etmpJson = (getJsonValueFromFile("etmp/playback/valid-estate-playback-01.json") \ "trustOrEstateDisplay").get
 
-      when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
+      when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateProcessedResponse(etmpJson, ResponseHeader("Processed", "1"))))
 
       val controller = application.injector.instanceOf[GetEstateController]
 
@@ -295,11 +295,11 @@ class GetEstateControllerSpec extends BaseSpec with BeforeAndAfter with JsonRequ
     "return 500 - Internal server error for invalid content" in {
 
       val application = applicationBuilder().overrides(
-        bind[DesService].toInstance(mockDesService),
+        bind[EstatesService].toInstance(mockEstatesService),
         bind[AuditService].toInstance(mockAuditService)
       ).build()
 
-      when(mockDesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
+      when(mockEstatesService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(GetEstateStatusResponse(ResponseHeader("Parked", "1"))))
 
       val controller = application.injector.instanceOf[GetEstateController]
 

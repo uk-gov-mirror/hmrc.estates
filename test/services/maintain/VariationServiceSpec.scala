@@ -53,7 +53,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
     "submit data correctly when the version matches, and then reset the cache" in {
 
-      val desService = mock[DesService]
+      val mockEstateService = mock[EstatesService]
 
       val variationsTransformationService = mock[VariationsTransformationService]
       val auditService = mock[AuditService]
@@ -61,9 +61,9 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
       val successfulResponse = VariationSuccessResponse("TVN34567890")
 
-      val response = setupForTest(desService, successfulResponse, variationsTransformationService, transformer)
+      val response = setupForTest(mockEstateService, successfulResponse, variationsTransformationService, transformer)
 
-      val service = new VariationService(desService, variationsTransformationService, transformer, auditService)
+      val service = new VariationService(mockEstateService, variationsTransformationService, transformer, auditService)
 
       val responseHeader = ResponseHeader("Processed", formBundleNo)
 
@@ -84,23 +84,23 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
 
         val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
-        verify(desService, times(1)).estateVariation(arg.capture())
+        verify(mockEstateService, times(1)).estateVariation(arg.capture())
 
         arg.getValue mustBe transformedJson
       }}
     }
     "audit error when submission fails" in {
 
-      val desService = mock[DesService]
+      val estateService = mock[EstatesService]
       val variationsTransformationService = mock[VariationsTransformationService]
       val auditService = mock[AuditService]
       val transformer = mock[VariationDeclarationService]
 
       val failedResponse = VariationFailureResponse(DuplicateSubmissionErrorResponse)
 
-      setupForTest(desService, failedResponse, variationsTransformationService, transformer)
+      setupForTest(estateService, failedResponse, variationsTransformationService, transformer)
 
-      val service = new VariationService(desService, variationsTransformationService, transformer, auditService)
+      val service = new VariationService(estateService, variationsTransformationService, transformer, auditService)
 
       whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
 
@@ -115,7 +115,7 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
   }
 
   private def setupForTest(
-                            desService: DesService,
+                            estateService: EstatesService,
                             variationResponse: VariationResponse,
                             variationsTransformationService: VariationsTransformationService,
                             transformer: VariationDeclarationService) = {
@@ -125,40 +125,40 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
     when(variationsTransformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier]))
       .thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
 
-    when(desService.getEstateInfoFormBundleNo(utr))
+    when(estateService.getEstateInfoFormBundleNo(utr))
       .thenReturn(Future.successful(formBundleNo))
 
     val response: GetEstateProcessedResponse = GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))
 
-    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+    when(estateService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
       .thenReturn(Future.successful(response))
 
     when(transformer.transform(any(), any(), any(), any()))
       .thenReturn(JsSuccess(transformedJson))
 
-    when(desService.estateVariation(any()))
+    when(estateService.estateVariation(any()))
       .thenReturn(Future.successful(variationResponse))
 
     response
   }
 
   "Fail if the etmp data version doesn't match our submission data" in {
-    val desService = mock[DesService]
+    val mockEstateService = mock[EstatesService]
     val transformationService = mock[VariationsTransformationService]
     val auditService = mock[AuditService]
     val transformer = mock[VariationDeclarationService]
 
-    when(desService.getEstateInfoFormBundleNo(utr))
+    when(mockEstateService.getEstateInfoFormBundleNo(utr))
       .thenReturn(Future.successful("31415900000"))
 
-    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+    when(mockEstateService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
       .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))))
 
-    val service = new VariationService(desService, transformationService, transformer, auditService)
+    val service = new VariationService(mockEstateService, transformationService, transformer, auditService)
 
     whenReady(service.submitDeclaration(utr, internalId, declaration)) { response =>
       response mustBe VariationFailureResponse(EtmpDataStaleErrorResponse)
-      verify(desService, times(0)).estateVariation(any())
+      verify(mockEstateService, times(0)).estateVariation(any())
     }
   }
 }

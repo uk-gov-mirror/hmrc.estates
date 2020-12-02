@@ -25,13 +25,13 @@ import controllers.actions.IdentifierAction
 import models.ApiResponse._
 import models._
 import models.ExistingCheckResponse._
-import services.DesService
+import services.EstatesService
 import utils.Session
 
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class CheckEstateController @Inject()(desService: DesService, config: AppConfig,
+class CheckEstateController @Inject()(estateService: EstatesService, config: AppConfig,
                                       identify: IdentifierAction)
                                      (implicit val executionContext: ExecutionContext, cc: ControllerComponents)
   extends EstatesBaseController(cc) with Logging {
@@ -39,7 +39,7 @@ class CheckEstateController @Inject()(desService: DesService, config: AppConfig,
   def checkExistingEstate(): Action[JsValue] = identify.async(parse.json) { implicit request =>
       withJsonBody[ExistingCheckRequest] {
         estatesCheckRequest =>
-          desService.checkExistingEstate(estatesCheckRequest).map {
+          estateService.checkExistingEstate(estatesCheckRequest).map {
             result =>
               logger.info(s"[checkExistingEstate][Session ID: ${Session.id(hc)}] response: $result")
               result match {

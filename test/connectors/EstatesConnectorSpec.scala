@@ -25,9 +25,9 @@ import play.api.libs.json.{JsError, Json}
 import utils.ErrorResponses._
 import utils.JsonRequests
 
-class IfsConnectorSpec extends BaseConnectorSpec with JsonRequests {
+class EstatesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
-  lazy val connector: IfsConnector = injector.instanceOf[IfsConnector]
+  lazy val connector: EstatesConnector = injector.instanceOf[EstatesConnector]
 
   lazy val request: ExistingCheckRequest = ExistingCheckRequest("trust name", postcode = Some("NE65TA"), "1234567890")
 

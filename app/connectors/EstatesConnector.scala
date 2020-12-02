@@ -34,7 +34,7 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: EstatesStoreService) extends Logging {
+class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: EstatesStoreService) extends Logging {
 
   private lazy val estatesServiceUrl : String = s"${config.registrationBaseUrl}/estates"
 
@@ -54,11 +54,11 @@ class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
   private val ENVIRONMENT_HEADER = "Environment"
   private val CORRELATION_HEADER = "CorrelationId"
 
-  private def ifsHeaders(correlationId : String) : Seq[(String, String)] =
+  private def registrationHeaders(correlationId : String) : Seq[(String, String)] =
     Seq(
-      HeaderNames.AUTHORIZATION -> s"Bearer ${config.ifsToken}",
+      HeaderNames.AUTHORIZATION -> s"Bearer ${config.registrationToken}",
       CONTENT_TYPE -> CONTENT_TYPE_JSON,
-      ENVIRONMENT_HEADER -> config.ifsEnvironment,
+      ENVIRONMENT_HEADER -> config.registrationEnvironment,
       CORRELATION_HEADER -> correlationId
     )
 
@@ -66,7 +66,7 @@ class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
   : Future[ExistingCheckResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = ifsHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
 
     logger.info(s"[checkExistingEstate] matching estate for correlationId: $correlationId")
 
@@ -76,7 +76,7 @@ class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
   def registerEstate(registration: EstateRegistration): Future[RegistrationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = ifsHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
 
     logger.info(s"[registerEstate] registering estate for correlationId: $correlationId")
 
@@ -86,7 +86,7 @@ class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
   def getEstateInfo(utr: String): Future[GetEstateResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = ifsHeaders(correlationId))
+    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
 
     logger.info(s"[getEstateInfo][UTR: $utr] getting playback for estate for correlationId: $correlationId")
 
@@ -102,7 +102,7 @@ class IfsConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
   def estateVariation(estateVariations: JsValue): Future[VariationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = ifsHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
 
     logger.info(s"[estateVariation] submitting estate variation for correlationId: $correlationId")
 

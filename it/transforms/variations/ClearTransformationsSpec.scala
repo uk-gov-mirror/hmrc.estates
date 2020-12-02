@@ -28,7 +28,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import connectors.DesNonMigratedConnector
+import connectors.DesConnector
 import controllers.actions.{FakeIdentifierAction, IdentifierAction}
 import models.getEstate.GetEstateResponse
 import utils.JsonUtils
@@ -43,7 +43,7 @@ class ClearTransformationsSpec extends AsyncFreeSpec with MustMatchers with Mock
 
   "a clear transformations call" - {
 
-    val stubbedDesConnector = mock[DesNonMigratedConnector]
+    val stubbedDesConnector = mock[DesConnector]
     when(stubbedDesConnector.getEstateInfo(any())).thenReturn(Future.successful(getEstateResponseFromDES))
 
     val cc = stubControllerComponents()
@@ -57,7 +57,7 @@ class ClearTransformationsSpec extends AsyncFreeSpec with MustMatchers with Mock
       ): _*)
       .overrides(
         bind[IdentifierAction].toInstance(new FakeIdentifierAction(cc.parsers.default, Organisation)(ExecutionContext.global)),
-        bind[DesNonMigratedConnector].toInstance(stubbedDesConnector)
+        bind[DesConnector].toInstance(stubbedDesConnector)
       )
       .build()
 

@@ -29,18 +29,18 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
 
-  val estatesNonMigratedBaseUrl : String = servicesConfig.baseUrl("des-estates-non-migrated")
-  val estatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
+  val desEstatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
+  val ifsEstatesBaseUrl : String = servicesConfig.baseUrl("ifs-estates")
 
-  val getEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-playback")
-  val varyEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-variation")
+  val getEstateBaseUrl : String = servicesConfig.baseUrl("ifs-estates-playback")
+  val varyEstateBaseUrl : String = servicesConfig.baseUrl("ifs-estates-variation")
   val estatesStoreBaseUrl : String = servicesConfig.baseUrl("estates-store")
-
-  val desEnvironmentNonMigrated : String = loadConfig("microservice.services.des-estates-non-migrated.environment")
-  val desTokenNonMigrated : String = loadConfig("microservice.services.des-estates-non-migrated.token")
 
   val desEnvironment : String = loadConfig("microservice.services.des-estates.environment")
   val desToken : String = loadConfig("microservice.services.des-estates.token")
+
+  val ifsEnvironment : String = loadConfig("microservice.services.ifs-estates.environment")
+  val ifsToken : String = loadConfig("microservice.services.ifs-estates.token")
 
   val taxEnrolmentsBaseUrl : String = servicesConfig.baseUrl("tax-enrolments")
   val taxEnrolmentsPayloadBodyCallback : String = loadConfig("microservice.services.tax-enrolments.callback")

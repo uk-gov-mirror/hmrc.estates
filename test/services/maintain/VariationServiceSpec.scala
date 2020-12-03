@@ -16,27 +16,23 @@
 
 package services.maintain
 
+import connectors.BaseConnectorSpec
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.{any, eq => equalTo}
-import org.mockito.Mockito.{times, verify, when}
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.mockito.Mockito.{reset, times, verify, when}
 import play.api.libs.json.{JsSuccess, JsValue, Json}
 import models.getEstate.{GetEstateProcessedResponse, ResponseHeader}
 import models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
 import models.{DeclarationForApi, DeclarationName, NameType}
 import services._
-import utils.JsonRequests
 import utils.ErrorResponses.{DuplicateSubmissionErrorResponse, EtmpDataStaleErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
-class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar with ScalaFutures with MustMatchers with GuiceOneAppPerSuite {
+class VariationServiceSpec extends BaseConnectorSpec {
 
-  private implicit  val hc: HeaderCarrier = new HeaderCarrier
   private val formBundleNo = "001234567890"
   private val utr = "1234567890"
   private val internalId = "InternalId"
@@ -44,63 +40,103 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
   private val transformedEtmpResponseJson = Json.parse("""{ "field": "Arbitrary transformed JSON" }""")
   private val estateInfoJson = (fullEtmpResponseJson \ "trustOrEstateDisplay").as[JsValue]
   private val transformedJson = Json.obj("field" -> "value")
-
+  private val transformedJsonWithSubmission = Json.obj("field" -> "value", "submissionDate" -> LocalDate.now())
   private val declarationName = DeclarationName(NameType("Handy", None, "Andy"))
-
   private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None)
+
+  val desService = mock[DesService]
+  val variationsTransformationService = mock[VariationsTransformationService]
+  val auditService = mock[AuditService]
+  val transformer = mock[VariationDeclarationService]
+  val estatesStoreService = mock[EstatesStoreService]
+
+  val estates5MLDService = new Estates5MLDService(estatesStoreService)
+
+  before {
+    reset(desService, variationsTransformationService, auditService, transformer, estatesStoreService)
+  }
+
+  def service = new VariationService(
+    desService,
+    variationsTransformationService,
+    transformer,
+    estates5MLDService,
+    auditService
+  )
 
   "submitDeclaration" should {
 
-    "submit data correctly when the version matches, and then reset the cache" in {
+    "submit data correctly when the version matches, and then reset the cache" when {
+      "4mld" in {
 
-      val desService = mock[DesService]
+        val successfulResponse = VariationSuccessResponse("TVN34567890")
 
-      val variationsTransformationService = mock[VariationsTransformationService]
-      val auditService = mock[AuditService]
-      val transformer = mock[VariationDeclarationService]
+        val response = setupForTest(successfulResponse)
 
-      val successfulResponse = VariationSuccessResponse("TVN34567890")
+        val responseHeader = ResponseHeader("Processed", formBundleNo)
 
-      val response = setupForTest(desService, successfulResponse, variationsTransformationService, transformer)
+        whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
 
-      val service = new VariationService(desService, variationsTransformationService, transformer, auditService)
+          variationResponse mustBe successfulResponse
 
-      val responseHeader = ResponseHeader("Processed", formBundleNo)
+          verify(variationsTransformationService, times( 1))
+            .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
 
-      whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
+          verify(transformer, times(1))
+            .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
 
-        variationResponse mustBe successfulResponse
+          verify(auditService).auditVariationSubmitted(
+            equalTo(internalId),
+            equalTo(transformedJson),
+            equalTo(successfulResponse))(any())
 
-        verify(variationsTransformationService, times( 1))
-          .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
+          val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
-        verify(transformer, times(1))
-          .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
+          verify(desService, times(1)).estateVariation(arg.capture())
 
-        verify(auditService).auditVariationSubmitted(
-          equalTo(internalId),
-          equalTo(transformedJson),
-          equalTo(successfulResponse))(any())
+          arg.getValue mustBe transformedJson
+        }}
+      }
 
-        val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
+      "5mld" in {
 
-        verify(desService, times(1)).estateVariation(arg.capture())
+        val successfulResponse = VariationSuccessResponse("TVN34567890")
 
-        arg.getValue mustBe transformedJson
-      }}
+        val response = setupForTest(successfulResponse)
+
+        val responseHeader = ResponseHeader("Processed", formBundleNo)
+
+        when(estatesStoreService.isFeatureEnabled(equalTo("5mld"))(any(), any()))
+          .thenReturn(Future.successful(true))
+
+        whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
+
+          variationResponse mustBe successfulResponse
+
+          verify(variationsTransformationService, times( 1))
+            .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
+
+          verify(transformer, times(1))
+            .transform(equalTo(transformedEtmpResponseJson), equalTo(responseHeader), equalTo(response.getEstate), equalTo(declaration))
+
+          verify(auditService).auditVariationSubmitted(
+            equalTo(internalId),
+            equalTo(transformedJsonWithSubmission),
+            equalTo(successfulResponse))(any())
+
+          val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
+
+          verify(desService, times(1)).estateVariation(arg.capture())
+
+          arg.getValue mustBe transformedJsonWithSubmission
+        }}
+      }
     }
     "audit error when submission fails" in {
 
-      val desService = mock[DesService]
-      val variationsTransformationService = mock[VariationsTransformationService]
-      val auditService = mock[AuditService]
-      val transformer = mock[VariationDeclarationService]
-
       val failedResponse = VariationFailureResponse(DuplicateSubmissionErrorResponse)
 
-      setupForTest(desService, failedResponse, variationsTransformationService, transformer)
-
-      val service = new VariationService(desService, variationsTransformationService, transformer, auditService)
+      setupForTest(failedResponse)
 
       whenReady(service.submitDeclaration(utr, internalId, declaration)) { variationResponse => {
 
@@ -114,11 +150,11 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
     }
   }
 
-  private def setupForTest(
-                            desService: DesService,
-                            variationResponse: VariationResponse,
-                            variationsTransformationService: VariationsTransformationService,
-                            transformer: VariationDeclarationService) = {
+  private def setupForTest(variationResponse: VariationResponse) = {
+
+    when(estatesStoreService.isFeatureEnabled(equalTo("5mld"))(any(), any()))
+      .thenReturn(Future.successful(false))
+
     when(variationsTransformationService.populatePersonalRepAddress(any[JsValue]))
       .thenReturn(JsSuccess(estateInfoJson))
 
@@ -143,18 +179,12 @@ class VariationServiceSpec extends WordSpec with JsonRequests with MockitoSugar 
   }
 
   "Fail if the etmp data version doesn't match our submission data" in {
-    val desService = mock[DesService]
-    val transformationService = mock[VariationsTransformationService]
-    val auditService = mock[AuditService]
-    val transformer = mock[VariationDeclarationService]
 
     when(desService.getEstateInfoFormBundleNo(utr))
       .thenReturn(Future.successful("31415900000"))
 
     when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
       .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))))
-
-    val service = new VariationService(desService, transformationService, transformer, auditService)
 
     whenReady(service.submitDeclaration(utr, internalId, declaration)) { response =>
       response mustBe VariationFailureResponse(EtmpDataStaleErrorResponse)

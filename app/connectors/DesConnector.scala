@@ -17,7 +17,6 @@
 package connectors
 
 import java.util.UUID
-
 import javax.inject.Inject
 import play.api.Logging
 import play.api.http.HeaderNames
@@ -26,7 +25,7 @@ import config.AppConfig
 import models._
 import models.getEstate.GetEstateResponse
 import models.variation.VariationResponse
-import services.EstatesStoreService
+import services.Estates5MLDService
 import utils.Constants._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpClient
@@ -34,7 +33,7 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: EstatesStoreService) extends Logging {
+class DesConnector @Inject()(http: HttpClient, config: AppConfig, estates5MLDService: Estates5MLDService) extends Logging {
 
   private lazy val subscriptionsUrl : String = s"${config.desEstatesBaseUrl}/trusts"
   private lazy val estatesServiceUrl : String = s"${config.desEstatesBaseUrl}/estates"
@@ -101,7 +100,7 @@ class DesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreSe
 
     logger.info(s"[getEstateInfo][UTR: $utr] getting playback for estate for correlationId: $correlationId")
 
-    estatesStoreService.is5mldEnabled.flatMap { is5MLD =>
+    estates5MLDService.is5mldEnabled.flatMap { is5MLD =>
       if (is5MLD) {
         http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
       } else {

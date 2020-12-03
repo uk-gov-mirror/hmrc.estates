@@ -16,19 +16,25 @@
 
 package services
 
-import connectors.EstatesStoreConnector
-import javax.inject.Inject
+import play.api.libs.json._
 import uk.gov.hmrc.http.HeaderCarrier
-import models.FeatureResponse
 
+import java.time.LocalDate
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EstatesStoreService @Inject()(estatesStoreConnector: EstatesStoreConnector) {
+class Estates5MLDService @Inject()(estatesStoreService: EstatesStoreService){
 
-  def isFeatureEnabled(feature: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] = {
-    estatesStoreConnector.getFeature(feature).map {
-      case FeatureResponse(_, true) => true
-      case _ => false
+  def is5mldEnabled()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] =
+    estatesStoreService.isFeatureEnabled("5mld")
+
+  def applySubmissionDate(registration: JsValue, is5mld: Boolean): JsResult[JsValue] = {
+    if (is5mld) {
+      registration.transform(
+        __.json.update((__ \ 'submissionDate).json.put(Json.toJson(LocalDate.now())))
+      )
+    } else {
+      JsSuccess(registration)
     }
   }
 

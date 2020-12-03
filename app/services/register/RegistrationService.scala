@@ -16,8 +16,6 @@
 
 package services.register
 
-import java.time.LocalDate
-
 import javax.inject.Inject
 import play.api.Logging
 import play.api.libs.json._
@@ -26,7 +24,7 @@ import models._
 import models.register.RegistrationDeclaration
 import models.requests.IdentifierRequest
 import repositories.TransformationRepository
-import services.{AuditService, DesService, EstatesStoreService}
+import services.{AuditService, DesService, Estates5MLDService}
 import transformers.ComposedDeltaTransform
 import transformers.register.DeclarationTransform
 import utils.Session
@@ -36,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationService @Inject()(repository: TransformationRepository,
                                     desService: DesService,
-                                    estatesStoreService: EstatesStoreService,
+                                    estates5MLDService: Estates5MLDService,
                                     declarationTransformer: DeclarationTransform,
                                     auditService: AuditService
                                    )(implicit ec: ExecutionContext) extends Logging {
@@ -74,18 +72,12 @@ class RegistrationService @Inject()(repository: TransformationRepository,
   def submit(declaration: RegistrationDeclaration)
             (implicit request: IdentifierRequest[_], hc: HeaderCarrier): Future[RegistrationResponse] = {
 
-    estatesStoreService.is5mldEnabled() flatMap { is5mld =>
-
-      val submissionDate = if(is5mld) {
-        Some(LocalDate.now())
-      } else {
-        None
-      }
+    estates5MLDService.is5mldEnabled() flatMap { is5mld =>
 
       repository.get(request.identifier) flatMap {
         case Some(transforms) =>
 
-          buildSubmissionFromTransforms(declaration.name, transforms, submissionDate) match {
+          buildSubmissionFromTransforms(declaration.name, transforms, is5mld) match {
             case JsSuccess(json, _) =>
 
               json.asOpt[EstateRegistration] match {
@@ -128,6 +120,7 @@ class RegistrationService @Inject()(repository: TransformationRepository,
 
           Future.failed(new RuntimeException(reason))
       }
+
     }
 
   }
@@ -158,24 +151,17 @@ class RegistrationService @Inject()(repository: TransformationRepository,
     } yield result
   }
 
-  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform, submissionDate: Option[LocalDate])
+  def buildSubmissionFromTransforms(name: NameType, transforms: ComposedDeltaTransform, is5mld: Boolean)
                                    (implicit request: IdentifierRequest[_]): JsResult[JsValue] = {
     for {
       transformsApplied <- applyTransforms(transforms)
       declarationTransformsApplied <- applyTransformsForDeclaration(transforms, transformsApplied)
       result <- applyDeclarationAddressTransform(declarationTransformsApplied, request.affinityGroup, name)
-      resultWithSubmissionDate <- applySubmissionDate(result, submissionDate)
+      resultWithSubmissionDate <- estates5MLDService.applySubmissionDate(result, is5mld)
     } yield {
       resultWithSubmissionDate
     }
   }
-
-  private def applySubmissionDate(registration: JsValue, submissionDate: Option[LocalDate]) =
-    submissionDate map { date =>
-      registration.transform(
-        __.json.update((__ \ 'submissionDate).json.put(Json.toJson(date)))
-      )
-    } getOrElse JsSuccess(registration)
 
   private def applyTransforms(transforms: ComposedDeltaTransform): JsResult[JsValue] = {
     logger.info(s"[applyTransforms] applying transformations")

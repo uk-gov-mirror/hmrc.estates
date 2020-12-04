@@ -29,14 +29,18 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val ttlInSeconds: Int = config.getOptional[Int]("mongodb.ttlSeconds").getOrElse(4*60*60)
 
-  val desEstatesBaseUrl : String = servicesConfig.baseUrl("des-estates")
+  val subscriptionBaseUrl : String = servicesConfig.baseUrl("subscription")
+  val registrationBaseUrl : String = servicesConfig.baseUrl("registration")
 
-  val getEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-playback")
-  val varyEstateBaseUrl : String = servicesConfig.baseUrl("des-estates-variation")
+  val getEstateBaseUrl : String = servicesConfig.baseUrl("playback")
+  val varyEstateBaseUrl : String = servicesConfig.baseUrl("variation")
   val estatesStoreBaseUrl : String = servicesConfig.baseUrl("estates-store")
 
-  val desEnvironment : String = loadConfig("microservice.services.des-estates.environment")
-  val desToken : String = loadConfig("microservice.services.des-estates.token")
+  val registrationEnvironment : String = loadConfig("microservice.services.registration.environment")
+  val registrationToken : String = loadConfig("microservice.services.registration.token")
+
+  val subscriptionEnvironment : String = loadConfig("microservice.services.subscription.environment")
+  val subscriptionToken : String = loadConfig("microservice.services.subscription.token")
 
   val taxEnrolmentsBaseUrl : String = servicesConfig.baseUrl("tax-enrolments")
   val taxEnrolmentsPayloadBodyCallback : String = loadConfig("microservice.services.tax-enrolments.callback")

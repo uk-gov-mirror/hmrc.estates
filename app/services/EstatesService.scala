@@ -19,7 +19,7 @@ package services
 import javax.inject.Inject
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import connectors.DesConnector
+import connectors.{EstatesConnector, SubscriptionConnector}
 import exceptions.InternalServerErrorException
 import models._
 import models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
@@ -31,10 +31,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepository) extends Logging {
+class EstatesService @Inject()(val estatesConnector: EstatesConnector,
+                               val subscriptionConnector: SubscriptionConnector,
+                               repository: CacheRepository) extends Logging {
 
   def getEstateInfoFormBundleNo(utr: String)(implicit hc: HeaderCarrier): Future[String] =
-    desConnector.getEstateInfo(utr).map {
+    estatesConnector.getEstateInfo(utr).map {
       case response: GetEstateProcessedResponse =>
         response.responseHeader.formBundleNo
       case response =>
@@ -44,15 +46,15 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
     }
 
   def checkExistingEstate(existingEstateCheckRequest: ExistingCheckRequest): Future[ExistingCheckResponse] = {
-    desConnector.checkExistingEstate(existingEstateCheckRequest)
+    estatesConnector.checkExistingEstate(existingEstateCheckRequest)
   }
 
   def registerEstate(estateRegistration: EstateRegistration): Future[RegistrationResponse] = {
-    desConnector.registerEstate(estateRegistration)
+    estatesConnector.registerEstate(estateRegistration)
   }
 
   def getSubscriptionId(trn: String): Future[SubscriptionIdResponse] = {
-    desConnector.getSubscriptionId(trn)
+    subscriptionConnector.getSubscriptionId(trn)
   }
 
   def refreshCacheAndGetEstateInfo(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
@@ -60,7 +62,7 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
     logger.info(s"[refreshCacheAndGetEstateInfo][Session ID: ${Session.id(hc)}][UTR: $utr] refreshing cache for $utr")
 
     repository.resetCache(utr, internalId).flatMap { _ =>
-      desConnector.getEstateInfo(utr).flatMap {
+      estatesConnector.getEstateInfo(utr).flatMap {
         case response: GetEstateProcessedResponse =>
           logger.info(s"[refreshCacheAndGetEstateInfo][[Session ID: ${Session.id(hc)}][UTR: $utr]" +
             s" setting cached record for $utr")
@@ -95,7 +97,5 @@ class DesService @Inject()(val desConnector: DesConnector, repository: CacheRepo
   }
 
   def estateVariation(estateVariation: JsValue): Future[VariationResponse] =
-    desConnector.estateVariation(estateVariation: JsValue)
+    estatesConnector.estateVariation(estateVariation: JsValue)
 }
-
-

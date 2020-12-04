@@ -23,7 +23,7 @@ import exceptions.InternalServerErrorException
 import models.DeclarationForApi
 import models.getEstate.{EtmpCacheDataStaleResponse, GetEstateProcessedResponse, GetEstateResponse, ResponseHeader}
 import models.variation.{VariationFailureResponse, VariationResponse, VariationSuccessResponse}
-import services.{AuditService, DesService, Estates5MLDService, VariationsTransformationService}
+import services.{AuditService, EstatesService, Estates5MLDService, VariationsTransformationService}
 import utils.ErrorResponses.{EtmpDataStaleErrorResponse, InternalServerErrorErrorResponse}
 import utils.JsonOps._
 import utils.Session
@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 
 class VariationService @Inject()(
-                                  desService: DesService,
+                                  estatesService: EstatesService,
                                   transformationService: VariationsTransformationService,
                                   declarationService: VariationDeclarationService,
                                   estates5MLDService: Estates5MLDService,
@@ -123,8 +123,8 @@ class VariationService @Inject()(
 
   private def getCachedEstateData(utr: String, internalId: String)(implicit hc: HeaderCarrier): Future[GetEstateResponse] = {
     for {
-      response <- desService.getEstateInfo(utr, internalId)
-      fbn <- desService.getEstateInfoFormBundleNo(utr)
+      response <- estatesService.getEstateInfo(utr, internalId)
+      fbn <- estatesService.getEstateInfoFormBundleNo(utr)
     } yield response match {
       case tpr: GetEstateProcessedResponse if tpr.responseHeader.formBundleNo == fbn =>
         logger.info(s"[getCachedEstateData][Session ID: ${Session.id(hc)}][UTR: $utr]" +
@@ -145,7 +145,7 @@ class VariationService @Inject()(
 
     val payload = value.applyRules
 
-    desService.estateVariation(payload) map {
+    estatesService.estateVariation(payload) map {
       case response: VariationSuccessResponse =>
 
         logger.info(s"[doSubmit][Session ID: ${Session.id(hc)}] variation submitted")

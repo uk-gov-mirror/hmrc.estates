@@ -31,7 +31,7 @@ import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.maintain.VariationService
-import services.{AuditService, DesService}
+import services.{AuditService, EstatesService}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import utils.ErrorResponses._
 import utils.Headers
@@ -42,7 +42,7 @@ import scala.concurrent.Future
 class EstateVariationsControllerSpec extends BaseSpec {
 
   private implicit val cc: ControllerComponents = stubControllerComponents()
-  private val mockDesService: DesService = mock[DesService]
+  private val mockEstateService: EstatesService = mock[EstatesService]
 
   private val mockAuditService: AuditService = mock[AuditService]
 
@@ -53,7 +53,7 @@ class EstateVariationsControllerSpec extends BaseSpec {
   private val responseHandler = new VariationsResponseHandler(mockAuditService)
 
   before {
-    reset(mockDesService, mockConfig)
+    reset(mockEstateService, mockConfig)
   }
 
   private def estateVariationsController = {

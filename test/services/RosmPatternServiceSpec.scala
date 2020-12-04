@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 class RosmPatternServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
-  private val mockDesService = mock[DesService]
+  private val mockEstateService = mock[EstatesService]
   private val mockTaxEnrolmentsService = mock[TaxEnrolmentsService]
   private val mockAuditService = mock[AuditService]
   private val identifier = "auth identifier"
@@ -36,7 +36,7 @@ class RosmPatternServiceSpec extends BaseSpec with BeforeAndAfterEach {
     reset(mockAuditService)
   }
 
-  val SUT = new RosmPatternServiceImpl(mockDesService, mockTaxEnrolmentsService, mockAuditService)
+  val SUT = new RosmPatternServiceImpl(mockEstateService, mockTaxEnrolmentsService, mockAuditService)
 
   ".getSubscriptionIdAndEnrol" should {
 
@@ -44,7 +44,7 @@ class RosmPatternServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
       "successfully sets subscriptionId id in tax enrolments for provided trn." in {
 
-        when(mockDesService.getSubscriptionId("trn123456789")).
+        when(mockEstateService.getSubscriptionId("trn123456789")).
           thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
 
         when(mockTaxEnrolmentsService.setSubscriptionId("123456789")).
@@ -67,7 +67,7 @@ class RosmPatternServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
       "DES throws an exception" in {
 
-        when(mockDesService.getSubscriptionId("trn123456789")).
+        when(mockEstateService.getSubscriptionId("trn123456789")).
           thenReturn(Future.failed(InternalServerErrorException("bad juju")))
 
         val futureResult = SUT.getSubscriptionIdAndEnrol("trn123456789", identifier)
@@ -82,7 +82,7 @@ class RosmPatternServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
       "tax enrolment service returns a failure" in {
 
-        when(mockDesService.getSubscriptionId("trn123456789")).
+        when(mockEstateService.getSubscriptionId("trn123456789")).
           thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
 
         when(mockTaxEnrolmentsService.setSubscriptionId("123456789")).
@@ -106,7 +106,7 @@ class RosmPatternServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
       "tax enrolment service does not found provided subscription id." in {
 
-        when(mockDesService.getSubscriptionId("trn123456789")).
+        when(mockEstateService.getSubscriptionId("trn123456789")).
           thenReturn(Future.successful(SubscriptionIdResponse("123456789")))
 
         when(mockTaxEnrolmentsService.setSubscriptionId("123456789")).

@@ -31,7 +31,8 @@ import models.register.{RegistrationDeclaration, TaxAmount}
 import models.requests.IdentifierRequest
 import org.mockito.ArgumentCaptor
 import repositories.TransformationRepository
-import services.{AuditService, DesService, Estates5MLDService, EstatesStoreService}
+import services.{AuditService, EstatesService, Estates5MLDService, EstatesStoreService}
+
 import transformers.ComposedDeltaTransform
 import transformers.register._
 import utils.JsonUtils
@@ -42,7 +43,7 @@ import scala.concurrent.Future
 class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutures with MustMatchers with OptionValues {
 
   val mockTransformationRepository: TransformationRepository = mock[TransformationRepository]
-  val mockDesService: DesService = mock[DesService]
+  val mockEstateService: EstatesService = mock[EstatesService]
   val mockEstatesStoreService: EstatesStoreService = mock[EstatesStoreService]
   val mockAuditService: AuditService = mock[AuditService]
 
@@ -60,7 +61,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
 
   val service = new RegistrationService(
     mockTransformationRepository,
-    mockDesService,
+    mockEstateService,
     estates5MLDService,
     declarationTransformer,
     mockAuditService
@@ -192,7 +193,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         when(mockTransformationRepository.get(any()))
           .thenReturn(Future.successful(Some(allTransforms)))
 
-        when(mockDesService.registerEstate(regCapture.capture()))
+        when(mockEstateService.registerEstate(regCapture.capture()))
           .thenReturn(Future.successful(RegistrationTrnResponse("trn")))
 
         val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
@@ -215,7 +216,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
         when(mockTransformationRepository.get(any()))
           .thenReturn(Future.successful(Some(allTransforms)))
 
-        when(mockDesService.registerEstate(regCapture.capture()))
+        when(mockEstateService.registerEstate(regCapture.capture()))
           .thenReturn(Future.successful(RegistrationTrnResponse("trn")))
 
         val result = service.submit(RegistrationDeclaration(NameType("John", None, "Doe")))
@@ -236,7 +237,7 @@ class RegistrationServiceSpec extends BaseSpec with MockitoSugar with ScalaFutur
       when(mockTransformationRepository.get(any()))
         .thenReturn(Future.successful(Some(allTransforms)))
 
-      when(mockDesService.registerEstate(any()))
+      when(mockEstateService.registerEstate(any()))
         .thenReturn(Future.successful(AlreadyRegisteredResponse))
 
       when(mockEstatesStoreService.isFeatureEnabled(mockEq("5mld"))(any(), any()))

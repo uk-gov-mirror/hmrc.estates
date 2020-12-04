@@ -44,7 +44,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
   private val declarationName = DeclarationName(NameType("Handy", None, "Andy"))
   private val declaration: DeclarationForApi = DeclarationForApi(declarationName, None)
 
-  val desService = mock[DesService]
+  val estateService = mock[EstatesService]
   val variationsTransformationService = mock[VariationsTransformationService]
   val auditService = mock[AuditService]
   val transformer = mock[VariationDeclarationService]
@@ -53,11 +53,11 @@ class VariationServiceSpec extends BaseConnectorSpec {
   val estates5MLDService = new Estates5MLDService(estatesStoreService)
 
   before {
-    reset(desService, variationsTransformationService, auditService, transformer, estatesStoreService)
+    reset(estateService, variationsTransformationService, auditService, transformer, estatesStoreService)
   }
 
   def service = new VariationService(
-    desService,
+    estateService,
     variationsTransformationService,
     transformer,
     estates5MLDService,
@@ -79,6 +79,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
           variationResponse mustBe successfulResponse
 
+
           verify(variationsTransformationService, times( 1))
             .applyDeclarationTransformations(equalTo(utr), equalTo(internalId), equalTo(estateInfoJson))(any[HeaderCarrier])
 
@@ -92,7 +93,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
           val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
-          verify(desService, times(1)).estateVariation(arg.capture())
+          verify(estateService, times(1)).estateVariation(arg.capture())
 
           arg.getValue mustBe transformedJson
         }}
@@ -126,7 +127,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
           val arg: ArgumentCaptor[JsValue] = ArgumentCaptor.forClass(classOf[JsValue])
 
-          verify(desService, times(1)).estateVariation(arg.capture())
+          verify(estateService, times(1)).estateVariation(arg.capture())
 
           arg.getValue mustBe transformedJsonWithSubmission
         }}
@@ -150,6 +151,7 @@ class VariationServiceSpec extends BaseConnectorSpec {
     }
   }
 
+
   private def setupForTest(variationResponse: VariationResponse) = {
 
     when(estatesStoreService.isFeatureEnabled(equalTo("5mld"))(any(), any()))
@@ -161,18 +163,18 @@ class VariationServiceSpec extends BaseConnectorSpec {
     when(variationsTransformationService.applyDeclarationTransformations(any(), any(), any())(any[HeaderCarrier]))
       .thenReturn(Future.successful(JsSuccess(transformedEtmpResponseJson)))
 
-    when(desService.getEstateInfoFormBundleNo(utr))
+    when(estateService.getEstateInfoFormBundleNo(utr))
       .thenReturn(Future.successful(formBundleNo))
 
     val response: GetEstateProcessedResponse = GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))
 
-    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+    when(estateService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
       .thenReturn(Future.successful(response))
 
     when(transformer.transform(any(), any(), any(), any()))
       .thenReturn(JsSuccess(transformedJson))
 
-    when(desService.estateVariation(any()))
+    when(estateService.estateVariation(any()))
       .thenReturn(Future.successful(variationResponse))
 
     response
@@ -180,15 +182,15 @@ class VariationServiceSpec extends BaseConnectorSpec {
 
   "Fail if the etmp data version doesn't match our submission data" in {
 
-    when(desService.getEstateInfoFormBundleNo(utr))
+    when(estateService.getEstateInfoFormBundleNo(utr))
       .thenReturn(Future.successful("31415900000"))
 
-    when(desService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
+    when(estateService.getEstateInfo(equalTo(utr), equalTo(internalId))(any[HeaderCarrier]()))
       .thenReturn(Future.successful(GetEstateProcessedResponse(estateInfoJson, ResponseHeader("Processed", formBundleNo))))
 
     whenReady(service.submitDeclaration(utr, internalId, declaration)) { response =>
       response mustBe VariationFailureResponse(EtmpDataStaleErrorResponse)
-      verify(desService, times(0)).estateVariation(any())
+      verify(estateService, times(0)).estateVariation(any())
     }
   }
 }

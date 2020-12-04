@@ -29,7 +29,7 @@ import models.getEstate.{GetEstateProcessedResponse, GetEstateResponse}
 import models.variation.EstatePerRepIndType
 import models.{AddressType, IdentificationType, NameType}
 import repositories.VariationsTransformationRepositoryImpl
-import services.{AuditService, DesService, VariationsTransformationService}
+import services.{AuditService, EstatesService, VariationsTransformationService}
 import transformers.ComposedDeltaTransform
 import transformers.variations.{AddAmendIndividualPersonalRepTransform, AddCloseEstateTransform}
 import utils.{JsonRequests, JsonUtils}
@@ -84,7 +84,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
 
   "must transform json data with the current transforms" in {
     val repository = mock[VariationsTransformationRepositoryImpl]
-    val service = new VariationsTransformationService(repository, mock[DesService], auditService)
+    val service = new VariationsTransformationService(repository, mock[EstatesService], auditService)
 
     val existingTransforms = Seq(
       AddAmendIndividualPersonalRepTransform(unitTestPersonalRepInfo)
@@ -103,7 +103,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
   }
   "must transform json data when no current transforms" in {
     val repository = mock[VariationsTransformationRepositoryImpl]
-    val service = new VariationsTransformationService(repository, mock[DesService], auditService)
+    val service = new VariationsTransformationService(repository, mock[EstatesService], auditService)
 
     when(repository.get(any(), any())).thenReturn(Future.successful(None))
     when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
@@ -121,8 +121,8 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
   "must apply transformations to ETMP json read from DES service" in {
     val response = get4MLDEstateResponse.as[GetEstateResponse]
     val processedResponse = response.asInstanceOf[GetEstateProcessedResponse]
-    val desService = mock[DesService]
-    when(desService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(response))
+    val estateService = mock[EstatesService]
+    when(estateService.getEstateInfo(any(), any())(any())).thenReturn(Future.successful(response))
 
     val newPersonalRepIndInfo = EstatePerRepIndType(
       lineNo = None,
@@ -151,7 +151,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
     val transformedJson = JsonUtils.getJsonValueFromFile("transformed/variations/valid-get-estate-response-transformed-with-amend-personal-rep-and-close.json")
     val expectedResponse = GetEstateProcessedResponse(transformedJson, processedResponse.responseHeader)
 
-    val service = new VariationsTransformationService(repository, desService, auditService)
+    val service = new VariationsTransformationService(repository, estateService, auditService)
 
     val result = service.getTransformedData("utr", "internalId")
     whenReady(result) {
@@ -163,7 +163,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
 
     "must write a corresponding transform to the transformation repository with no existing transforms" in {
       val repository = mock[VariationsTransformationRepositoryImpl]
-      val service = new VariationsTransformationService(repository, mock[DesService], auditService)
+      val service = new VariationsTransformationService(repository, mock[EstatesService], auditService)
 
       when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(Nil))))
       when(repository.set(any(), any(), any())).thenReturn(Future.successful(true))
@@ -179,7 +179,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
 
     "must write a corresponding transform to the transformation repository with existing transforms" in {
       val repository = mock[VariationsTransformationRepositoryImpl]
-      val service = new VariationsTransformationService(repository, mock[DesService], auditService)
+      val service = new VariationsTransformationService(repository, mock[EstatesService], auditService)
 
       val existingTransforms = Seq(AddAmendIndividualPersonalRepTransform(existingPersonalRepInfo))
       when(repository.get(any(), any())).thenReturn(Future.successful(Some(ComposedDeltaTransform(existingTransforms))))
@@ -203,7 +203,7 @@ class VariationsTransformationServiceSpec extends FreeSpec with MockitoSugar wit
     val internalId: String = "internalId"
 
     val repository = mock[VariationsTransformationRepositoryImpl]
-    val service = new VariationsTransformationService(repository, mock[DesService], auditService)
+    val service = new VariationsTransformationService(repository, mock[EstatesService], auditService)
 
     when(repository.resetCache(any(), any())).thenReturn(Future.successful(Some(Json.obj())))
 

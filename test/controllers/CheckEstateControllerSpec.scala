@@ -27,7 +27,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import controllers.actions.FakeIdentifierAction
 import models.{ExistingCheckRequest, ExistingCheckResponse}
 import models.ExistingCheckResponse._
-import services.{DesService, ValidationService}
+import services.{EstatesService, ValidationService}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +39,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
   private lazy val bodyParsers = injector.instanceOf[BodyParsers.Default]
   private implicit val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
 
-  private val mockDesService = mock[DesService]
+  private val mockEstateService = mock[EstatesService]
 
   val validPayloadRequest: JsValue = Json.parse("""{"name": "estate name","postcode": "NE1 1NE","utr": "1234567890"}""")
   val validPayloadPostCodeLowerCase: JsValue = Json.parse("""{"name": "estate name","postcode": "aa9a 9aa","utr": "1234567890"}""")
@@ -49,7 +49,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
 
     "return OK with match true" when {
       "estates data match with existing estate. " in {
-        mockDesServiceResponse(Matched)
+        mockEstatesServiceResponse(Matched)
 
         val result = getEstateController.checkExistingEstate().apply(postRequestWithPayload(validPayloadRequest))
         status(result) mustBe OK
@@ -57,7 +57,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
       }
       
       "estate data match with existing estate with postcode in lowercase. " in {
-        mockDesServiceResponse(Matched)
+        mockEstatesServiceResponse(Matched)
 
         val result = getEstateController.checkExistingEstate().apply(postRequestWithPayload(validPayloadPostCodeLowerCase))
         status(result) mustBe OK
@@ -67,7 +67,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
 
     "return OK with match true" when {
       "estate data match with existing estate without postcode. " in {
-        mockDesServiceResponse(Matched)
+        mockEstatesServiceResponse(Matched)
 
         val result = getEstateController.checkExistingEstate().apply(postRequestWithPayload(validPayloadRequestWithoutPostCode))
         status(result) mustBe OK
@@ -77,7 +77,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
 
     "return OK with match false" when {
       "estate data does not match with existing estates." in {
-        mockDesServiceResponse(NotMatched)
+        mockEstatesServiceResponse(NotMatched)
         val result = getEstateController.checkExistingEstate().apply(postRequestWithPayload(validPayloadRequest))
         status(result) mustBe OK
         (contentAsJson(result) \ "match").as[Boolean] mustBe false
@@ -87,7 +87,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
     "return 403 with message and code" when {
 
       "estate data matched with already registered estate." in {
-        mockDesServiceResponse(AlreadyRegistered)
+        mockEstatesServiceResponse(AlreadyRegistered)
 
         val result = getEstateController.checkExistingEstate().apply(postRequestWithPayload(validPayloadRequest))
 
@@ -156,7 +156,7 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
 
     "return Internal server error " when {
       "des dependent service is not responding" in {
-        mockDesServiceResponse(ServiceUnavailable)
+        mockEstatesServiceResponse(ServiceUnavailable)
 
         val result = getEstateController.checkExistingEstate().apply(postRequestWithPayload(validPayloadRequest))
 
@@ -169,10 +169,10 @@ class CheckEstateControllerSpec extends BaseSpec with GuiceOneServerPerSuite {
   }
 
   private def getEstateController =
-    new CheckEstateController(mockDesService, appConfig, new FakeIdentifierAction(bodyParsers, Organisation))
+    new CheckEstateController(mockEstateService, appConfig, new FakeIdentifierAction(bodyParsers, Organisation))
 
-  private def mockDesServiceResponse(response : ExistingCheckResponse) = {
-    when(mockDesService.checkExistingEstate(any[ExistingCheckRequest]))
+  private def mockEstatesServiceResponse(response : ExistingCheckResponse) = {
+    when(mockEstateService.checkExistingEstate(any[ExistingCheckRequest]))
       .thenReturn(Future.successful(response))
   }
 }

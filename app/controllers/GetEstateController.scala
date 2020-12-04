@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import controllers.actions.{IdentifierAction, ValidateUTRActionFactory}
 import models.getEstate._
 import models.requests.IdentifierRequest
-import services.{AuditService, DesService, VariationsTransformationService}
+import services.{AuditService, EstatesService, VariationsTransformationService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class GetEstateController @Inject()(identify: IdentifierAction,
                                     auditService: AuditService,
-                                    desService: DesService,
+                                    estateService: EstatesService,
                                     variationsTransformationService: VariationsTransformationService,
                                     validateUTRActionFactory: ValidateUTRActionFactory
                                    )(implicit cc: ControllerComponents, ec: ExecutionContext) extends BackendController(cc) {
@@ -118,7 +118,7 @@ class GetEstateController @Inject()(identify: IdentifierAction,
         val data = if (applyTransforms) {
           variationsTransformationService.getTransformedData(utr, request.identifier)
         } else {
-          desService.getEstateInfo(utr, request.identifier)
+          estateService.getEstateInfo(utr, request.identifier)
         }
 
         data map {

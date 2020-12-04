@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estatesStoreService: Estates5MLDService) extends Logging {
+class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estates5MLDService: Estates5MLDService) extends Logging {
 
   private lazy val estatesServiceUrl : String = s"${config.registrationBaseUrl}/estates"
 
@@ -89,7 +89,7 @@ class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estatesSto
 
     logger.info(s"[getEstateInfo][UTR: $utr] getting playback for estate for correlationId: $correlationId")
 
-    estatesStoreService.is5mldEnabled.flatMap { is5MLD =>
+    estates5MLDService.is5mldEnabled.flatMap { is5MLD =>
       if (is5MLD) {
         http.GET[GetEstateResponse](create5MLDEstateEndpointForUtr(utr))(GetEstateResponse.httpReads(utr), implicitly[HeaderCarrier](hc), global)
       } else {

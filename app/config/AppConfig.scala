@@ -39,6 +39,12 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val registrationEnvironment : String = loadConfig("microservice.services.registration.environment")
   val registrationToken : String = loadConfig("microservice.services.registration.token")
 
+  val playbackEnvironment : String = loadConfig("microservice.services.playback.environment")
+  val playbackToken : String = loadConfig("microservice.services.playback.token")
+
+  val variationEnvironment : String = loadConfig("microservice.services.variation.environment")
+  val variationToken : String = loadConfig("microservice.services.variation.token")
+
   val subscriptionEnvironment : String = loadConfig("microservice.services.subscription.environment")
   val subscriptionToken : String = loadConfig("microservice.services.subscription.token")
 

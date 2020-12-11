@@ -53,11 +53,12 @@ class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estates5ML
   private val ENVIRONMENT_HEADER = "Environment"
   private val CORRELATION_HEADER = "CorrelationId"
 
-  private def registrationHeaders(correlationId : String) : Seq[(String, String)] =
-    Seq(
-      HeaderNames.AUTHORIZATION -> s"Bearer ${config.registrationToken}",
+  private def headers(correlationId : String,
+                      token: String,
+                      environment: String) : Seq[(String, String)] = Seq(
+      HeaderNames.AUTHORIZATION -> s"Bearer $token",
       CONTENT_TYPE -> CONTENT_TYPE_JSON,
-      ENVIRONMENT_HEADER -> config.registrationEnvironment,
+      ENVIRONMENT_HEADER -> environment,
       CORRELATION_HEADER -> correlationId
     )
 
@@ -65,7 +66,11 @@ class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estates5ML
   : Future[ExistingCheckResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headers(
+      correlationId = correlationId,
+      token = config.registrationToken,
+      environment = config.registrationEnvironment
+    ))
 
     logger.info(s"[checkExistingEstate] matching estate for correlationId: $correlationId")
 
@@ -75,7 +80,11 @@ class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estates5ML
   def registerEstate(registration: EstateRegistration): Future[RegistrationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headers(
+      correlationId = correlationId,
+      token = config.registrationToken,
+      environment = config.registrationEnvironment
+    ))
 
     logger.info(s"[registerEstate] registering estate for correlationId: $correlationId")
 
@@ -85,7 +94,11 @@ class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estates5ML
   def getEstateInfo(utr: String): Future[GetEstateResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
+    implicit val hc : HeaderCarrier = HeaderCarrier(extraHeaders = headers(
+      correlationId = correlationId,
+      token = config.playbackToken,
+      environment = config.playbackEnvironment
+    ))
 
     logger.info(s"[getEstateInfo][UTR: $utr] getting playback for estate for correlationId: $correlationId")
 
@@ -101,7 +114,11 @@ class EstatesConnector @Inject()(http: HttpClient, config: AppConfig, estates5ML
   def estateVariation(estateVariations: JsValue): Future[VariationResponse] = {
     val correlationId = UUID.randomUUID().toString
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = registrationHeaders(correlationId))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headers(
+      correlationId = correlationId,
+      token = config.variationToken,
+      environment = config.variationEnvironment
+    ))
 
     logger.info(s"[estateVariation] submitting estate variation for correlationId: $correlationId")
 

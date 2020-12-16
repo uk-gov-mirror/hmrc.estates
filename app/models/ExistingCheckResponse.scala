@@ -42,11 +42,10 @@ object ExistingCheckResponse {
           case OK =>
             if (response.json.as[DesResponse].`match`) Matched else NotMatched
           case CONFLICT =>
-            response.json.asOpt[DesErrorResponse] match {
-              case Some(desResponse) if desResponse.code == Constants.ALREADY_REGISTERED_CODE =>
-                AlreadyRegistered
-              case _ =>
-                ServerError
+            if (response.body.contains(Constants.ALREADY_REGISTERED_CODE)) {
+              AlreadyRegistered
+            } else {
+              ServerError
             }
           case BAD_REQUEST =>
             BadRequest

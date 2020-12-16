@@ -36,8 +36,11 @@ object RegistrationFailureResponse {
   implicit val formats: OFormat[RegistrationFailureResponse] = Json.format[RegistrationFailureResponse]
 }
 
-object AlreadyRegisteredResponse extends RegistrationFailureResponse(FORBIDDEN, ALREADY_REGISTERED_CODE, ALREADY_REGISTERED_ESTATE_MESSAGE)
-object NoMatchResponse extends RegistrationFailureResponse(FORBIDDEN, NO_MATCH_CODE, NO_MATCH_MESSAGE)
+object AlreadyRegisteredResponse
+  extends RegistrationFailureResponse(FORBIDDEN, ALREADY_REGISTERED_CODE, ALREADY_REGISTERED_ESTATE_MESSAGE)
+
+object NoMatchResponse
+  extends RegistrationFailureResponse(FORBIDDEN, NO_MATCH_CODE, NO_MATCH_MESSAGE)
 
 object RegistrationResponse extends Logging {
 
@@ -60,15 +63,13 @@ object RegistrationResponse extends Logging {
           case OK =>
             response.json.as[RegistrationTrnResponse]
           case FORBIDDEN =>
-            response.json.asOpt[DesErrorResponse] match {
-              case Some(desReponse) if desReponse.code == ALREADY_REGISTERED_CODE =>
+            response.body match {
+              case x if x.contains(ALREADY_REGISTERED_CODE) =>
                 logger.info(s"Already registered response from des.")
                 AlreadyRegisteredResponse
-              case Some(desReponse) if desReponse.code == NO_MATCH_CODE =>
+              case x if x.contains(NO_MATCH_CODE) =>
                 logger.info(s"No match response from des.")
                 NoMatchResponse
-              case Some(desResponse) =>
-                RegistrationFailureResponse(response.status, desResponse.code, desResponse.reason)
               case _ =>
                 logger.error("Forbidden response from des.")
                 RegistrationFailureResponse(response.status)

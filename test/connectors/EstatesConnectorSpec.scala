@@ -36,199 +36,507 @@ class EstatesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
   ".checkExistingEstate" should {
 
-    "return Matched" when {
-      "estate data match with existing estate" in {
-        val requestBody = Json.stringify(Json.toJson(request))
+    "4MLD" should {
+      "return Matched" when {
+        "estate data match with existing estate" in {
+          val requestBody = Json.stringify(Json.toJson(request))
 
-        stubForPost(server, "/estates/match", requestBody, OK, """{"match": true}""")
+          stubForPost(server, "/estates/match", requestBody, OK, """{"match": true}""")
 
-        val futureResult = connector.checkExistingEstate(request)
+          val futureResult = connector.checkExistingEstate(request)
 
-        whenReady(futureResult) {
-          result => result mustBe Matched
+          whenReady(futureResult) {
+            result => result mustBe Matched
+          }
+        }
+      }
+      "return NotMatched" when {
+        "estate data does not with existing estate" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, OK, """{"match": false}""")
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe NotMatched
+          }
+        }
+      }
+
+      "return BadRequest" when {
+        "payload sent is not valid" in {
+          val wrongPayloadRequest = request.copy(utr = "NUMBER1234")
+          val requestBody = Json.stringify(Json.toJson(wrongPayloadRequest))
+
+          stubForPost(server, "/estates/match", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
+
+          val futureResult = connector.checkExistingEstate(wrongPayloadRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe BadRequest
+          }
+        }
+      }
+
+      "return AlreadyRegistered" when {
+        "estate is already registered with provided details" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, CONFLICT, Json.stringify(jsonResponseAlreadyRegistered))
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe AlreadyRegistered
+          }
+        }
+      }
+
+      "return ServiceUnavailable" when {
+        "DES dependent service is not responding" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe ServiceUnavailable
+          }
+        }
+      }
+
+      "return ServerError" when {
+        "DES is experiencing some problem" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe ServerError
+          }
+        }
+      }
+
+      "return ServerError" when {
+        "des is returning forbidden response" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, CONFLICT, "{}")
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe ServerError
+          }
         }
       }
     }
-    "return NotMatched" when {
-      "estate data does not with existing estate" in {
-        val requestBody = Json.stringify(Json.toJson(request))
 
-        stubForPost(server, "/estates/match", requestBody, OK, """{"match": false}""")
+    "5MLD" should {
+      "return Matched" when {
+        "estate data match with existing estate" in {
+          val requestBody = Json.stringify(Json.toJson(request))
 
-        val futureResult = connector.checkExistingEstate(request)
+          stubForPost(server, "/estates/match", requestBody, OK, """{"match": true}""")
 
-        whenReady(futureResult) {
-          result => result mustBe NotMatched
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe Matched
+          }
+        }
+      }
+      "return NotMatched" when {
+        "estate data does not with existing estate" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, OK, """{"match": false}""")
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe NotMatched
+          }
+        }
+      }
+
+      "return BadRequest" when {
+
+        "payload sent is not valid" in {
+          val wrongPayloadRequest = request.copy(utr = "NUMBER1234")
+          val requestBody = Json.stringify(Json.toJson(wrongPayloadRequest))
+
+          stubForPost(server, "/estates/match", requestBody, BAD_REQUEST,
+          s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "INVALID_PAYLOAD",
+               |      "reason": "Submission has not passed validation. Invalid payload."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin
+          )
+
+          val futureResult = connector.checkExistingEstate(wrongPayloadRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe BadRequest
+          }
+        }
+      }
+
+      "return AlreadyRegistered" when {
+
+        "estate is already registered with provided details" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, CONFLICT,
+          s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "ALREADY_REGISTERED",
+               |      "reason": "Trust/ Estate is already registered."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin
+          )
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe AlreadyRegistered
+          }
+        }
+      }
+
+      "return ServiceUnavailable" when {
+        "DES dependent service is not responding" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, SERVICE_UNAVAILABLE,
+          s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "SERVICE_UNAVAILABLE",
+               |      "reason": "Dependent systems are currently not responding."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin)
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe ServiceUnavailable
+          }
+        }
+      }
+
+      "return ServerError" when {
+        "DES is experiencing some problem" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, INTERNAL_SERVER_ERROR,
+          s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "SERVER_ERROR",
+               |      "reason": "IF is currently experiencing problems that require live service intervention."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin)
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe ServerError
+          }
+        }
+      }
+
+      "return ServerError" when {
+        "des is returning forbidden response" in {
+          val requestBody = Json.stringify(Json.toJson(request))
+
+          stubForPost(server, "/estates/match", requestBody, CONFLICT, "{}")
+
+          val futureResult = connector.checkExistingEstate(request)
+
+          whenReady(futureResult) {
+            result => result mustBe ServerError
+          }
         }
       }
     }
 
-    "return BadRequest" when {
-      "payload sent is not valid" in {
-        val wrongPayloadRequest = request.copy(utr = "NUMBER1234")
-        val requestBody = Json.stringify(Json.toJson(wrongPayloadRequest))
-
-        stubForPost(server, "/estates/match", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
-
-        val futureResult = connector.checkExistingEstate(wrongPayloadRequest)
-
-        whenReady(futureResult) {
-          result => result mustBe BadRequest
-        }
-      }
-    }
-
-    "return AlreadyRegistered" when {
-      "estate is already registered with provided details" in {
-        val requestBody = Json.stringify(Json.toJson(request))
-
-        stubForPost(server, "/estates/match", requestBody, CONFLICT, Json.stringify(jsonResponseAlreadyRegistered))
-
-        val futureResult = connector.checkExistingEstate(request)
-
-        whenReady(futureResult) {
-          result => result mustBe AlreadyRegistered
-        }
-      }
-    }
-
-    "return ServiceUnavailable" when {
-      "DES dependent service is not responding" in {
-        val requestBody = Json.stringify(Json.toJson(request))
-
-        stubForPost(server, "/estates/match", requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
-
-        val futureResult = connector.checkExistingEstate(request)
-
-        whenReady(futureResult) {
-          result => result mustBe ServiceUnavailable
-        }
-      }
-    }
-
-    "return ServerError" when {
-      "DES is experiencing some problem" in {
-        val requestBody = Json.stringify(Json.toJson(request))
-
-        stubForPost(server, "/estates/match", requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
-
-        val futureResult = connector.checkExistingEstate(request)
-
-        whenReady(futureResult) {
-          result => result mustBe ServerError
-        }
-      }
-    }
-
-    "return ServerError" when {
-      "des is returning forbidden response" in {
-        val requestBody = Json.stringify(Json.toJson(request))
-
-        stubForPost(server, "/estates/match", requestBody, CONFLICT, "{}")
-
-        val futureResult = connector.checkExistingEstate(request)
-
-        whenReady(futureResult) {
-          result => result mustBe ServerError
-        }
-      }
-    }
   }
 
   ".registerEstate" should {
 
-    "return TRN" when {
-      "valid request to DES register an estate" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+    "4MLD" should {
+      "return TRN" when {
 
-        stubForPost(server, "/estates/registration", requestBody, OK, """{"trn": "XTRN1234567"}""")
+        "valid request to DES register an estate" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
-        val futureResult = connector.registerEstate(estateRegRequest)
+          stubForPost(server, "/estates/registration", requestBody, OK, """{"trn": "XTRN1234567"}""")
 
-        whenReady(futureResult) {
-          result => result mustBe RegistrationTrnResponse("XTRN1234567")
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationTrnResponse("XTRN1234567")
+          }
+
         }
+      }
 
+      "return BadRequest response" when {
+        "payload sent to DES is invalid" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+          stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(BAD_REQUEST)
+          }
+        }
+      }
+
+      "return AlreadyRegisteredResponse" when {
+        "estates is already registered with provided details" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponseAlreadyRegistered))
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe AlreadyRegisteredResponse
+          }
+        }
+      }
+
+      "return NoMatch response" when {
+        "estates is already registered with provided details" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponse403NoMatch))
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe NoMatchResponse
+          }
+        }
+      }
+
+      "return ServiceUnavailable response" when {
+        "DES dependent service is not responding" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+          stubForPost(server, "/estates/registration", requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(SERVICE_UNAVAILABLE)
+          }
+        }
+      }
+
+      "return InternalServerError response" when {
+        "DES is experiencing some problem" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(INTERNAL_SERVER_ERROR)
+          }
+        }
+      }
+
+      "return Forbidden response" when {
+        "DES is returning 403 without ALREADY REGISTERED code" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, "{}")
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(FORBIDDEN)
+          }
+        }
       }
     }
 
-    "return BadRequest response" when {
-      "payload sent to DES is invalid" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-        stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
+    "5MLD" should {
 
-        val futureResult = connector.registerEstate(estateRegRequest)
+      "return TRN" when {
 
-        whenReady(futureResult) {
-          result => result mustBe RegistrationFailureResponse(BAD_REQUEST)
+        "valid request to DES register an estate" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, OK, """{"trn": "XTRN1234567"}""")
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationTrnResponse("XTRN1234567")
+          }
+
+        }
+      }
+
+      "return BadRequest response" when {
+        "payload sent to DES is invalid" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+          stubForPost(server, "/estates/registration", requestBody, BAD_REQUEST,
+          s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "INVALID_PAYLOAD",
+               |      "reason": "Submission has not passed validation. Invalid payload."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin)
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(BAD_REQUEST)
+          }
+        }
+      }
+
+      "return AlreadyRegisteredResponse" when {
+        "estates is already registered with provided details" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, FORBIDDEN,
+            s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "ALREADY_REGISTERED",
+               |      "reason": "Trust/ Estate is already registered."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin
+          )
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe AlreadyRegisteredResponse
+          }
+        }
+      }
+
+      "return NoMatch response" when {
+        "estates is already registered with provided details" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, FORBIDDEN,
+            s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "NO_MATCH",
+               |      "reason": "There is no match in HMRC records."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin
+          )
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe NoMatchResponse
+          }
+        }
+      }
+
+      "return ServiceUnavailable response" when {
+        "DES dependent service is not responding" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, SERVICE_UNAVAILABLE,
+            s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "SERVICE_UNAVAILABLE",
+               |      "reason": "Dependent systems are currently not responding."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin
+          )
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(SERVICE_UNAVAILABLE)
+          }
+        }
+      }
+
+      "return InternalServerError response" when {
+        "DES is experiencing some problem" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, INTERNAL_SERVER_ERROR,
+            s"""
+               |{
+               |  "failures": [
+               |    {
+               |      "code": "SERVER_ERROR",
+               |      "reason": "IF is currently experiencing problems that require live service intervention."
+               |    }
+               |  ]
+               |}
+               |""".stripMargin
+          )
+
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(INTERNAL_SERVER_ERROR)
+          }
+        }
+      }
+
+      "return Forbidden response" when {
+
+        "DES is returning 403 without ALREADY REGISTERED code" in {
+          val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
+
+          stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, "{}")
+          val futureResult = connector.registerEstate(estateRegRequest)
+
+          whenReady(futureResult) {
+            result => result mustBe RegistrationFailureResponse(FORBIDDEN)
+          }
         }
       }
     }
 
-    "return AlreadyRegisteredResponse" when {
-      "estates is already registered with provided details" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
 
-        stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponseAlreadyRegistered))
-        val futureResult = connector.registerEstate(estateRegRequest)
-
-        whenReady(futureResult) {
-          result => result mustBe AlreadyRegisteredResponse
-        }
-      }
-    }
-
-    "return NoMatch response" when {
-      "estates is already registered with provided details" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-
-        stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, Json.stringify(jsonResponse403NoMatch))
-        val futureResult = connector.registerEstate(estateRegRequest)
-
-        whenReady(futureResult) {
-          result => result mustBe NoMatchResponse
-        }
-      }
-    }
-
-    "return ServiceUnavailable response" when {
-      "DES dependent service is not responding" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-        stubForPost(server, "/estates/registration", requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
-        val futureResult = connector.registerEstate(estateRegRequest)
-
-        whenReady(futureResult) {
-          result => result mustBe RegistrationFailureResponse(SERVICE_UNAVAILABLE)
-        }
-      }
-    }
-
-    "return InternalServerError response" when {
-      "DES is experiencing some problem" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-
-        stubForPost(server, "/estates/registration", requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
-
-        val futureResult = connector.registerEstate(estateRegRequest)
-
-        whenReady(futureResult) {
-          result => result mustBe RegistrationFailureResponse(INTERNAL_SERVER_ERROR)
-        }
-      }
-    }
-
-    "return Forbidden response" when {
-      "DES is returning 403 without ALREADY REGISTERED code" in {
-        val requestBody = Json.stringify(Json.toJson(estateRegRequest)(EstateRegistration.estateRegistrationWriteToDes))
-
-        stubForPost(server, "/estates/registration", requestBody, FORBIDDEN, "{}")
-        val futureResult = connector.registerEstate(estateRegRequest)
-
-        whenReady(futureResult) {
-          result => result mustBe RegistrationFailureResponse(FORBIDDEN)
-        }
-      }
-    }
   }
 
   ".getEstateInfo" should {

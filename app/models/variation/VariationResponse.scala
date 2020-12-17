@@ -51,7 +51,7 @@ object VariationResponse extends Logging {
             response.json.as[VariationSuccessResponse](VariationSuccessResponse.formats)
           case BAD_REQUEST if response.body contains "INVALID_CORRELATIONID" =>
             failure(InvalidCorrelationIdErrorResponse)
-          case CONFLICT if response.body contains "DUPLICATE_SUBMISSION" =>
+          case CONFLICT if response.body contains "DUPLICATE" =>
             failure(DuplicateSubmissionErrorResponse)
           case BAD_REQUEST =>
             failure(InvalidRequestErrorResponse)

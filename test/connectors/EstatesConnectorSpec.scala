@@ -1094,96 +1094,250 @@ class EstatesConnectorSpec extends BaseConnectorSpec with JsonRequests {
 
     val url = "/estates/variation"
 
-    "return a VariationTrnResponse" when {
+    "4MLD" should {
 
-      "DES has returned a 200 with a trn" in {
+      "return a VariationTrnResponse" when {
 
-        val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
-        stubForPost(server, url, requestBody, OK, """{"tvn": "XXTVN1234567890"}""")
+        "DES has returned a 200 with a trn" in {
 
-        val futureResult = connector.estateVariation(estateVariationsRequest)
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+          stubForPost(server, url, requestBody, OK, """{"tvn": "XXTVN1234567890"}""")
 
-        whenReady(futureResult) { result =>
-          result mustBe a[VariationSuccessResponse]
-          inside(result){ case VariationSuccessResponse(tvn)  => tvn must fullyMatch regex """^[a-zA-Z0-9]{15}$""".r }
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) { result =>
+            result mustBe a[VariationSuccessResponse]
+            inside(result){ case VariationSuccessResponse(tvn)  => tvn must fullyMatch regex """^[a-zA-Z0-9]{15}$""".r }
+          }
         }
       }
-    }
 
-    "payload sent to DES is invalid" in {
+      "payload sent to DES is invalid" in {
 
-      val variation = estateVariationsRequest
+        val variation = estateVariationsRequest
 
-      val requestBody = Json.stringify(Json.toJson(variation))
-      stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
+        val requestBody = Json.stringify(Json.toJson(variation))
+        stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse4004mld))
 
-      val futureResult = connector.estateVariation(variation)
-
-      whenReady(futureResult) {
-        result =>
-          result mustBe VariationFailureResponse(InvalidRequestErrorResponse)
-      }
-
-    }
-
-    "return DuplicateSubmission response" when {
-      "trusts two requests are submitted with the same Correlation ID" in {
-
-        val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
-
-        stubForPost(server, url, requestBody, CONFLICT, Json.stringify(jsonResponse409DuplicateCorrelation))
-        val futureResult = connector.estateVariation(estateVariationsRequest)
+        val futureResult = connector.estateVariation(variation)
 
         whenReady(futureResult) {
           result =>
-            result mustBe VariationFailureResponse(DuplicateSubmissionErrorResponse)
+            result mustBe VariationFailureResponse(InvalidRequestErrorResponse)
+        }
+
+      }
+
+      "return DuplicateSubmission response" when {
+        "trusts two requests are submitted with the same Correlation ID" in {
+
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, CONFLICT, Json.stringify(jsonResponse409DuplicateCorrelation))
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(DuplicateSubmissionErrorResponse)
+          }
+        }
+      }
+
+      "return InvalidCorrelationId response" when {
+        "trusts provides an invalid Correlation ID" in {
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse400CorrelationId))
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(InvalidCorrelationIdErrorResponse)
+          }
+        }
+      }
+
+      "return ServiceUnavailable response" when {
+        "DES dependent service is not responding" in {
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(ServiceUnavailableErrorResponse)
+          }
+        }
+      }
+
+      "return InternalServerError response" when {
+        "DES is experiencing some problem" in {
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(InternalServerErrorErrorResponse)
+          }
         }
       }
     }
 
-    "return InvalidCorrelationId response" when {
-      "trusts provides an invalid Correlation ID" in {
-        val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+    "5MLD" should {
+      "return a VariationTrnResponse" when {
 
-        stubForPost(server, url, requestBody, BAD_REQUEST, Json.stringify(jsonResponse400CorrelationId))
-        val futureResult = connector.estateVariation(estateVariationsRequest)
+        "DES has returned a 200 with a trn" in {
+
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+          stubForPost(server, url, requestBody, OK, """{"tvn": "XXTVN1234567890"}""")
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) { result =>
+            result mustBe a[VariationSuccessResponse]
+            inside(result){ case VariationSuccessResponse(tvn)  => tvn must fullyMatch regex """^[a-zA-Z0-9]{15}$""".r }
+          }
+        }
+      }
+
+      "payload sent to DES is invalid" in {
+
+        val variation = estateVariationsRequest
+
+        val requestBody = Json.stringify(Json.toJson(variation))
+        stubForPost(server, url, requestBody, BAD_REQUEST,
+          s"""
+             |{
+             |  "failures": [
+             |    {
+             |      "code": "INVALID_PAYLOAD",
+             |      "reason": "Submission has not passed validation. Invalid payload."
+             |    }
+             |  ]
+             |}
+             |""".stripMargin)
+
+        val futureResult = connector.estateVariation(variation)
 
         whenReady(futureResult) {
           result =>
-            result mustBe VariationFailureResponse(InvalidCorrelationIdErrorResponse)
+            result mustBe VariationFailureResponse(InvalidRequestErrorResponse)
+        }
+
+      }
+
+      "return DuplicateSubmission response" when {
+        "trusts two requests are submitted with the same Correlation ID" in {
+
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, CONFLICT,
+            """
+              |{
+              |  "failures": [
+              |    {
+              |      "code": "DUPLICATED_SUBMISSION",
+              |      "reason": "Duplicated CorrelationId was submitted."
+              |    }
+              |  ]
+              |}
+              |""".stripMargin
+          )
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(DuplicateSubmissionErrorResponse)
+          }
+        }
+      }
+
+      "return InvalidCorrelationId response" when {
+        "trusts provides an invalid Correlation ID" in {
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, BAD_REQUEST,
+            """
+              |{
+              |  "failures": [
+              |    {
+              |      "code": "INVALID_CORRELATIONID",
+              |      "reason": "Submission has not passed validation. Invalid CorrelationId."
+              |    }
+              |  ]
+              |}
+              |""".stripMargin
+          )
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(InvalidCorrelationIdErrorResponse)
+          }
+        }
+      }
+
+      "return ServiceUnavailable response" when {
+        "DES dependent service is not responding" in {
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, SERVICE_UNAVAILABLE,
+            """
+              |{
+              |  "failures": [
+              |    {
+              |      "code": "SERVICE_UNAVAILABLE",
+              |      "reason": "Dependent systems are currently not responding."
+              |    }
+              |  ]
+              |}
+              |""".stripMargin
+          )
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(ServiceUnavailableErrorResponse)
+          }
+        }
+      }
+
+      "return InternalServerError response" when {
+        "DES is experiencing some problem" in {
+          val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
+
+          stubForPost(server, url, requestBody, INTERNAL_SERVER_ERROR,
+            """
+              |{
+              |  "failures": [
+              |    {
+              |      "code": "SERVER_ERROR",
+              |      "reason": "IF is currently experiencing problems that require live service intervention."
+              |    }
+              |  ]
+              |}
+              |""".stripMargin
+          )
+
+          val futureResult = connector.estateVariation(estateVariationsRequest)
+
+          whenReady(futureResult) {
+            result =>
+              result mustBe VariationFailureResponse(InternalServerErrorErrorResponse)
+          }
         }
       }
     }
 
-    "return ServiceUnavailable response" when {
-      "DES dependent service is not responding" in {
-        val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
 
-        stubForPost(server, url, requestBody, SERVICE_UNAVAILABLE, Json.stringify(jsonResponse503))
-
-        val futureResult = connector.estateVariation(estateVariationsRequest)
-
-        whenReady(futureResult) {
-          result =>
-            result mustBe VariationFailureResponse(ServiceUnavailableErrorResponse)
-        }
-      }
-    }
-
-    "return InternalServerError response" when {
-      "DES is experiencing some problem" in {
-        val requestBody = Json.stringify(Json.toJson(estateVariationsRequest))
-
-        stubForPost(server, url, requestBody, INTERNAL_SERVER_ERROR, Json.stringify(jsonResponse500))
-
-        val futureResult = connector.estateVariation(estateVariationsRequest)
-
-        whenReady(futureResult) {
-          result =>
-            result mustBe VariationFailureResponse(InternalServerErrorErrorResponse)
-        }
-      }
-    }
   }
 
 }

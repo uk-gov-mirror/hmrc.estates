@@ -23,7 +23,7 @@ class DeltaTransformSpec extends BaseSpec {
 
   "DeltaTransform" must {
 
-    "not throw match error when parsing an transform with an unrecognised key" in {
+    "not throw a match error when parsing a transform with an unrecognised key" in {
       val json = Json.parse(
         s"""{
            |  "deltaTransforms": [

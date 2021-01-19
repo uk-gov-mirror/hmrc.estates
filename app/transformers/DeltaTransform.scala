@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,10 @@ object DeltaTransform {
     readsForTransform[AddCloseEstateTransform](AddCloseEstateTransform.key)
   }
 
+  def defaultReads: PartialFunction[JsObject, JsResult[DeltaTransform]] = {
+    case _ => throw new Exception("Don't know how to de-serialise transform")
+  }
+
   implicit val reads: Reads[DeltaTransform] = Reads[DeltaTransform](
     value =>
       (
@@ -82,10 +86,9 @@ object DeltaTransform {
           amendIndividualPersonalRepReads orElse
           amendBusinessPersonalRepReads orElse
           readsForTransform[DeceasedTransform](DeceasedTransform.key) orElse
-          closeEstateReads
-        )
-      (value.as[JsObject]) orElse
-        (throw new Exception(s"Don't know how to deserialise transform"))
+          closeEstateReads orElse
+          defaultReads
+        )(value.as[JsObject])
   )
 
   def personalRepWrites[T <: DeltaTransform] : PartialFunction[T, JsValue] = {

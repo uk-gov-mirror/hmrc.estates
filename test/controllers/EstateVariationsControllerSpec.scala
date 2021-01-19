@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package controllers
 
-import java.util.UUID
-
 import base.BaseSpec
 import config.AppConfig
 import controllers.actions.{FakeIdentifierAction, VariationsResponseHandler}
@@ -25,7 +23,6 @@ import models.variation.{VariationFailureResponse, VariationSuccessResponse}
 import models.{DeclarationForApi, DeclarationName, NameType}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.libs.json.Json
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
@@ -36,6 +33,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import utils.ErrorResponses._
 import utils.Headers
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package connectors
 
 import org.scalatest.RecoverMethods
 import play.api.http.Status
-import uk.gov.hmrc.http.{BadRequestException, UpstreamErrorResponse}
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -67,7 +67,7 @@ class EstatesStoreConnectorSpec extends BaseConnectorSpec with RecoverMethods {
 
         val futureResult = connector.getFeature("5mld")
         whenReady(futureResult.failed) {
-          result => result mustBe a[BadRequestException]
+          result => result mustBe a[UpstreamErrorResponse]
         }
       }
 

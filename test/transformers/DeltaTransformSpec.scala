@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
-package transformers.variations
+package transformers
 
-import java.time.LocalDate
-
-import org.scalatest.{FreeSpec, MustMatchers}
+import base.BaseSpec
 import play.api.libs.json.Json
 
-class AddCloseEstateTransformSpec extends FreeSpec with MustMatchers {
+class DeltaTransformSpec extends BaseSpec {
 
-  "the close estate transformer should" - {
+  "DeltaTransform" must {
 
-    val closeDate: LocalDate = LocalDate.parse("2000-01-01")
+    "not throw a match error when parsing a transform with an unrecognised key" in {
+      val json = Json.parse(
+        s"""{
+           |  "deltaTransforms": [
+           |    {
+           |      "SomeUnknownTransformKey": {
+           |        "key": "value"
+           |      }
+           |    }
+           |  ]
+           |}
+           |""".stripMargin)
 
-    "successfully set the estate close date" in {
-
-      val beforeJson = Json.obj()
-      val afterJson = Json.obj("trustEndDate" -> closeDate)
-
-      val transformer = AddCloseEstateTransform(closeDate)
-
-      val result = transformer.applyTransform(beforeJson).get
-
-      result mustBe afterJson
+      val e = intercept[Exception] {
+        json.as[ComposedDeltaTransform]
+      }
+      e.getMessage mustBe "Don't know how to de-serialise transform"
     }
   }
 }
